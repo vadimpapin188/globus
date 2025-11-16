@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Глобус — Поиск</title>
+  <style>
+    body {
+      background: #0e2f3f;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    input {
+      width: 300px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      margin-right: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      background-color: #00bcd4;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0097a7;
+    }
+  </style>
+</head>
+<body>
+  <h1>Глобус — Поиск</h1>
+  <input type="text" id="searchQuery" placeholder="Введите запрос" />
+  <button onclick="search()">Искать</button>
+
+  <script>
+    function search() {
+      const query = document.getElementById('searchQuery').value.trim();
+      if (query) {
+        window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query);
+      } else {
+        alert('Введите запрос!');
+      }
+    }
+  </script>
+</body>
+</html>
