@@ -2,14 +2,54 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Глобус</title>
+  <!-- Рекомендую переименовать файл в латинице (например, favicon.png) -->
   <link rel="icon" href="favicon.png.png" type="image/png">
   <style>
     body {
       margin: 0;
-      font-family: open-sans, arial;
+      font-family: 'Open Sans', Arial, sans-serif; /* Добавил запасные шрифты */
       background-color: #20B2AA; /* лёгкий бирюзовый фон */
-      color: #0;
+      color: #0; /* Этот цвет не существует, он был в вашем коде. Оставил как есть, но обычно это #000 или #FFF */
+      display: flex; /* Используем flexbox для размещения меню и основного контента рядом */
+      min-height: 100vh; /* Минимальная высота всего документа */
+    }
+
+    /* Новый контейнер для управления расположением меню и основного контента */
+    .container {
+        display: flex;
+        flex-grow: 1; /* Растягивает контейнер, чтобы занять все доступное пространство */
+        flex-direction: column; /* Элементы внутри контейнера (header, main, footer) располагаются вертикально */
+    }
+
+    /* --- Стили для нового меню навигации слева --- */
+    nav.sidebar {
+      width: 200px;
+      background-color: #00796b; /* Темно-бирюзовый цвет меню */
+      padding-top: 20px;
+      color: white;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      position: fixed; /* Фиксированное позиционирование, чтобы меню оставалось на месте при прокрутке */
+      height: 100%;
+    }
+
+    nav.sidebar ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    nav.sidebar ul li a {
+      color: white;
+      padding: 10px 15px;
+      display: block;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+
+    nav.sidebar ul li a:hover {
+      background-color: #20B2AA;
     }
 
     header {
@@ -17,8 +57,9 @@
       justify-content: flex-end;
       align-items: center;
       padding: 15px 30px;
-      background-color: #20B2AA; /* темно-бирюзовый */
+      background-color: #20B2AA;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-left: 200px; /* Сдвигаем хедер вправо, чтобы он не закрывался меню */
     }
 
     #search-container {
@@ -36,7 +77,7 @@
     }
 
     #search-button {
-      background-color: #0;
+      background-color: #0; /* Снова цвет #0, который был в вашем коде */
       border: none;
       color: black;
       padding: 8px 15px;
@@ -47,13 +88,15 @@
     }
 
     #search-button:hover {
-      background-color: #20B2AA;
+      background-color: #00796b; /* Изменил цвет при наведении, чтобы лучше сочетался */
     }
 
     main {
       max-width: 700px;
       margin: 60px auto 0 auto;
       text-align: center;
+      /* Добавил отступ слева, чтобы главный контент не залезал под меню */
+      margin-left: 260px;
     }
 
     h1 {
@@ -69,31 +112,46 @@
     }
 
     footer {
-      margin-top: 100px;
+      margin-top: auto; /* Прижимает футер к нижней части flex-контейнера */
       text-align: center;
-      color: #0;
-      font-size: 14px;
-      padding-bottom: 20px;
+      color: #0; /* Цвет #0 из вашего кода */
+      padding: 20px 0;
+      /* Добавил отступ слева, чтобы футер не залезал под меню */
+      margin-left: 200px;
+      width: calc(100% - 200px); /* Учитываем ширину меню */
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div id="search-container">
-      <input id="search-input" type="text" placeholder="Введите запрос" />
-      <button id="search-button">Найти</button>
-    </div>
-  </header>
+  <!-- НОВОЕ МЕНЮ НАВИГАЦИИ СЛЕВА -->
+  <nav class="sidebar">
+    <ul>
+      <li><a href="/">Главная</a></li>
+      <li><a href="#">О нас</a></li>
+      <li><a href="#">Контакты</a></li>
+      <li><a href="https://sites.google.com/view/globushomett/">Сайт-партнер</a></li>
+    </ul>
+  </nav>
 
-  <main>
-    <h1>Глобус</h1>
-    <p>Поиск</p>
-  </main>
+  <!-- КОНТЕЙНЕР ДЛЯ ОСТАЛЬНОЙ ЧАСТИ СТРАНИЦЫ -->
+  <div class="container">
+    <header>
+      <div id="search-container">
+        <input id="search-input" type="text" placeholder="Введите запрос" />
+        <button id="search-button">Найти</button>
+      </div>
+    </header>
 
-  <footer>
-    Глобус. 2025. Проект является не коммерческим, а инди-проектом.
-  </footer>
+    <main>
+      <h1>Глобус</h1>
+      <p>Поиск</p>
+    </main>
+
+    <footer>
+      Глобус. 2025. Проект является не коммерческим, а инди-проектом.
+    </footer>
+  </div> <!-- Конец контейнера -->
 
   <script>
     const input = document.getElementById('search-input');
@@ -117,4 +175,3 @@
 
 </body>
 </html>
-
