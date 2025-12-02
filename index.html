@@ -1,177 +1,245 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Глобус</title>
-  <!-- Рекомендую переименовать файл в латинице (например, favicon.png) -->
-  <link rel="icon" href="favicon.png.png" type="image/png">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Open Sans', Arial, sans-serif; /* Добавил запасные шрифты */
-      background-color: #20B2AA; /* лёгкий бирюзовый фон */
-      color: #0; /* Этот цвет не существует, он был в вашем коде. Оставил как есть, но обычно это #000 или #FFF */
-      display: flex; /* Используем flexbox для размещения меню и основного контента рядом */
-      min-height: 100vh; /* Минимальная высота всего документа */
-    }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Глобус</title>
+    <link rel="icon" href="favicon.png.png" type="image/png">
+  <style>
+    /* --- ГЛОБАЛЬНЫЕ СТИЛИ И БЕЛЫЙ ТЕКСТ --- */
+    body {
+      margin: 0;
+      font-family: 'Open Sans', Arial, sans-serif;
+      background-color: #20B2AA;
+      color: white; /* **Текст по умолчанию белый** */
+      display: flex;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease; /* Добавляем плавность для body */
+    }
 
-    /* Новый контейнер для управления расположением меню и основного контента */
-    .container {
-        display: flex;
-        flex-grow: 1; /* Растягивает контейнер, чтобы занять все доступное пространство */
-        flex-direction: column; /* Элементы внутри контейнера (header, main, footer) располагаются вертикально */
-    }
+    /* Контейнер для управления расположением меню и основного контента */
+    .container {
+        display: flex;
+        flex-grow: 1;
+        flex-direction: column;
+    }
 
-    /* --- Стили для нового меню навигации слева --- */
-    nav.sidebar {
-      width: 200px;
-      background-color: #00796b; /* Темно-бирюзовый цвет меню */
-      padding-top: 20px;
-      color: white;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-      position: fixed; /* Фиксированное позиционирование, чтобы меню оставалось на месте при прокрутке */
-      height: 100%;
-    }
+    /* --- СТИЛИ МЕНЮ (САЙДБАР) --- */
+    nav.sidebar {
+      width: 200px;
+      background-color: #00796b;
+      padding-top: 20px;
+      color: white;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+      position: fixed;
+      height: 100%;
+      z-index: 100; /* Чтобы меню было поверх всего */
+      transition: all 0.3s ease; /* Плавное сворачивание */
+      transform: translateX(0); /* Изначально видно */
+    }
 
-    nav.sidebar ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
+    /* Стиль для СВЕРНУТОГО меню */
+    nav.sidebar.collapsed {
+      width: 60px; /* Уменьшенная ширина для свернутого состояния */
+      transform: translateX(0);
+    }
 
-    nav.sidebar ul li a {
-      color: white;
-      padding: 10px 15px;
-      display: block;
-      text-decoration: none;
-      transition: background-color 0.3s ease;
-    }
+    nav.sidebar ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
 
-    nav.sidebar ul li a:hover {
-      background-color: #20B2AA;
-    }
+    nav.sidebar ul li a {
+      color: white;
+      padding: 10px 15px;
+      display: block;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+      white-space: nowrap; /* Предотвращает перенос текста */
+      overflow: hidden;
+    }
 
-    header {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 15px 30px;
-      background-color: #20B2AA;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      margin-left: 200px; /* Сдвигаем хедер вправо, чтобы он не закрывался меню */
-    }
+    nav.sidebar.collapsed ul li a {
+      padding: 10px 10px; /* Уменьшаем отступ для свернутого меню */
+      text-align: center;
+    }
 
-    #search-container {
-      display: flex;
-      gap: 10px;
-      width: 350px;
-    }
+    nav.sidebar ul li a:hover {
+      background-color: #20B2AA;
+    }
 
-    #search-input {
-      flex-grow: 1;
-      padding: 8px 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 4px;
-    }
+    /* Кнопка переключения меню */
+    #menu-toggle {
+      position: absolute;
+      top: 15px;
+      right: -25px; /* Выносим кнопку за пределы сайдбара */
+      background-color: #00796b;
+      color: white;
+      border: none;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-radius: 0 5px 5px 0;
+      transition: background-color 0.3s ease;
+      z-index: 101;
+    }
 
-    #search-button {
-      background-color: #0; /* Снова цвет #0, который был в вашем коде */
-      border: none;
-      color: black;
-      padding: 8px 15px;
-      font-size: 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
+    #menu-toggle:hover {
+      background-color: #20B2AA;
+    }
 
-    #search-button:hover {
-      background-color: #00796b; /* Изменил цвет при наведении, чтобы лучше сочетался */
-    }
+    /* --- ОСНОВНОЙ КОНТЕНТ И ХЕДЕР --- */
+    header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: #20B2AA;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-left: 200px; /* Изначальный сдвиг */
+      transition: margin-left 0.3s ease; /* Плавный сдвиг при сворачивании */
+    }
 
-    main {
-      max-width: 700px;
-      margin: 60px auto 0 auto;
-      text-align: center;
-      /* Добавил отступ слева, чтобы главный контент не залезал под меню */
-      margin-left: 260px;
-    }
+    /* Сдвиг хедера при СВЕРНУТОМ меню */
+    header.shifted {
+      margin-left: 60px;
+    }
 
-    h1 {
-      font-weight: 300;
-      font-size: 80px;
-      margin-bottom: 10px;
-      color: #00796b;
-    }
+    #search-container {
+      display: flex;
+      gap: 10px;
+      width: 350px;
+    }
 
-    p {
-      font-size: 18px;
-      color: #555;
-    }
+    #search-input {
+      flex-grow: 1;
+      padding: 8px 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      color: black; /* Цвет текста в поле ввода */
+    }
 
-    footer {
-      margin-top: auto; /* Прижимает футер к нижней части flex-контейнера */
-      text-align: center;
-      color: #0; /* Цвет #0 из вашего кода */
-      padding: 20px 0;
-      /* Добавил отступ слева, чтобы футер не залезал под меню */
-      margin-left: 200px;
-      width: calc(100% - 200px); /* Учитываем ширину меню */
-    }
-  </style>
+    #search-button {
+      background-color: #00796b;
+      border: none;
+      color: white; /* **Текст кнопки белый** */
+      padding: 8px 15px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #search-button:hover {
+      background-color: #004d40;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 60px auto 0 auto;
+      text-align: center;
+      margin-left: 260px; /* Изначальный отступ */
+      transition: margin-left 0.3s ease; /* Плавный сдвиг */
+    }
+
+    /* Сдвиг main при СВЕРНУТОМ меню */
+    main.shifted {
+      margin-left: 100px; /* 60px (меню) + 40px (отступ) */
+    }
+
+    h1 {
+      font-weight: 300;
+      font-size: 80px;
+      margin-bottom: 10px;
+      color: #00796b;
+    }
+
+    p {
+      font-size: 18px;
+      color: white; /* **Текст параграфа белый** */
+    }
+
+    footer {
+      margin-top: auto;
+      text-align: center;
+      color: white; /* **Текст футера белый** */
+      padding: 20px 0;
+      margin-left: 200px;
+      width: calc(100% - 200px);
+      transition: all 0.3s ease; /* Плавный сдвиг и изменение ширины */
+    }
+
+    /* Изменение футера при СВЕРНУТОМ меню */
+    footer.shifted {
+      margin-left: 60px;
+      width: calc(100% - 60px);
+    }
+  </style>
 </head>
 <body>
 
-  <!-- НОВОЕ МЕНЮ НАВИГАЦИИ СЛЕВА -->
-  <nav class="sidebar">
-    <ul>
-      <li><a href="https://vadimpapin188.github.io/globus/">Главная</a></li>
-      <li><a href="#">О нас</a></li>
-      <li><a href="#">Контакты</a></li>
-      <li><a href="https://sites.google.com/view/globushomett/">Старая версия сайта</a></li>
-    </ul>
-  </nav>
+    <nav class="sidebar" id="sidebar">
+    <button id="menu-toggle">«</button>     <ul>
+      <li><a href="https://vadimpapin188.github.io/globus/">Главная</a></li>
+      <li><a href="#">О нас</a></li>
+      <li><a href="#">Контакты</a></li>
+      <li><a href="https://sites.google.com/view/globushomett/">Старая версия сайта</a></li>
+    </ul>
+  </nav>
 
-  <!-- КОНТЕЙНЕР ДЛЯ ОСТАЛЬНОЙ ЧАСТИ СТРАНИЦЫ -->
-  <div class="container">
-    <header>
-      <div id="search-container">
-        <input id="search-input" type="text" placeholder="Введите запрос" />
-        <button id="search-button">Найти</button>
-      </div>
-    </header>
+    <div class="container">
+    <header id="header">
+      <div id="search-container">
+        <input id="search-input" type="text" placeholder="Введите запрос" />
+        <button id="search-button">Найти</button>
+      </div>
+    </header>
 
-    <main>
-      <h1>Глобус</h1>
-      <p>Поиск</p>
-    </main>
+    <main id="main">
+      <h1>Глобус</h1>
+      <p>Поиск</p>
+    </main>
 
-    <footer>
-      Глобус. 2025. Проект является не коммерческим, а инди-проектом.
-    </footer>
-  </div> <!-- Конец контейнера -->
+    <footer id="footer">
+      Глобус. 2025. Проект является не коммерческим, а инди-проектом.
+    </footer>
+  </div>   <script>
+    const input = document.getElementById('search-input');
+    const button = document.getElementById('search-button');
+    const sidebar = document.getElementById('sidebar');
+    const toggleButton = document.getElementById('menu-toggle');
+    const header = document.getElementById('header');
+    const main = document.getElementById('main');
+    const footer = document.getElementById('footer');
 
-  <script>
-    const input = document.getElementById('search-input');
-    const button = document.getElementById('search-button');
+    // --- ФУНКЦИИ ПОИСКА ---
+    function search() {
+      const query = input.value.trim();
+      if (!query) return alert('Введите запрос для поиска');
+      const url = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query);
+      window.location.href = url;
+    }
 
-    function search() {
-      const query = input.value.trim();
-      if (!query) return alert('Введите запрос для поиска');
-      const url = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query);
-      window.location.href = url;
-    }
+    button.addEventListener('click', search);
 
-    button.addEventListener('click', search);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        search();
+      }
+    });
 
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        search();
-      }
-    });
-  </script>
+    // --- ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ ---
+    toggleButton.addEventListener('click', () => {
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      header.classList.toggle('shifted', isCollapsed);
+      main.classList.toggle('shifted', isCollapsed);
+      footer.classList.toggle('shifted', isCollapsed);
+      
+      // Изменение текста кнопки: « (свернуть) или » (развернуть)
+      toggleButton.textContent = isCollapsed ? '»' : '«';
+    });
+  </script>
 
 </body>
 </html>
