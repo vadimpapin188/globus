@@ -1,245 +1,308 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Глобус</title>
-    <link rel="icon" href="favicon.png.png" type="image/png">
-  <style>
-    /* --- ГЛОБАЛЬНЫЕ СТИЛИ И БЕЛЫЙ ТЕКСТ --- */
-    body {
-      margin: 0;
-      font-family: 'Open Sans', Arial, sans-serif;
-      background-color: #20B2AA;
-      color: white; /* **Текст по умолчанию белый** */
-      display: flex;
-      min-height: 100vh;
-      transition: margin-left 0.3s ease; /* Добавляем плавность для body */
-    }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Глобус</title>
+  <link rel="icon" href="favicon.png.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ---------------------------------------------------------------------- */
+    /* --- СТИЛИ CSS (ВСЕ НИЖЕ) --- */
+    /* ---------------------------------------------------------------------- */
 
-    /* Контейнер для управления расположением меню и основного контента */
-    .container {
-        display: flex;
-        flex-grow: 1;
-        flex-direction: column;
-    }
+    /* --- ГЛОБАЛЬНЫЕ СТИЛИ И ЦВЕТА --- */
+    :root {
+      --color-primary: #00796B; /* Темно-бирюзовый/зеленый (Акцент) */
+      --color-primary-dark: #004D40; /* Темный акцент (Ховер) */
+      --color-background: #f0f4f8; /* Светлый фон */
+      --color-sidebar-bg: #2c3e50; /* Темный фон сайдбара */
+      --color-text-dark: #333333; /* Основной текст */
+      --color-text-light: #ffffff; /* Текст на темном фоне */
+      --sidebar-width: 240px;
+      --sidebar-collapsed-width: 60px;
+      --transition-duration: 0.3s;
+      --shadow-light: 0 4px 10px rgba(0,0,0,0.1);
+    }
 
-    /* --- СТИЛИ МЕНЮ (САЙДБАР) --- */
-    nav.sidebar {
-      width: 200px;
-      background-color: #00796b;
-      padding-top: 20px;
-      color: white;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.3);
-      position: fixed;
-      height: 100%;
-      z-index: 100; /* Чтобы меню было поверх всего */
-      transition: all 0.3s ease; /* Плавное сворачивание */
-      transform: translateX(0); /* Изначально видно */
-    }
+    body {
+      margin: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-text-dark);
+      display: flex;
+      min-height: 100vh;
+      transition: margin-left var(--transition-duration) ease;
+    }
 
-    /* Стиль для СВЕРНУТОГО меню */
-    nav.sidebar.collapsed {
-      width: 60px; /* Уменьшенная ширина для свернутого состояния */
-      transform: translateX(0);
-    }
+    /* Контейнер для управления расположением меню и основного контента */
+    .container {
+        display: flex;
+        flex-grow: 1;
+        flex-direction: column;
+    }
 
-    nav.sidebar ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
+    /* --- СТИЛИ МЕНЮ (САЙДБАР) --- */
+    nav.sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--color-sidebar-bg);
+      padding-top: 50px; /* Увеличил отступ сверху */
+      color: var(--color-text-light);
+      box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+      position: fixed;
+      height: 100%;
+      z-index: 100;
+      transition: all var(--transition-duration) ease;
+      transform: translateX(0);
+    }
 
-    nav.sidebar ul li a {
-      color: white;
-      padding: 10px 15px;
-      display: block;
-      text-decoration: none;
-      transition: background-color 0.3s ease;
-      white-space: nowrap; /* Предотвращает перенос текста */
-      overflow: hidden;
-    }
+    /* Стиль для СВЕРНУТОГО меню */
+    nav.sidebar.collapsed {
+      width: var(--sidebar-collapsed-width);
+    }
 
-    nav.sidebar.collapsed ul li a {
-      padding: 10px 10px; /* Уменьшаем отступ для свернутого меню */
-      text-align: center;
-    }
+    nav.sidebar ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
 
-    nav.sidebar ul li a:hover {
-      background-color: #20B2AA;
-    }
+    nav.sidebar ul li a {
+      color: var(--color-text-light);
+      padding: 15px 15px; /* Увеличенный отступ */
+      display: flex; /* Для выравнивания текста */
+      align-items: center;
+      text-decoration: none;
+      transition: background-color var(--transition-duration) ease, color var(--transition-duration) ease;
+      white-space: nowrap;
+      overflow: hidden;
+      font-weight: 300;
+    }
 
-    /* Кнопка переключения меню */
-    #menu-toggle {
-      position: absolute;
-      top: 15px;
-      right: -25px; /* Выносим кнопку за пределы сайдбара */
-      background-color: #00796b;
-      color: white;
-      border: none;
-      padding: 8px 10px;
-      cursor: pointer;
-      border-radius: 0 5px 5px 0;
-      transition: background-color 0.3s ease;
-      z-index: 101;
-    }
+    nav.sidebar ul li a:hover {
+      background-color: var(--color-primary); /* Акцентный цвет при наведении */
+      color: var(--color-text-light);
+    }
 
-    #menu-toggle:hover {
-      background-color: #20B2AA;
-    }
+    nav.sidebar.collapsed ul li a {
+      padding: 15px 0;
+      justify-content: center; /* Центрируем иконку/текст */
+    }
 
-    /* --- ОСНОВНОЙ КОНТЕНТ И ХЕДЕР --- */
-    header {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 15px 30px;
-      background-color: #20B2AA;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      margin-left: 200px; /* Изначальный сдвиг */
-      transition: margin-left 0.3s ease; /* Плавный сдвиг при сворачивании */
-    }
+    /* Скрываем текст в свернутом состоянии (если бы были иконки) */
+    nav.sidebar.collapsed ul li a span {
+      display: none;
+    }
 
-    /* Сдвиг хедера при СВЕРНУТОМ меню */
-    header.shifted {
-      margin-left: 60px;
-    }
+    /* Кнопка переключения меню */
+    #menu-toggle {
+      position: absolute;
+      top: 15px;
+      right: -15px; /* Выносим кнопку за пределы сайдбара */
+      background-color: var(--color-primary);
+      color: var(--color-text-light);
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px; /* Мягкие углы */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: background-color var(--transition-duration) ease;
+      z-index: 101;
+      font-size: 20px;
+      line-height: 1;
+    }
 
-    #search-container {
-      display: flex;
-      gap: 10px;
-      width: 350px;
-    }
+    #menu-toggle:hover {
+      background-color: var(--color-primary-dark);
+    }
 
-    #search-input {
-      flex-grow: 1;
-      padding: 8px 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 4px;
-      color: black; /* Цвет текста в поле ввода */
-    }
+    /* --- ОСНОВНОЙ КОНТЕНТ И ХЕДЕР --- */
+    header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: var(--color-text-light); /* Белый фон хедера */
+      box-shadow: var(--shadow-light); /* Легкая тень */
+      margin-left: var(--sidebar-width); /* Изначальный сдвиг */
+      transition: margin-left var(--transition-duration) ease;
+      position: sticky; /* Закрепляем хедер */
+      top: 0;
+      z-index: 50;
+    }
 
-    #search-button {
-      background-color: #00796b;
-      border: none;
-      color: white; /* **Текст кнопки белый** */
-      padding: 8px 15px;
-      font-size: 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
+    /* Сдвиг хедера при СВЕРНУТОМ меню */
+    header.shifted {
+      margin-left: var(--sidebar-collapsed-width);
+    }
 
-    #search-button:hover {
-      background-color: #004d40;
-    }
+    #search-container {
+      display: flex;
+      gap: 10px;
+      width: 400px;
+      max-width: 100%;
+    }
 
-    main {
-      max-width: 700px;
-      margin: 60px auto 0 auto;
-      text-align: center;
-      margin-left: 260px; /* Изначальный отступ */
-      transition: margin-left 0.3s ease; /* Плавный сдвиг */
-    }
+    #search-input {
+      flex-grow: 1;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 20px; /* Скругленные углы */
+      color: var(--color-text-dark);
+      transition: border-color var(--transition-duration) ease;
+    }
 
-    /* Сдвиг main при СВЕРНУТОМ меню */
-    main.shifted {
-      margin-left: 100px; /* 60px (меню) + 40px (отступ) */
-    }
+    #search-input:focus {
+      border-color: var(--color-primary);
+      outline: none;
+    }
 
-    h1 {
-      font-weight: 300;
-      font-size: 80px;
-      margin-bottom: 10px;
-      color: #00796b;
-    }
+    #search-button {
+      background-color: var(--color-primary);
+      border: none;
+      color: var(--color-text-light);
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 20px; /* Скругленные углы */
+      cursor: pointer;
+      transition: background-color var(--transition-duration) ease;
+      font-weight: 400;
+    }
 
-    p {
-      font-size: 18px;
-      color: white; /* **Текст параграфа белый** */
-    }
+    #search-button:hover {
+      background-color: var(--color-primary-dark);
+    }
 
-    footer {
-      margin-top: auto;
-      text-align: center;
-      color: white; /* **Текст футера белый** */
-      padding: 20px 0;
-      margin-left: 200px;
-      width: calc(100% - 200px);
-      transition: all 0.3s ease; /* Плавный сдвиг и изменение ширины */
-    }
+    main {
+      max-width: 900px;
+      margin: 80px auto 100px auto; /* Увеличенный отступ */
+      text-align: center;
+      margin-left: calc(var(--sidebar-width) + 60px); /* Изначальный отступ */
+      transition: margin-left var(--transition-duration) ease;
+      padding: 0 20px;
+    }
 
-    /* Изменение футера при СВЕРНУТОМ меню */
-    footer.shifted {
-      margin-left: 60px;
-      width: calc(100% - 60px);
-    }
-  </style>
+    /* Сдвиг main при СВЕРНУТОМ меню */
+    main.shifted {
+      margin-left: calc(var(--sidebar-collapsed-width) + 60px);
+    }
+
+    h1 {
+      font-weight: 300;
+      font-size: 60px; /* Немного уменьшил для минимализма */
+      margin-bottom: 20px;
+      color: var(--color-primary);
+      letter-spacing: 2px;
+    }
+
+    p {
+      font-size: 20px;
+      color: var(--color-text-dark);
+      opacity: 0.7;
+    }
+
+    footer {
+      margin-top: auto;
+      text-align: center;
+      color: var(--color-text-dark);
+      padding: 20px 0;
+      background-color: #e0e6ec; /* Светлый фон футера */
+      border-top: 1px solid #ddd;
+      margin-left: var(--sidebar-width);
+      width: calc(100% - var(--sidebar-width));
+      transition: all var(--transition-duration) ease;
+    }
+
+    /* Изменение футера при СВЕРНУТОМ меню */
+    footer.shifted {
+      margin-left: var(--sidebar-collapsed-width);
+      width: calc(100% - var(--sidebar-collapsed-width));
+    }
+    
+    /* Добавляем стили для иконок в меню (если их нет, это не повлияет) */
+    nav.sidebar ul li a::before {
+        /* Добавьте сюда иконки, используя Font Awesome или SVG */
+        content: '\2022'; /* Используем простую точку как заглушку */
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+    
+    /* Убираем маркер для главной страницы, чтобы выделить ее */
+    nav.sidebar ul li:first-child a::before {
+        content: '»'; 
+    }
+
+    /* ---------------------------------------------------------------------- */
+    /* --- СТИЛИ CSS (ВСЕ ВЫШЕ) --- */
+    /* ---------------------------------------------------------------------- */
+  </style>
 </head>
 <body>
 
-    <nav class="sidebar" id="sidebar">
-    <button id="menu-toggle">«</button>     <ul>
-      <li><a href="https://vadimpapin188.github.io/globus/">Главная</a></li>
-      <li><a href="#">О нас</a></li>
-      <li><a href="#">Контакты</a></li>
-      <li><a href="https://sites.google.com/view/globushomett/">Старая версия сайта</a></li>
-    </ul>
-  </nav>
+    <nav class="sidebar" id="sidebar">
+    <button id="menu-toggle">«</button>
+    <ul>
+      <li><a href="https://vadimpapin188.github.io/globus/"><span>Главная</span></a></li>
+      <li><a href="#"><span>О нас</span></a></li>
+      <li><a href="#"><span>Контакты</span></a></li>
+      <li><a href="https://sites.google.com/view/globushomett/"><span>Старая версия сайта</span></a></li>
+    </ul>
+  </nav>
 
-    <div class="container">
-    <header id="header">
-      <div id="search-container">
-        <input id="search-input" type="text" placeholder="Введите запрос" />
-        <button id="search-button">Найти</button>
-      </div>
-    </header>
+    <div class="container">
+    <header id="header">
+      <div id="search-container">
+        <input id="search-input" type="text" placeholder="Введите запрос" />
+        <button id="search-button">Найти</button>
+      </div>
+    </header>
 
-    <main id="main">
-      <h1>Глобус</h1>
-      <p>Поиск</p>
-    </main>
+    <main id="main">
+      <h1>ГЛОБУС</h1>
+      <p>Простой и быстрый поиск информации</p>
+    </main>
 
-    <footer id="footer">
-      Глобус. 2025. Проект является не коммерческим, а инди-проектом.
-    </footer>
-  </div>   <script>
-    const input = document.getElementById('search-input');
-    const button = document.getElementById('search-button');
-    const sidebar = document.getElementById('sidebar');
-    const toggleButton = document.getElementById('menu-toggle');
-    const header = document.getElementById('header');
-    const main = document.getElementById('main');
-    const footer = document.getElementById('footer');
+    <footer id="footer">
+      © Глобус. 2025. Проект является не коммерческим, а инди-проектом.
+    </footer>
+  </div>
+  <script>
+    const input = document.getElementById('search-input');
+    const button = document.getElementById('search-button');
+    const sidebar = document.getElementById('sidebar');
+    const toggleButton = document.getElementById('menu-toggle');
+    const header = document.getElementById('header');
+    const main = document.getElementById('main');
+    const footer = document.getElementById('footer');
 
-    // --- ФУНКЦИИ ПОИСКА ---
-    function search() {
-      const query = input.value.trim();
-      if (!query) return alert('Введите запрос для поиска');
-      const url = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query);
-      window.location.href = url;
-    }
+    // --- ФУНКЦИИ ПОИСКА ---
+    function search() {
+      const query = input.value.trim();
+      if (!query) return alert('Введите запрос для поиска');
+      const url = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query);
+      window.location.href = url;
+    }
 
-    button.addEventListener('click', search);
+    button.addEventListener('click', search);
 
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        search();
-      }
-    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        search();
+      }
+    });
 
-    // --- ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ ---
-    toggleButton.addEventListener('click', () => {
-      const isCollapsed = sidebar.classList.toggle('collapsed');
-      header.classList.toggle('shifted', isCollapsed);
-      main.classList.toggle('shifted', isCollapsed);
-      footer.classList.toggle('shifted', isCollapsed);
-      
-      // Изменение текста кнопки: « (свернуть) или » (развернуть)
-      toggleButton.textContent = isCollapsed ? '»' : '«';
-    });
-  </script>
+    // --- ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ ---
+    toggleButton.addEventListener('click', () => {
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      header.classList.toggle('shifted', isCollapsed);
+      main.classList.toggle('shifted', isCollapsed);
+      footer.classList.toggle('shifted', isCollapsed);
+
+      // Изменение текста кнопки: « (свернуть) или » (развернуть)
+      toggleButton.textContent = isCollapsed ? '»' : '«';
+    });
+  </script>
 
 </body>
 </html>
