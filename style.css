@@ -1,0 +1,8 @@
+/* Добавлена ссылка на Google Fonts в <head> */
+font-family: 'Roboto', Arial, sans-serif;
+/* ... */
+h1 {
+  font-size: 60px;
+  font-weight: 300; /* Более тонкий шрифт для минимализма */
+  letter-spacing: 2px;
+}
