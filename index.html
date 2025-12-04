@@ -140,11 +140,19 @@
       margin-left: var(--sidebar-collapsed-width);
     }
 
+    /* ОБНОВЛЕНО: Используем flex-direction column для контейнера, чтобы CAPTCHA/Turnstile были под поисковой строкой */
+    header > div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end; /* Выравнивание по правому краю */
+      width: 400px;
+      max-width: 100%;
+    }
+
     #search-container {
       display: flex;
       gap: 10px;
-      width: 400px;
-      max-width: 100%;
+      width: 100%;
     }
     
     /* ДОБАВЛЕНО: Стили для контейнера CAPTCHA */
@@ -367,8 +375,8 @@
       // 2. Проверка Cloudflare Turnstile (проверяем только наличие токена)
       if (!turnstileToken) {
         alert('Пожалуйста, пройдите проверку Cloudflare Turnstile.');
-        // Можно принудительно вызвать рендер/сброс, если нужно
-        // turnstile.reset('#cf-turnstile');
+        // Если вы используете не implicit рендер, можете сбросить его тут:
+        // turnstile.reset('#cf-turnstile'); 
         return;
       }
 
@@ -379,7 +387,10 @@
       // Сброс после успешного поиска для следующего запроса
       generateCaptcha();
       turnstileToken = null; // Сброс токена
-      // turnstile.reset('#cf-turnstile'); // Если вы используете Turnstile с id
+      // Сброс виджета Cloudflare
+      if (typeof turnstile !== 'undefined') {
+        turnstile.reset('#cf-turnstile');
+      }
     }
 
     button.addEventListener('click', search);
