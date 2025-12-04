@@ -7,9 +7,6 @@
   <title>Глобус</title>
   <link rel="icon" href="favicon.png.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-
   <style>
     /* ---------------------------------------------------------------------- */
     /* --- СТИЛИ CSS (ВСЕ НИЖЕ) --- */
@@ -140,7 +137,7 @@
       margin-left: var(--sidebar-collapsed-width);
     }
 
-    /* ОБНОВЛЕНО: Используем flex-direction column для контейнера, чтобы CAPTCHA/Turnstile были под поисковой строкой */
+    /* Стилизация контейнера для CAPTCHA под строкой поиска */
     header > div {
       display: flex;
       flex-direction: column;
@@ -153,38 +150,6 @@
       display: flex;
       gap: 10px;
       width: 100%;
-    }
-    
-    /* ДОБАВЛЕНО: Стили для контейнера CAPTCHA */
-    #captcha-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 15px; /* Отступ сверху для CAPTCHA */
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background-color: #ffffff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    #captcha-wrapper label {
-      font-size: 16px;
-      font-weight: 400;
-      color: var(--color-primary-dark);
-    }
-    
-    #captcha-input {
-      width: 80px;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      transition: border-color var(--transition-duration) ease;
-    }
-    
-    #captcha-input:focus {
-      border-color: var(--color-primary);
-      outline: none;
     }
 
     #search-input {
@@ -217,6 +182,40 @@
     #search-button:hover {
       background-color: var(--color-primary-dark);
     }
+    
+    /* ДОБАВЛЕНО: Стили для контейнера CAPTCHA */
+    #captcha-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 15px; /* Отступ сверху для CAPTCHA */
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      font-size: 16px;
+      color: var(--color-primary-dark);
+    }
+
+    #captcha-wrapper label {
+      font-weight: 400;
+      white-space: nowrap;
+    }
+    
+    #captcha-input {
+      width: 80px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      transition: border-color var(--transition-duration) ease;
+    }
+    
+    #captcha-input:focus {
+      border-color: var(--color-primary);
+      outline: none;
+    }
+
 
     main {
       max-width: 900px;
@@ -306,13 +305,6 @@
           <label id="captcha-question">Проверка:</label>
           <input id="captcha-input" type="number" placeholder="Ваш ответ" />
         </div>
-        
-                <div id="cf-turnstile"
-              class="cf-turnstile"
-              data-sitekey="YOUR_CLOUDFLARE_SITE_KEY"
-              data-callback="turnstileCallback"
-              data-theme="light">
-        </div>
       </div>
           </header>
 
@@ -334,11 +326,10 @@
     const main = document.getElementById('main');
     const footer = document.getElementById('footer');
 
-    // ДОБАВЛЕНО: Элементы и переменные для CAPTCHA и Turnstile
+    // ДОБАВЛЕНО: Элементы и переменные для CAPTCHA
     const captchaQuestion = document.getElementById('captcha-question');
     const captchaInput = document.getElementById('captcha-input');
     let captchaAnswer = 0;
-    let turnstileToken = null;
 
     // --- ФУНКЦИИ CAPTCHA ---
     function generateCaptcha() {
@@ -351,13 +342,8 @@
     }
     
     function validateCaptcha() {
+      // Проверяем, что введенное значение является числом и совпадает с ответом
       return parseInt(captchaInput.value, 10) === captchaAnswer;
-    }
-
-    // --- ФУНКЦИИ TURNSTILE ---
-    window.turnstileCallback = function(token) {
-      turnstileToken = token;
-      console.log('Turnstile Token:', turnstileToken);
     }
 
     // --- ФУНКЦИИ ПОИСКА (ОБНОВЛЕНО) ---
@@ -372,25 +358,12 @@
         return;
       }
 
-      // 2. Проверка Cloudflare Turnstile (проверяем только наличие токена)
-      if (!turnstileToken) {
-        alert('Пожалуйста, пройдите проверку Cloudflare Turnstile.');
-        // Если вы используете не implicit рендер, можете сбросить его тут:
-        // turnstile.reset('#cf-turnstile'); 
-        return;
-      }
-
-      // Если обе проверки пройдены:
+      // Если проверка пройдена:
       const url = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query);
       window.location.href = url;
       
-      // Сброс после успешного поиска для следующего запроса
+      // Сброс CAPTCHA после успешного поиска для следующего запроса
       generateCaptcha();
-      turnstileToken = null; // Сброс токена
-      // Сброс виджета Cloudflare
-      if (typeof turnstile !== 'undefined') {
-        turnstile.reset('#cf-turnstile');
-      }
     }
 
     button.addEventListener('click', search);
