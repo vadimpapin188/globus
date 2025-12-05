@@ -1,3 +1,4 @@
+НИЧЕГО не меняй в этом коде, но добавь проверку captcha (свою) и функции cloudflare но  свои:
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -137,19 +138,11 @@
       margin-left: var(--sidebar-collapsed-width);
     }
 
-    /* Стилизация контейнера для CAPTCHA под строкой поиска */
-    header > div {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end; /* Выравнивание по правому краю */
-      width: 400px;
-      max-width: 100%;
-    }
-
     #search-container {
       display: flex;
       gap: 10px;
-      width: 100%;
+      width: 400px;
+      max-width: 100%;
     }
 
     #search-input {
@@ -182,40 +175,6 @@
     #search-button:hover {
       background-color: var(--color-primary-dark);
     }
-    
-    /* ДОБАВЛЕНО: Стили для контейнера CAPTCHA */
-    #captcha-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 15px; /* Отступ сверху для CAPTCHA */
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background-color: #ffffff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      font-size: 16px;
-      color: var(--color-primary-dark);
-    }
-
-    #captcha-wrapper label {
-      font-weight: 400;
-      white-space: nowrap;
-    }
-    
-    #captcha-input {
-      width: 80px;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      transition: border-color var(--transition-duration) ease;
-    }
-    
-    #captcha-input:focus {
-      border-color: var(--color-primary);
-      outline: none;
-    }
-
 
     main {
       max-width: 900px;
@@ -295,18 +254,11 @@
 
     <div class="container">
     <header id="header">
-            <div>
-        <div id="search-container">
-          <input id="search-input" type="text" placeholder="Введите запрос" />
-          <button id="search-button">Найти</button>
-        </div>
-        
-                <div id="captcha-wrapper">
-          <label id="captcha-question">Проверка:</label>
-          <input id="captcha-input" type="number" placeholder="Ваш ответ" />
-        </div>
+      <div id="search-container">
+        <input id="search-input" type="text" placeholder="Введите запрос" />
+        <button id="search-button">Найти</button>
       </div>
-          </header>
+    </header>
 
     <main id="main">
       <h1>ГЛОБУС</h1>
@@ -326,44 +278,12 @@
     const main = document.getElementById('main');
     const footer = document.getElementById('footer');
 
-    // ДОБАВЛЕНО: Элементы и переменные для CAPTCHA
-    const captchaQuestion = document.getElementById('captcha-question');
-    const captchaInput = document.getElementById('captcha-input');
-    let captchaAnswer = 0;
-
-    // --- ФУНКЦИИ CAPTCHA ---
-    function generateCaptcha() {
-      const num1 = Math.floor(Math.random() * 10) + 1;
-      const num2 = Math.floor(Math.random() * 10) + 1;
-      // Используем простое сложение для примера
-      captchaAnswer = num1 + num2; 
-      captchaQuestion.textContent = `Сколько будет ${num1} + ${num2}?`;
-      captchaInput.value = ''; // Очистка ввода
-    }
-    
-    function validateCaptcha() {
-      // Проверяем, что введенное значение является числом и совпадает с ответом
-      return parseInt(captchaInput.value, 10) === captchaAnswer;
-    }
-
-    // --- ФУНКЦИИ ПОИСКА (ОБНОВЛЕНО) ---
+    // --- ФУНКЦИИ ПОИСКА ---
     function search() {
       const query = input.value.trim();
       if (!query) return alert('Введите запрос для поиска');
-
-      // 1. Проверка CAPTCHA
-      if (!validateCaptcha()) {
-        alert('Неверный ответ на CAPTCHA. Попробуйте еще раз!');
-        generateCaptcha(); // Генерируем новый вопрос
-        return;
-      }
-
-      // Если проверка пройдена:
       const url = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query);
       window.location.href = url;
-      
-      // Сброс CAPTCHA после успешного поиска для следующего запроса
-      generateCaptcha();
     }
 
     button.addEventListener('click', search);
@@ -373,9 +293,6 @@
         search();
       }
     });
-    
-    // Инициализация CAPTCHA при загрузке страницы
-    generateCaptcha();
 
     // --- ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ ---
     toggleButton.addEventListener('click', () => {
