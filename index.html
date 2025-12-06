@@ -1,689 +1,169 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="google-site-verification" content="6j8jsJHuf1wb0ss06CUSkohPVM_p5DK02UgROLuRJtU" />
-  <title>Глобус</title>
-  <link rel="icon" href="favicon.png.png" type="image/png">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <title>Глобус (Версия 1.0)</title>
   <style>
-    /* --------------------------------------------------------------------- */
-/* --- СТИЛИ CSS (ВСЕ НИЖЕ) --- */
-/* ---------------------------------------------------------------------- */
+    /* --- МИНИМАЛИСТИЧНЫЕ СТИЛИ --- */
+    :root {
+      --primary-color: #008000; /* Зеленый - основной */
+      --secondary-color: #333333; /* Темный - текст */
+      --background-color: #f0f0f0; /* Светло-серый фон */
+      --sidebar-bg: #444444; /* Темно-серый сайдбар */
+      --sidebar-width: 200px;
+    }
 
-/* --- ГЛОБАЛЬНЫЕ СТИЛИ И ЦВЕТА --- */
-:root {
-  --color-primary: #00796B; /* Темно-бирюзовый/зеленый (Акцент) */
-  --color-primary-dark: #004D40; /* Темный акцент (Ховер) */
-  --color-background: #f0f4f8; /* Светлый фон */
-  --color-sidebar-bg: #2c3e50; /* Темный фон сайдбара */
-  --color-text-dark: #333333; /* Основной текст*/
-  --color-text-light: #ffffff; /* Текст на темном фоне */
-  --color-card-bg: #ffffff; /* Фон карточек/элементов */
-  --sidebar-width: 240px;
-  --sidebar-collapsed-width: 60px;
-  --transition-duration: 0.3s;
-  --shadow-light: 0 4px 10px rgba(0,0,0,0.1);
-  --shadow-hover: 0 8px 15px rgba(0,0,0,0.15); /* Более выраженная тень при наведении */
-}
-
-html {
-  scroll-behavior: smooth; /* Плавный скролл */
-}
-
-body {
-  margin: 0;
-  font-family: 'Roboto', Arial, sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-text-dark);
-  display: flex;
-  min-height: 100vh;
-  transition: margin-left var(--transition-duration) ease;
-}
-
-/* Контейнер для управления расположением меню и основного контента */
-.container {
-  display: flex;
-  flex-grow: 1;
-  flex-direction: column;
-}
-
-/* --- СТИЛИ МЕНЮ (САЙДБАР) --- */
-nav.sidebar {
-  width: var(--sidebar-width);
-  background-color: var(--color-sidebar-bg);
-  padding-top: 50px;
-  color: var(--color-text-light);
-  box-shadow: 2px 0 5px rgba(0,0,0,0.3);
-  position: fixed;
-  height: 100%;
-  z-index: 100;
-  transition: all var(--transition-duration) ease-in-out; /* Улучшенный переход */
-  transform: translateX(0);
-  box-sizing: border-box; /* Для лучшей работы с padding */
-}
-
-/* Стиль для СВЕРНУТОГО меню */
-nav.sidebar.collapsed {
-  width: var(--sidebar-collapsed-width);
-}
-
-nav.sidebar ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-nav.sidebar ul li a {
-  color: var(--color-text-light);
-  padding: 15px 15px;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  transition: background-color var(--transition-duration) ease, color var(--transition-duration) ease;
-  white-space: nowrap;
-  overflow: hidden;
-  font-weight: 300;
-}
-
-nav.sidebar ul li a:hover {
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
-}
-
-/* Активный пункт меню */
-nav.sidebar ul li:first-child a {
-  background-color: var(--color-primary-dark); /* Выделение активной (главной) страницы */
-  font-weight: 400;
-}
-
-nav.sidebar.collapsed ul li a {
-  padding: 15px 0;
-  justify-content: center;
-}
-
-/* Скрываем текст в свернутом состоянии */
-nav.sidebar.collapsed ul li a span {
-  display: none;
-}
-
-/* --- Иконки в меню (используем псевдоэлементы как заглушки) --- */
-nav.sidebar ul li a::before {
-    content: ''; 
-    margin-right: 15px;
-    font-size: 1.2em;
-    width: 20px; /* Фиксированная ширина для иконок */
-    text-align: center;
-    transition: margin-right var(--transition-duration) ease;
-}
-
-/* Главная */
-nav.sidebar ul li:nth-child(1) a::before { content: '🏠'; margin-left: 5px;} 
-/* О нас */
-nav.sidebar ul li:nth-child(2) a::before { content: 'ℹ️'; margin-left: 5px;} 
-/* Контакты */
-nav.sidebar ul li:nth-child(3) a::before { content: '📞'; margin-left: 5px;} 
-/* Старая версия */
-nav.sidebar ul li:nth-child(4) a::before { content: '🔗'; margin-left: 5px;} 
-
-/* Скрываем отступ для текста в свернутом состоянии */
-nav.sidebar.collapsed ul li a::before {
-    margin-right: 0;
-}
-
-
-/* Кнопка переключения меню */
-#menu-toggle {
-  position: absolute;
-  top: 15px;
-  right: -25px; /* Увеличил вынос кнопки */
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
-  border: 2px solid var(--color-background); /* Добавил светлую рамку */
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 50%; /* Сделал кнопку круглой */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  transition: all var(--transition-duration) ease;
-  z-index: 101;
-  font-size: 18px;
-  line-height: 1;
-}
-
-#menu-toggle:hover {
-  background-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-hover);
-  transform: scale(1.05);
-}
-
-/* --- ОСНОВНОЙ КОНТЕНТ И ХЕДЕР --- */
-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 15px 30px;
-  background-color: var(--color-card-bg); /* Белый фон хедера */
-  box-shadow: var(--shadow-light);
-  margin-left: var(--sidebar-width);
-  transition: margin-left var(--transition-duration) ease;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  width: calc(100% - var(--sidebar-width)); /* Чтобы избежать горизонтального скролла */
-  box-sizing: border-box;
-}
-
-/* Сдвиг хедера при СВЕРНУТОМ меню */
-header.shifted {
-  margin-left: var(--sidebar-collapsed-width);
-  width: calc(100% - var(--sidebar-collapsed-width));
-}
-
-#search-container {
-  display: flex;
-  gap: 10px;
-  width: 400px;
-  max-width: 100%;
-}
-
-#search-input {
-  flex-grow: 1;
-  padding: 10px 15px;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  color: var(--color-text-dark);
-  transition: all var(--transition-duration) ease;
-}
-
-#search-input:focus {
-  border-color: var(--color-primary);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.2); /* Красивое выделение фокуса */
-}
-
-#search-button {
-  background-color: var(--color-primary);
-  border: none;
-  color: var(--color-text-light);
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background-color var(--transition-duration) ease, transform 0.1s ease;
-  font-weight: 400;
-}
-
-#search-button:hover {
-  background-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-light);
-}
-
-#search-button:active {
-    transform: scale(0.98); /* Небольшая анимация нажатия */
-}
-
-main {
-  max-width: 900px;
-  margin: 80px auto 100px auto;
-  text-align: center;
-  margin-left: calc(var(--sidebar-width) + 60px);
-  transition: margin-left var(--transition-duration) ease;
-  padding: 0 20px;
-}
-
-/* Сдвиг main при СВЕРНУТОМ меню */
-main.shifted {
-  margin-left: calc(var(--sidebar-collapsed-width) + 60px);
-}
-
-h1 {
-  font-weight: 700; /* Сделал более жирным */
-  font-size: 60px; 
-  margin-bottom: 20px;
-  color: var(--color-primary-dark); /* Более темный цвет для контраста */
-  letter-spacing: 3px; /* Увеличил разрядку */
-  text-transform: uppercase;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-}
-
-p {
-  font-size: 22px; /* Немного увеличил */
-  color: var(--color-text-dark);
-  opacity: 0.8;
-  line-height: 1.6;
-}
-
-footer {
-  margin-top: auto;
-  text-align: center;
-  color: var(--color-text-dark);
-  padding: 20px 0;
-  background-color: #e0e6ec; 
-  border-top: 1px solid #ddd;
-  margin-left: var(--sidebar-width);
-  width: calc(100% - var(--sidebar-width));
-  transition: all var(--transition-duration) ease;
-  font-size: 14px;
-}
-
-/* Изменение футера при СВЕРНУТОМ меню */
-footer.shifted {
-  margin-left: var(--sidebar-collapsed-width);
-  width: calc(100% - var(--sidebar-collapsed-width));
-}
-
-/* --- Медиа-запросы для базовой адаптивности --- */
-@media (max-width: 768px) {
-    /* На маленьких экранах делаем сайдбар всегда свернутым или скрытым */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif; /* Базовый шрифт */
+      background-color: var(--background-color);
+      color: var(--secondary-color);
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    /* --- САЙДБАР --- */
     nav.sidebar {
-        width: var(--sidebar-collapsed-width);
-        padding-top: 80px;
-    }
-    
-    header {
-        margin-left: var(--sidebar-collapsed-width);
-        width: calc(100% - var(--sidebar-collapsed-width));
-        padding: 10px 15px;
-    }
-
-    /* Уменьшаем размер и отступы основного контента */
-    main {
-        margin-left: calc(var(--sidebar-collapsed-width) + 30px);
-        margin-right: 30px;
-        padding: 0;
-        margin-top: 40px;
+      width: var(--sidebar-width);
+      background-color: var(--sidebar-bg);
+      color: white;
+      position: fixed;
+      height: 100%;
+      padding-top: 10px;
+      box-sizing: border-box;
     }
 
-    header.shifted {
-        margin-left: var(--sidebar-collapsed-width);
-    }
-    
-    main.shifted {
-        margin-left: calc(var(--sidebar-collapsed-width) + 30px);
-    }
-    
-    footer {
-        margin-left: var(--sidebar-collapsed-width);
-        width: calc(100% - var(--sidebar-collapsed-width));
-    }
-    
-    footer.shifted {
-        margin-left: var(--sidebar-collapsed-width);
-        width: calc(100% - var(--sidebar-collapsed-width));
+    nav.sidebar.collapsed {
+      width: 50px; /* Свернутая ширина */
     }
 
-    #search-container {
-        width: 100%;
+    nav.sidebar ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    nav.sidebar ul li a {
+      color: white;
+      padding: 10px;
+      display: block;
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    nav.sidebar ul li a:hover {
+      background-color: var(--primary-color);
+    }
+
+    nav.sidebar.collapsed ul li a span {
+      display: none; /* Скрываем текст */
     }
     
-    /* Скрываем кнопку переключения на маленьких экранах, чтобы не мешала */
+    nav.sidebar ul li a::before {
+        /* Простые значки-заглушки */
+        content: '•'; 
+        margin-right: 8px;
+        font-weight: bold;
+    }
+    
+    nav.sidebar.collapsed ul li a::before {
+        margin-right: 0;
+        display: block;
+        text-align: center;
+    }
+
     #menu-toggle {
-        display: none; 
+      position: absolute;
+      top: 5px;
+      right: -25px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 5px 8px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    /* --- КОНТЕНТ --- */
+    .content-area {
+        flex-grow: 1;
+        margin-left: var(--sidebar-width);
+        display: flex;
+        flex-direction: column;
     }
     
+    .content-area.shifted {
+        margin-left: 50px;
+    }
+
+    header {
+      padding: 10px 20px;
+      background-color: white;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    #search-input {
+      padding: 5px;
+      border: 1px solid #aaa;
+      margin-right: 5px;
+    }
+
+    #search-button {
+      padding: 5px 10px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    main {
+      padding: 20px;
+      text-align: center;
+      flex-grow: 1;
+    }
+
     h1 {
-        font-size: 48px;
+      color: var(--primary-color);
+      font-size: 30px;
     }
-    
+
     p {
-        font-size: 18px;
-    }
-}
-
-
-/* ---------------------------------------------------------------------- */
-/* --- СТИЛИ CSS (ВСЕ ВЫШЕ) --- */
-/* ---------------------------------------------------------------------- */
-              
-  </style>
-  /* --------------------------------------------------------------------- */
-/* --- СТИЛИ CSS (ВСЕ НИЖЕ) --- */
-/* ---------------------------------------------------------------------- */
-
-/* --- ГЛОБАЛЬНЫЕ СТИЛИ И ЦВЕТА --- */
-:root {
-  --color-primary: #00796B; /* Темно-бирюзовый/зеленый (Акцент) */
-  --color-primary-dark: #004D40; /* Темный акцент (Ховер) */
-  --color-background: #f0f4f8; /* Светлый фон */
-  --color-sidebar-bg: #2c3e50; /* Темный фон сайдбара */
-  --color-text-dark: #333333; /* Основной текст*/
-  --color-text-light: #ffffff; /* Текст на темном фоне */
-  --color-card-bg: #ffffff; /* Фон карточек/элементов */
-  --sidebar-width: 240px;
-  --sidebar-collapsed-width: 60px;
-  --transition-duration: 0.3s;
-  --shadow-light: 0 4px 10px rgba(0,0,0,0.1);
-  --shadow-hover: 0 8px 15px rgba(0,0,0,0.15); /* Более выраженная тень при наведении */
-}
-
-html {
-  scroll-behavior: smooth; /* Плавный скролл */
-}
-
-body {
-  margin: 0;
-  font-family: 'Roboto', Arial, sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-text-dark);
-  display: flex;
-  min-height: 100vh;
-  transition: margin-left var(--transition-duration) ease;
-}
-
-/* Контейнер для управления расположением меню и основного контента */
-.container {
-  display: flex;
-  flex-grow: 1;
-  flex-direction: column;
-}
-
-/* --- СТИЛИ МЕНЮ (САЙДБАР) --- */
-nav.sidebar {
-  width: var(--sidebar-width);
-  background-color: var(--color-sidebar-bg);
-  padding-top: 50px;
-  color: var(--color-text-light);
-  box-shadow: 2px 0 5px rgba(0,0,0,0.3);
-  position: fixed;
-  height: 100%;
-  z-index: 100;
-  transition: all var(--transition-duration) ease-in-out; /* Улучшенный переход */
-  transform: translateX(0);
-  box-sizing: border-box; /* Для лучшей работы с padding */
-}
-
-/* Стиль для СВЕРНУТОГО меню */
-nav.sidebar.collapsed {
-  width: var(--sidebar-collapsed-width);
-}
-
-nav.sidebar ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-nav.sidebar ul li a {
-  color: var(--color-text-light);
-  padding: 15px 15px;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  transition: background-color var(--transition-duration) ease, color var(--transition-duration) ease;
-  white-space: nowrap;
-  overflow: hidden;
-  font-weight: 300;
-}
-
-nav.sidebar ul li a:hover {
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
-}
-
-/* Активный пункт меню */
-nav.sidebar ul li:first-child a {
-  background-color: var(--color-primary-dark); /* Выделение активной (главной) страницы */
-  font-weight: 400;
-}
-
-nav.sidebar.collapsed ul li a {
-  padding: 15px 0;
-  justify-content: center;
-}
-
-/* Скрываем текст в свернутом состоянии */
-nav.sidebar.collapsed ul li a span {
-  display: none;
-}
-
-/* --- Иконки в меню (используем псевдоэлементы как заглушки) --- */
-nav.sidebar ul li a::before {
-    content: ''; 
-    margin-right: 15px;
-    font-size: 1.2em;
-    width: 20px; /* Фиксированная ширина для иконок */
-    text-align: center;
-    transition: margin-right var(--transition-duration) ease;
-}
-
-/* Главная */
-nav.sidebar ul li:nth-child(1) a::before { content: '🏠'; margin-left: 5px;} 
-/* О нас */
-nav.sidebar ul li:nth-child(2) a::before { content: 'ℹ️'; margin-left: 5px;} 
-/* Контакты */
-nav.sidebar ul li:nth-child(3) a::before { content: '📞'; margin-left: 5px;} 
-/* Старая версия */
-nav.sidebar ul li:nth-child(4) a::before { content: '🔗'; margin-left: 5px;} 
-
-/* Скрываем отступ для текста в свернутом состоянии */
-nav.sidebar.collapsed ul li a::before {
-    margin-right: 0;
-}
-
-
-/* Кнопка переключения меню */
-#menu-toggle {
-  position: absolute;
-  top: 15px;
-  right: -25px; /* Увеличил вынос кнопки */
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
-  border: 2px solid var(--color-background); /* Добавил светлую рамку */
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 50%; /* Сделал кнопку круглой */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  transition: all var(--transition-duration) ease;
-  z-index: 101;
-  font-size: 18px;
-  line-height: 1;
-}
-
-#menu-toggle:hover {
-  background-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-hover);
-  transform: scale(1.05);
-}
-
-/* --- ОСНОВНОЙ КОНТЕНТ И ХЕДЕР --- */
-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 15px 30px;
-  background-color: var(--color-card-bg); /* Белый фон хедера */
-  box-shadow: var(--shadow-light);
-  margin-left: var(--sidebar-width);
-  transition: margin-left var(--transition-duration) ease;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  width: calc(100% - var(--sidebar-width)); /* Чтобы избежать горизонтального скролла */
-  box-sizing: border-box;
-}
-
-/* Сдвиг хедера при СВЕРНУТОМ меню */
-header.shifted {
-  margin-left: var(--sidebar-collapsed-width);
-  width: calc(100% - var(--sidebar-collapsed-width));
-}
-
-#search-container {
-  display: flex;
-  gap: 10px;
-  width: 400px;
-  max-width: 100%;
-}
-
-#search-input {
-  flex-grow: 1;
-  padding: 10px 15px;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  color: var(--color-text-dark);
-  transition: all var(--transition-duration) ease;
-}
-
-#search-input:focus {
-  border-color: var(--color-primary);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.2); /* Красивое выделение фокуса */
-}
-
-#search-button {
-  background-color: var(--color-primary);
-  border: none;
-  color: var(--color-text-light);
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background-color var(--transition-duration) ease, transform 0.1s ease;
-  font-weight: 400;
-}
-
-#search-button:hover {
-  background-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-light);
-}
-
-#search-button:active {
-    transform: scale(0.98); /* Небольшая анимация нажатия */
-}
-
-main {
-  max-width: 900px;
-  margin: 80px auto 100px auto;
-  text-align: center;
-  margin-left: calc(var(--sidebar-width) + 60px);
-  transition: margin-left var(--transition-duration) ease;
-  padding: 0 20px;
-}
-
-/* Сдвиг main при СВЕРНУТОМ меню */
-main.shifted {
-  margin-left: calc(var(--sidebar-collapsed-width) + 60px);
-}
-
-h1 {
-  font-weight: 700; /* Сделал более жирным */
-  font-size: 60px; 
-  margin-bottom: 20px;
-  color: var(--color-primary-dark); /* Более темный цвет для контраста */
-  letter-spacing: 3px; /* Увеличил разрядку */
-  text-transform: uppercase;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-}
-
-p {
-  font-size: 22px; /* Немного увеличил */
-  color: var(--color-text-dark);
-  opacity: 0.8;
-  line-height: 1.6;
-}
-
-footer {
-  margin-top: auto;
-  text-align: center;
-  color: var(--color-text-dark);
-  padding: 20px 0;
-  background-color: #e0e6ec; 
-  border-top: 1px solid #ddd;
-  margin-left: var(--sidebar-width);
-  width: calc(100% - var(--sidebar-width));
-  transition: all var(--transition-duration) ease;
-  font-size: 14px;
-}
-
-/* Изменение футера при СВЕРНУТОМ меню */
-footer.shifted {
-  margin-left: var(--sidebar-collapsed-width);
-  width: calc(100% - var(--sidebar-collapsed-width));
-}
-
-/* --- Медиа-запросы для базовой адаптивности --- */
-@media (max-width: 768px) {
-    /* На маленьких экранах делаем сайдбар всегда свернутым или скрытым */
-    nav.sidebar {
-        width: var(--sidebar-collapsed-width);
-        padding-top: 80px;
-    }
-    
-    header {
-        margin-left: var(--sidebar-collapsed-width);
-        width: calc(100% - var(--sidebar-collapsed-width));
-        padding: 10px 15px;
-    }
-
-    /* Уменьшаем размер и отступы основного контента */
-    main {
-        margin-left: calc(var(--sidebar-collapsed-width) + 30px);
-        margin-right: 30px;
-        padding: 0;
-        margin-top: 40px;
-    }
-
-    header.shifted {
-        margin-left: var(--sidebar-collapsed-width);
-    }
-    
-    main.shifted {
-        margin-left: calc(var(--sidebar-collapsed-width) + 30px);
+      font-size: 16px;
     }
     
     footer {
-        margin-left: var(--sidebar-collapsed-width);
-        width: calc(100% - var(--sidebar-collapsed-width));
+      text-align: center;
+      padding: 10px;
+      background-color: #cccccc;
+      font-size: 12px;
+      margin-top: auto;
+      border-top: 1px solid #aaa;
     }
-    
-    footer.shifted {
-        margin-left: var(--sidebar-collapsed-width);
-        width: calc(100% - var(--sidebar-collapsed-width));
-    }
-
-    #search-container {
-        width: 100%;
-    }
-    
-    /* Скрываем кнопку переключения на маленьких экранах, чтобы не мешала */
-    #menu-toggle {
-        display: none; 
-    }
-    
-    h1 {⁶
-        font-size: 48px;
-    }
-    
-    p {
-        font-size: 18px;
-    }
-}
-
-
-/* ---------------------------------------------------------------------- */
-/* --- СТИЛИ CSS (ВСЕ ВЫШЕ) --- */
-/* ---------------------------------------------------------------------- */
-  
+  </style>
 </head>
 <body>
 
   <nav class="sidebar" id="sidebar">
     <button id="menu-toggle">«</button>
     <ul>
-      <li><a href="https://vadimpapin188.github.io/globus/"><span>Главная</span></a></li>
+      <li><a href="#"><span>Главная</span></a></li>
       <li><a href="#"><span>О нас</span></a></li>
       <li><a href="#"><span>Контакты</span></a></li>
-      <li><a href="https://sites.google.com/view/globushomett/"><span>Старая версия сайта</span></a></li>
+      <li><a href="#"><span>Старая версия</span></a></li>
     </ul>
   </nav>
 
-  <div class="container">
+  <div class="content-area" id="content-area">
     <header id="header">
       <div id="search-container">
-        <input id="search-input" type="text" placeholder="Введите запрос" />
+        <input id="search-input" type="text" placeholder="Введите запрос">
         <button id="search-button">Найти</button>
       </div>
     </header>
@@ -691,54 +171,42 @@ footer.shifted {
     <main id="main">
       <h1>ГЛОБУС</h1>
       <p>Простой и быстрый поиск информации</p>
+      <p>Это учебный проект, сделанный в простом стиле.</p>
     </main>
 
     <footer id="footer">
-      © Глобус. 2025. Проект является не коммерческим, а инди-проектом.
+      © Глобус. 2025.
     </footer>
   </div>
+  
   <script>
     const input = document.getElementById('search-input');
     const button = document.getElementById('search-button');
     const sidebar = document.getElementById('sidebar');
     const toggleButton = document.getElementById('menu-toggle');
-    const header = document.getElementById('header');
-    const main = document.getElementById('main');
-    const footer = document.getElementById('footer');
+    const contentArea = document.getElementById('content-area');
 
-    // --- ФУНКЦИИ ПОИСКА ---
+    // ФУНКЦИЯ ПОИСКА
     function search() {
       const query = input.value.trim();
-      if (!query) return alert('Введите запрос для поиска');
-      // Внимание! Вы перенаправляете пользователя на старый сайт с запросом в URL. 
-      // Если это не то, что вы хотите, измените URL.
-      const url = 'https://sites.google.com/view/globushomett/?q=' + encodeURIComponent(query);
-      window.location.href = url;
+      if (!query) return alert('Введите что-нибудь!');
+      // Простое перенаправление
+      window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(query);
     }
 
     button.addEventListener('click', search);
-
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         search();
       }
     });
 
-    // --- ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ ---
+    // ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ
     toggleButton.addEventListener('click', () => {
       const isCollapsed = sidebar.classList.toggle('collapsed');
-      
-      // Используем requestAnimationFrame для более плавной анимации (опционально)
-      requestAnimationFrame(() => {
-        header.classList.toggle('shifted', isCollapsed);
-        main.classList.toggle('shifted', isCollapsed);
-        footer.classList.toggle('shifted', isCollapsed);
-        
-        // Изменение текста кнопки: « (свернуть) или » (развернуть)
-        toggleButton.textContent = isCollapsed ? '»' : '«';
-      });
+      contentArea.classList.toggle('shifted', isCollapsed);
+      toggleButton.textContent = isCollapsed ? '»' : '«';
     });
   </script>
-
 </body>
 </html>
