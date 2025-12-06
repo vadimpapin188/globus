@@ -179,33 +179,57 @@
   </div>
   
   <script>
+    
     const input = document.getElementById('search-input');
     const button = document.getElementById('search-button');
     const sidebar = document.getElementById('sidebar');
     const toggleButton = document.getElementById('menu-toggle');
     const contentArea = document.getElementById('content-area');
 
+    // --- НОВАЯ ФУНКЦИЯ ДЛЯ ФОРМАТИРОВАНИЯ ЗАПРОСА ---
+    function formatQuery(query) {
+        // 1. Удаляем пробелы в начале и конце, заменяем множественные пробелы на один
+        let formattedQuery = query.trim().replace(/\s+/g, ' ');
+
+        // 2. Делаем первую букву заглавной
+        if (formattedQuery.length > 0) {
+            formattedQuery = formattedQuery.charAt(0).toUpperCase() + formattedQuery.slice(1);
+        }
+
+        // Примечание: полноценное исправление орфографии требует серверной части или API.
+        // Эту простую функцию можно использовать как "базовое исправление".
+        return formattedQuery;
+    }
+
     // ФУНКЦИЯ ПОИСКА
     function search() {
-      const query = input.value.trim();
-      if (!query) return alert('Введите что-нибудь!');
-      // Простое перенаправление
-      window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query);
+        const query = input.value;
+        if (!query.trim()) return alert('Введите что-нибудь!');
+
+        // 1. Форматируем запрос
+        const formattedQuery = formatQuery(query);
+
+        // 2. Обновляем поле ввода отформатированным текстом (опционально, для обратной связи)
+        input.value = formattedQuery;
+
+        // 3. Простое перенаправление с отформатированным запросом
+        // Заменено на более корректное, чтобы не терять пробелы
+        window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(formattedQuery);
     }
 
     button.addEventListener('click', search);
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        search();
-      }
+        if (e.key === 'Enter') {
+            search();
+        }
     });
 
-    // ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ
+    // ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ (без изменений)
     toggleButton.addEventListener('click', () => {
-      const isCollapsed = sidebar.classList.toggle('collapsed');
-      contentArea.classList.toggle('shifted', isCollapsed);
-      toggleButton.textContent = isCollapsed ? '»' : '«';
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        contentArea.classList.toggle('shifted', isCollapsed);
+        toggleButton.textContent = isCollapsed ? '»' : '«';
     });
-  </script>
-</body>
+</script>
+ </body>
 </html>
