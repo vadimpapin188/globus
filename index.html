@@ -206,10 +206,7 @@
         // 1. Удаляем пробелы в начале и конце, заменяем множественные пробелы на один
         let formattedQuery = query.trim().replace(/\s+/g, ' ');
 
-        // 2. Делаем первую букву заглавной
-        if (formattedQuery.length > 0) {
-            formattedQuery = formattedQuery.charAt(0).toUpperCase() + formattedQuery.slice(1);
-        }
+       
 
         // Примечание: полноценное исправление орфографии требует серверной части или API.
         // Эту простую функцию можно использовать как "базовое исправление".
