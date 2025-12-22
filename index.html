@@ -198,37 +198,75 @@
   </div>
 
   <script>
-    const input = document.getElementById('search-input');
-    const button = document.getElementById('search-button');
-    const sidebar = document.getElementById('sidebar');
-    const toggleButton = document.getElementById('menu-toggle');
-    const contentArea = document.getElementById('content-area');
+   const input = document.getElementById('search-input');
+const button = document.getElementById('search-button');
+const sidebar = document.getElementById('sidebar');
+const toggleButton = document.getElementById('menu-toggle');
+const contentArea = document.getElementById('content-area');
 
-    function formatQuery(query) {
-        return query.trim().replace(/\s+/g, ' ');
+// Функция для очистки текста и перевода в нижний регистр
+function cleanText(text) {
+    return text.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+// Функция для исправления опечаток через Яндекс.Спеллер API
+async function fixOrtho(query) {
+    try {
+        // Отправляем запрос к API (это бесплатно и быстро)
+        const response = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        let correctedQuery = query;
+        // Перебираем все найденные ошибки с конца в начало, чтобы не сбились индексы
+        for (let i = data.length - 1; i >= 0; i--) {
+            const error = data[i];
+            if (error.s && error.s.length > 0) {
+                // Заменяем слово с ошибкой на первый предложенный вариант
+                correctedQuery = correctedQuery.substring(0, error.pos) + error.s[0] + correctedQuery.substring(error.pos + error.len);
+            }
+        }
+        return correctedQuery;
+    } catch (error) {
+        console.error("Ошибка при проверке орфографии:", error);
+        return query; // Если сервис недоступен, возвращаем оригинал
     }
+}
 
-    function search() {
-        const query = input.value;
-        if (!query.trim()) return alert('Введите запрос!');
+// ГЛАВНАЯ ФУНКЦИЯ ПОИСКА
+async function search() {
+    let query = input.value;
+    if (!query.trim()) return alert('Введите запрос!');
 
-        const formattedQuery = formatQuery(query);
-        input.value = formattedQuery;
-        
-        // Перенаправление
-        window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(formattedQuery);
-    }
+    // 1. Убираем лишние пробелы и меняем регистр на маленький
+    query = cleanText(query);
 
-    button.addEventListener('click', search);
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') search();
-    });
+    // Блокируем кнопку на время проверки
+    button.disabled = true;
+    button.textContent = '...';
 
-    toggleButton.addEventListener('click', () => {
-        const isCollapsed = sidebar.classList.toggle('collapsed');
-        contentArea.classList.toggle('shifted', isCollapsed);
-        toggleButton.textContent = isCollapsed ? '»' : '«';
-    });
+    // 2. Исправляем ошибки
+    const finalQuery = await fixOrtho(query);
+
+    // 3. Обновляем поле (чтобы пользователь видел исправления)
+    input.value = finalQuery;
+
+    // 4. Перенаправление
+    window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery);
+}
+
+// Слушатели событий
+button.addEventListener('click', search);
+input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') search();
+});
+
+// Сворачивание меню
+toggleButton.addEventListener('click', () => {
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    contentArea.classList.toggle('shifted', isCollapsed);
+    toggleButton.textContent = isCollapsed ? '»' : '«';
+});
   </script>
 </body>
 </html>
+
