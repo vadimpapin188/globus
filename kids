@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Глобус Детям - Фирменный безопасный поиск</title>
+  <style>
+    :root {
+      --kids-primary: #ffcc00;
+      --kids-bg: #e0f7fa;
+      --kids-text: #2c3e50;
+      --sidebar-width: 200px;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--kids-bg);
+      color: var(--kids-text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* --- САЙДБАР --- */
+    nav.sidebar {
+      width: var(--sidebar-width);
+      background-color: #34495e;
+      position: fixed;
+      height: 100%;
+      z-index: 100;
+      transition: 0.3s;
+    }
+    nav.sidebar.collapsed { width: 50px; }
+    nav.sidebar ul { list-style: none; padding: 0; }
+    nav.sidebar ul li a { color: white; padding: 15px; display: block; text-decoration: none; white-space: nowrap; overflow: hidden; }
+
+    /* --- КОНТЕНТ --- */
+    .content-area {
+      flex-grow: 1;
+      margin-left: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      transition: 0.3s;
+    }
+    .content-area.shifted { margin-left: 50px; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .brand-section h1 { margin: 0; font-size: 40px; color: #ff6f00; }
+    .brand-section span { font-size: 14px; background: #ffcc00; padding: 2px 8px; border-radius: 10px; }
+
+    .search-section { display: flex; border-radius: 30px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    #search-input { padding: 15px 25px; border: none; width: 350px; font-size: 18px; outline: none; }
+    #search-button { padding: 15px 30px; background-color: #4caf50; color: white; border: none; cursor: pointer; font-weight: bold; }
+
+    main { padding: 0 40px; }
+    
+    /* Сообщения системы безопасности */
+    #status-display { margin-top: 20px; font-weight: bold; min-height: 24px; }
+    .warning { color: #e74c3c; display: none; background: #ffdada; padding: 10px; border-radius: 5px; }
+    .safe { color: #27ae60; }
+    .checking { color: #2980b9; }
+
+    footer { margin-top: auto; text-align: center; padding: 20px; background: rgba(255,255,255,0.5); }
+  </style>
+</head>
+<body>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="menu-toggle" style="position:absolute; right:-15px; top:10px; border-radius:50%; cursor:pointer;">«</button>
+    <ul>
+      <li><a href="https://vadimpapin188.github.io/globus">🏠 <span>Главная Глобус</span></a></li>
+      <li><a href="#">🛡️ <span>Безопасность</span></a></li>
+    </ul>
+  </nav>
+
+  <div class="content-area" id="content-area">
+    <div class="top-bar">
+      <div class="brand-section">
+        <h1>Глобус <span>ДЕТЯМ</span></h1>
+      </div>
+      <div class="search-section">
+        <input id="search-input" type="text" placeholder="Безопасный поиск...">
+        <button id="search-button">Искать!</button>
+      </div>
+    </div>
+
+    <main>
+      <div id="status-display"></div>
+      <div id="warning-msg" class="warning"></div>
+      <p>Добро пожаловать в детский режим. Здесь все под контролем Глобуса.</p>
+    </main>
+
+    <footer>
+      © Глобус Детям. 2025. Использование фирменного движка globushomett.
+    </footer>
+  </div>
+
+  <script>
+    const input = document.getElementById('search-input');
+    const button = document.getElementById('search-button');
+    const statusDisplay = document.getElementById('status-display');
+    const warningMsg = document.getElementById('warning-msg');
+
+    // База слов, которые могут вести к опасному контенту
+    const DANGER_WORDS = ['вирус', 'взлом', 'плохой', 'яд', 'опасность', 'дурак'];
+
+    async function checkAndSearch() {
+        let query = input.value.toLowerCase().trim();
+        if (!query) return;
+
+        // Очистка предыдущих сообщений
+        warningMsg.style.display = 'none';
+        statusDisplay.className = 'checking';
+        statusDisplay.textContent = "🔍 Глобус сканирует возможные результаты...";
+
+        // 1. Предварительная проверка слов
+        const hasDanger = DANGER_WORDS.some(word => query.includes(word));
+
+        // Имитация задержки для "анализа кода страницы"
+        await new Promise(r => setTimeout(r, 1500));
+
+        if (hasDanger) {
+            statusDisplay.textContent = "";
+            warningMsg.textContent = "⚠️ Внимание! Глобус обнаружил признаки опасного контента по этому запросу. Доступ заблокирован для вашей безопасности.";
+            warningMsg.style.display = 'block';
+            return;
+        }
+
+        // 2. Если все чисто - исправляем орфографию
+        statusDisplay.textContent = "✨ Проверка пройдена! Подготовка результатов...";
+        statusDisplay.className = 'safe';
+
+        const resp = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`);
+        const data = await resp.json();
+        let finalQuery = query;
+        data.forEach(err => { if(err.s.length > 0) finalQuery = finalQuery.replace(err.word, err.s[0]); });
+
+        // 3. Переход на ТВОЙ фирменный сайт
+        setTimeout(() => {
+            window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery);
+        }, 800);
+    }
+
+    button.addEventListener('click', checkAndSearch);
+    input.addEventListener('keydown', (e) => { if(e.key === 'Enter') checkAndSearch(); });
+
+    // Сайдбар
+    const sidebar = document.getElementById('sidebar');
+    const content = document.getElementById('content-area');
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        const isCol = sidebar.classList.toggle('collapsed');
+        content.classList.toggle('shifted', isCol);
+        this.textContent = isCol ? '»' : '«';
+    });
+  </script>
+</body>
+</html>
