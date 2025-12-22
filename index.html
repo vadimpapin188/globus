@@ -1,45 +1,254 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Павлодар VR — Мечеть</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  </head>
-  <body>
-    <a-scene background="color: #87CEEB"> <a-assets>
-        <img id="pavlodar" src="https://i.ibb.co.com/hFjtBJTk/pavl-mechet.jpg" crossorigin="anonymous">
-        <img id="ground" src="https://cdn.aframe.io/a-painter/images/floor.jpg" crossorigin="anonymous">
-      </a-assets>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Глобус - Поисковик на все 100%</title>
+  <link rel="icon" href="favicon.png.png" type="image/png">
 
-      <a-curvedimage 
-        src="#pavlodar" 
-        height="5" 
-        radius="4" 
-        theta-length="240" 
-        position="0 2.5 0" 
-        rotation="0 90 0">
-      </a-curvedimage>
+  <style>
+    /* --- МИНИМАЛИСТИЧНЫЕ СТИЛИ --- */
+    :root {
+      --primary-color: #006eff; /* Зеленый - основной */
+      --secondary-color: #b4b7b8; /* Темный - текст */
+      --background-color: #096082; /* Светло-серый фон */
+      --sidebar-bg: #444444; /* Темно-серый сайдбар */
+      --sidebar-width: 200px;
+    }
 
-      <a-plane 
-        src="#ground" 
-        rotation="-90 0 0" 
-        width="20" 
-        height="20" 
-        repeat="10 10">
-      </a-plane>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif; /* Базовый шрифт */
+      background-color: var(--background-color);
+      color: var(--secondary-color);
+      display: flex;
+      min-height: 100vh;
+    }
 
-      <a-text 
-        value="Mechet imeni Mashkhura Zhusupa" 
-        position="-2 4.5 -3" 
-        color="#333" 
-        width="6"
-        font="kelsonsans">
-      </a-text>
+    /* --- САЙДБАР --- */
+    nav.sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--sidebar-bg);
+      color: white;
+      position: fixed;
+      height: 100%;
+      padding-top: 10px;
+      box-sizing: border-box;
+    }
 
-      <a-entity camera look-controls position="0 1.6 0">
-        <a-cursor color="yellow"></a-cursor>
-      </a-entity>
+    nav.sidebar.collapsed {
+      width: 50px; /* Свернутая ширина */
+    }
 
-    </a-scene>
-  </body>
+    nav.sidebar ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    nav.sidebar ul li a {
+      color: white;
+      padding: 10px;
+      display: block;
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    nav.sidebar ul li a:hover {
+      background-color: var(--primary-color);
+    }
+
+    nav.sidebar.collapsed ul li a span {
+      display: none; /* Скрываем текст */
+    }
+
+    nav.sidebar ul li a::before {
+        /* Простые значки-заглушки */
+        content: '•'; 
+        margin-right: 8px;
+        font-weight: bold;
+    }
+
+    nav.sidebar.collapsed ul li a::before {
+        margin-right: 0;
+        display: block;
+        text-align: center;
+    }
+
+    #menu-toggle {
+      position: absolute;
+      top: 5px;
+      right: -25px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 5px 8px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    /* --- КОНТЕНТ --- */
+    .content-area {
+        flex-grow: 1;
+        margin-left: var(--sidebar-width);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .content-area.shifted {
+        margin-left: 50px;
+    }
+
+    header {
+      padding: 10px 20px;
+      background-color: white;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      text-align: center;
+    }
+
+    #search-input {
+      padding: 5px;
+      border: 1px solid #aaa;
+      margin-right: 5px;
+    }
+
+    #search-button {
+      padding: 5px 10px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    main {
+      padding: 20px;
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      font-size: 30px;
+      text-align: left;
+    }
+
+    p {
+      font-size: 16px;
+      text-align: left;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #cccccc;
+      font-size: 12px;
+      margin-top: auto;
+      border-top: 1px solid #aaa;
+    }
+
+
+     b {
+      font-size: 30px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="content-area" id="content-area">
+  <header id="header">
+    <div id="search-container">
+      <input id="search-input" type="text" placeholder="Найдём по всей земле и за её пределы">
+      <button id="search-button">Найти</button>
+    </div>
+  
+  </header>
+  <!-- остальной контент -->
+</div>
+
+
+  <nav class="sidebar" id="sidebar">
+    <button id="menu-toggle">«</button>
+    <ul>
+      <li style="color: blue; font-weight: bold;><a href="vadimpapin188.github.io/globus"><span>Главная</span></a></li>
+      <li><a href="vadimpapin188.github.io/globus"><span>Главная</span></a></li>
+      <li><a href="#"><span>О нас</span></a></li>
+      <li><a href="#"><span>Нововведения</span></a></li>
+      <li><a href="https://vadimpapin188.github.io/globus-news/"><span>Попробуйте Новости Глобуса!</span></a></li>
+    </ul>
+  </nav>
+
+
+    </header>
+
+    <main id="main">
+        <div id="search-container">
+      <input id="search-input" type="text" placeholder="Найдём по всей земле и за её пределы">
+      <button id="search-button">Найти</button>
+    </div>
+      <h1>Глобус</h1>
+      <p>Проект является некомерческим и инди</p>
+    </main>
+    <footer id="footer">
+      © Глобус. 2025.
+    </footer>
+  </div>
+
+  <script>
+
+    const input = document.getElementById('search-input');
+    const button = document.getElementById('search-button');
+    const sidebar = document.getElementById('sidebar');
+    const toggleButton = document.getElementById('menu-toggle');
+    const contentArea = document.getElementById('content-area');
+
+    // --- НОВАЯ ФУНКЦИЯ ДЛЯ ФОРМАТИРОВАНИЯ ЗАПРОСА ---
+    function formatQuery(query) {
+        // 1. Удаляем пробелы в начале и конце, заменяем множественные пробелы на один
+        let formattedQuery = query.trim().replace(/\s+/g, ' ');
+
+
+
+        // Примечание: полноценное исправление орфографии требует серверной части или API.
+        // Эту простую функцию можно использовать как "базовое исправление".
+        return formattedQuery;
+    }
+
+    // ФУНКЦИЯ ПОИСКА
+    function search() {
+        const query = input.value;
+        if (!query.trim()) return alert('Введите что-нибудь!');
+
+        // 1. Форматируем запрос
+        const formattedQuery = formatQuery(query);
+
+        // 2. Обновляем поле ввода отформатированным текстом (опционально, для обратной связи)
+        input.value = formattedQuery;
+
+        // 3. Простое перенаправление с отформатированным запросом
+        // Заменено на более корректное, чтобы не терять пробелы
+        window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(formattedQuery);
+    }
+
+    button.addEventListener('click', search);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            search();
+        }
+    });
+
+    // ФУНКЦИЯ СВОРАЧИВАНИЯ МЕНЮ (без изменений)
+    toggleButton.addEventListener('click', () => {
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        contentArea.classList.toggle('shifted', isCollapsed);
+        toggleButton.textContent = isCollapsed ? '»' : '«';
+    });
+</script>
+ </body>
 </html>
