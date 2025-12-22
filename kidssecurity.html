@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Безопасность — Глобус Детям</title>
+  <style>
+    :root {
+      --bg-color: #0a0a0c;
+      --card-bg: #161b22;
+      --accent-color: #006eff;
+      --text-main: #e6edf3;
+      --text-dim: #8b949e;
+      --border-color: #30363d;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      width: 100%;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0;
+      color: var(--accent-color);
+    }
+
+    .info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-top: 0;
+      border-left: 4px solid var(--accent-color);
+      padding-left: 15px;
+    }
+
+    p {
+      color: var(--text-dim);
+      font-size: 15px;
+    }
+
+    .status-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .status-list li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .status-list li::before {
+      content: "✓";
+      color: #238636;
+      margin-right: 10px;
+      font-weight: bold;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--accent-color);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Система защиты Глобус</h1>
+  </header>
+
+  <div class="info-card">
+    <h2>Активный заслон</h2>
+    <p>Каждый поисковый запрос в детском режиме проходит через автоматический фильтр. Система блокирует доступ к ресурсам, содержащим упоминания вредных привычек, агрессии или технические угрозы.</p>
+    
+    <ul class="status-list">
+      <li>Автоматическая проверка орфографии</li>
+      <li>Фильтрация опасных ключевых слов</li>
+      <li>Изоляция от взрослого сегмента поиска</li>
+      <li>Блокировка подозрительного кода страниц</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h2>Принципы работы</h2>
+    <p>Глобус Детям не сохраняет личные данные пользователей младше 12 лет. Поиск работает в защищенном режиме, исключая возможность случайного перехода на непроверенные сайты.</p>
+  </div>
+
+  <a href="index.html" class="back-link">← Вернуться к поиску</a>
+
+  <footer>
+    © Глобус Инди-проект. 2025. Разработано для обеспечения безопасности в сети.
+  </footer>
+</div>
+
+</body>
+</html>
