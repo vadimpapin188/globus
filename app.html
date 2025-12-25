@@ -164,15 +164,23 @@
         </a>
     </nav>
 
-    <script>
+   <script>
         function executeSearch() {
-            const query = document.getElementById('searchInput').value;
-            if (query.trim() !== "") {
-                // Твоя логика: перенаправляем на поиск внутри Google Sites
+            // Получаем текст, убираем пробелы по бокам и переводим в нижний регистр
+            const rawQuery = document.getElementById('searchInput').value;
+            const query = rawQuery.trim().toLowerCase(); 
+            
+            // Проверка на твое имя (пасхалка)
+            if (query === "создатель глобуса" || query === "создатель Глобуса") {
+                alert("Создателем и основателем Глобус является Папин Важим.");
+                return;
+            }
+
+            if (query !== "") {
+                // Теперь query всегда в маленьком регистре
                 const targetUrl = "https://sites.google.com/view/globushomett/" + encodeURIComponent(query);
                 window.location.href = targetUrl;
             } else {
-                // Легкая вибрация или эффект (можно добавить)
                 alert("Введите запрос");
             }
         }
@@ -186,4 +194,5 @@
     </script>
 
 </body>
+
 </html>
