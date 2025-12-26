@@ -37,16 +37,8 @@
       transition: width 0.3s;
     }
 
-    nav.sidebar.collapsed {
-      width: 50px;
-    }
-
-    nav.sidebar ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
-
+    nav.sidebar.collapsed { width: 50px; }
+    nav.sidebar ul { list-style-type: none; padding: 0; margin: 0; }
     nav.sidebar ul li a {
       color: white;
       padding: 10px;
@@ -56,26 +48,10 @@
       overflow: hidden;
       font-size: 14px;
     }
-
-    nav.sidebar ul li a:hover {
-      background-color: var(--primary-color);
-    }
-
-    nav.sidebar.collapsed ul li a span {
-      display: none;
-    }
-
-    nav.sidebar ul li a::before {
-        content: '•'; 
-        margin-right: 8px;
-        font-weight: bold;
-    }
-
-    nav.sidebar.collapsed ul li a::before {
-        margin-right: 0;
-        display: block;
-        text-align: center;
-    }
+    nav.sidebar ul li a:hover { background-color: var(--primary-color); }
+    nav.sidebar.collapsed ul li a span { display: none; }
+    nav.sidebar ul li a::before { content: '•'; margin-right: 8px; font-weight: bold; }
+    nav.sidebar.collapsed ul li a::before { margin-right: 0; display: block; text-align: center; }
 
     #menu-toggle {
       position: absolute;
@@ -98,38 +74,19 @@
         flex-direction: column;
         transition: margin-left 0.3s;
     }
+    .content-area.shifted { margin-left: 50px; }
 
-    .content-area.shifted {
-        margin-left: 50px;
-    }
-
-    /* Верхняя панель с заголовком и поиском */
     .top-bar {
       display: flex;
-      justify-content: space-between; /* Текст влево, поиск вправо */
-      align-items: center; /* Выравнивание по вертикали */
+      justify-content: space-between;
+      align-items: center;
       padding: 20px 40px;
-      background-color: rgba(255, 255, 255, 0.05); /* Легкий фон для видимости */
+      background-color: rgba(255, 255, 255, 0.05);
     }
 
-    .brand-section h1 {
-      color: var(--primary-color);
-      font-size: 40px;
-      margin: 0;
-    }
-
-    .search-section {
-      display: flex;
-      gap: 10px;
-    }
-
-    #search-input {
-      padding: 10px 15px;
-      border: 1px solid #aaa;
-      width: 300px;
-      border-radius: 4px;
-    }
-
+    .brand-section h1 { color: var(--primary-color); font-size: 40px; margin: 0; }
+    .search-section { display: flex; gap: 10px; }
+    #search-input { padding: 10px 15px; border: 1px solid #aaa; width: 300px; border-radius: 4px; }
     #search-button {
       padding: 10px 20px;
       background-color: var(--primary-color);
@@ -140,20 +97,8 @@
       font-weight: bold;
     }
 
-    #search-button:hover {
-      background-color: #0056cc;
-    }
-
-    main {
-      padding: 0 40px;
-      flex-grow: 1;
-    }
-
-    p {
-      font-size: 18px;
-      text-align: left;
-      color: #fff;
-    }
+    main { padding: 0 40px; flex-grow: 1; }
+    p { font-size: 18px; text-align: left; color: #fff; }
 
     footer {
       text-align: center;
@@ -163,6 +108,30 @@
       font-size: 12px;
       border-top: 1px solid #333;
     }
+
+    .ai-answer-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 12px;
+        color: white;
+        line-height: 1.6;
+        font-size: 18px;
+        border-left: 5px solid var(--primary-color);
+        margin-top: 20px;
+    }
+
+    .shop-btn {
+        padding: 15px 25px;
+        margin-top: 15px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        color: white;
+        margin-right: 10px;
+    }
+    .wb { background: #8d169b; }
+    .dm { background: #0056b3; }
   </style>
 </head>
 <body>
@@ -198,77 +167,122 @@
   </div>
 
   <script>
-   const input = document.getElementById('search-input');
-const button = document.getElementById('search-button');
-const sidebar = document.getElementById('sidebar');
-const toggleButton = document.getElementById('menu-toggle');
-const contentArea = document.getElementById('content-area');
+    const input = document.getElementById('search-input');
+    const button = document.getElementById('search-button');
+    const sidebar = document.getElementById('sidebar');
+    const toggleButton = document.getElementById('menu-toggle');
+    const contentArea = document.getElementById('content-area');
+    const mainArea = document.getElementById('main');
 
-// Функция для очистки текста и перевода в нижний регистр
-function cleanText(text) {
-    return text.trim().toLowerCase().replace(/\s+/g, ' ');
-}
+    const GEMINI_API_KEY = "AIzaSyDCKRhLTYu-f2ihgDJBunxT8hQDrP48TUE";
+    const aiTriggers = ["как", "что", "почему", "зачем", "кто", "где", "когда", "какой"];
 
-// Функция для исправления опечаток через Яндекс.Спеллер API
-async function fixOrtho(query) {
-    try {
-        // Отправляем запрос к API (это бесплатно и быстро)
-        const response = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`);
-        const data = await response.json();
-
-        let correctedQuery = query;
-        // Перебираем все найденные ошибки с конца в начало, чтобы не сбились индексы
-        for (let i = data.length - 1; i >= 0; i--) {
-            const error = data[i];
-            if (error.s && error.s.length > 0) {
-                // Заменяем слово с ошибкой на первый предложенный вариант
-                correctedQuery = correctedQuery.substring(0, error.pos) + error.s[0] + correctedQuery.substring(error.pos + error.len);
-            }
-        }
-        return correctedQuery;
-    } catch (error) {
-        console.error("Ошибка при проверке орфографии:", error);
-        return query; // Если сервис недоступен, возвращаем оригинал
+    function cleanText(text) {
+        return text.trim().toLowerCase().replace(/\s+/g, ' ');
     }
-}
 
-// ГЛАВНАЯ ФУНКЦИЯ ПОИСКА
-async function search() {
-    let query = input.value;
-    if (!query.trim()) return alert('Введите запрос!');
+    async function fixOrtho(query) {
+        try {
+            const response = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            let correctedQuery = query;
+            for (let i = data.length - 1; i >= 0; i--) {
+                const error = data[i];
+                if (error.s && error.s.length > 0) {
+                    correctedQuery = correctedQuery.substring(0, error.pos) + error.s[0] + correctedQuery.substring(error.pos + error.len);
+                }
+            }
+            return correctedQuery;
+        } catch (error) { return query; }
+    }
 
-    // 1. Убираем лишние пробелы и меняем регистр на маленький
-    query = cleanText(query);
+    async function askAI(question) {
+        mainArea.innerHTML = "<h2>Глобус ИИ</h2><p>Подключение к интеллектуальному ядру Глобуса... Пожалуйста, подождите.</p>";
+        
+        try {
+            // Используем прокси для обхода блокировок браузера
+            const proxyUrl = "https://corsproxy.io/?";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-    // Блокируем кнопку на время проверки
-    button.disabled = true;
-    button.textContent = '...';
+            const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Ты — официальный ИИ поисковой системы Глобус. Отвечай серьезно, информативно и только на русском языке. Вопрос: ${question}` }] }]
+                })
+            });
 
-    // 2. Исправляем ошибки
-    const finalQuery = await fixOrtho(query);
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0].content) {
+                const aiAnswer = data.candidates[0].content.parts[0].text;
+                mainArea.innerHTML = `
+                    <h2>🤖 Ответ Глобус-ИИ</h2>
+                    <div class="ai-answer-box">
+                        ${aiAnswer.trim().replace(/\n/g, '<br>')}
+                    </div>
+                `;
+            } else {
+                throw new Error("Ошибка данных");
+            }
+        } catch (error) {
+            mainArea.innerHTML = "<h2>Ошибка</h2><p>Не удалось получить ответ. Попробуйте нажать 'Найти' еще раз или проверьте интернет.</p>";
+        }
+    }
 
-    // 3. Обновляем поле (чтобы пользователь видел исправления)
-    input.value = finalQuery;
+    async function search() {
+        let query = input.value;
+        if (!query.trim()) return alert('Введите запрос!');
+        query = cleanText(query);
 
-    // 4. Перенаправление
-    window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery);
-}
+        // Проверка ЛГБТ
+        const restricted = ["лгбт", "lgbt"];
+        if (restricted.some(w => query.includes(w))) {
+            mainArea.innerHTML = `
+                <div style="background: #fff; color: #000; padding: 20px; border-radius: 10px;">
+                    <h2 style="color: red;">Отказ Глобуса</h2>
+                    <p>Хотя Глобус пытается быть открытым для всех, этот контент не желает добра пользователям.</p>
+                </div>
+            `;
+            return;
+        }
 
-// Слушатели событий
-button.addEventListener('click', search);
-input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') search();
-});
+        button.disabled = true;
+        button.textContent = '...';
 
-// Сворачивание меню
-toggleButton.addEventListener('click', () => {
-    const isCollapsed = sidebar.classList.toggle('collapsed');
-    contentArea.classList.toggle('shifted', isCollapsed);
-    toggleButton.textContent = isCollapsed ? '»' : '«';
-});
+        const finalQuery = await fixOrtho(query);
+        input.value = finalQuery;
+
+        if (finalQuery.includes("одежда")) {
+            mainArea.innerHTML = `
+                <h2>Глобус Маркет</h2>
+                <p>Выберите платформу для поиска одежды:</p>
+                <button class="shop-btn wb" onclick="window.location.href='https://www.wildberries.ru/catalog/0/search.aspx?search=${finalQuery}'">Wildberries</button>
+                <button class="shop-btn dm" onclick="window.location.href='https://www.detmir.ru/search/results/?qt=${finalQuery}'">Детский Мир</button>
+            `;
+            button.disabled = false;
+            button.textContent = 'Найти';
+            return;
+        }
+
+        const firstWord = finalQuery.split(' ')[0];
+        if (aiTriggers.includes(firstWord)) {
+            await askAI(finalQuery);
+            button.disabled = false;
+            button.textContent = 'Найти';
+        } else {
+            window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery);
+        }
+    }
+
+    button.addEventListener('click', search);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') search(); });
+
+    toggleButton.addEventListener('click', () => {
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        contentArea.classList.toggle('shifted', isCollapsed);
+        toggleButton.textContent = isCollapsed ? '»' : '«';
+    });
   </script>
 </body>
 </html>
-
-
-
