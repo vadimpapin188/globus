@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Глобус - Поисковик на все 100%</title>
   <link rel="icon" href="favicon.png.png" type="image/png">
-
   <style>
     :root {
       --primary-color: #B3B1B1;
@@ -14,128 +13,32 @@
       --sidebar-bg: #444444;
       --sidebar-width: 200px;
     }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: var(--background-color);
-      color: var(--secondary-color);
-      display: flex;
-      min-height: 100vh;
-    }
-
-    /* --- САЙДБАР --- */
-    nav.sidebar {
-      width: var(--sidebar-width);
-      background-color: var(--sidebar-bg);
-      color: white;
-      position: fixed;
-      height: 100%;
-      padding-top: 10px;
-      box-sizing: border-box;
-      z-index: 100;
-      transition: width 0.3s;
-    }
-
+    body { margin: 0; font-family: Arial, sans-serif; background-color: var(--background-color); color: var(--secondary-color); display: flex; min-height: 100vh; }
+    nav.sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: white; position: fixed; height: 100%; padding-top: 10px; box-sizing: border-box; z-index: 100; transition: width 0.3s; }
     nav.sidebar.collapsed { width: 50px; }
     nav.sidebar ul { list-style-type: none; padding: 0; margin: 0; }
-    nav.sidebar ul li a {
-      color: white;
-      padding: 10px;
-      display: block;
-      text-decoration: none;
-      white-space: nowrap;
-      overflow: hidden;
-      font-size: 14px;
-    }
+    nav.sidebar ul li a { color: white; padding: 10px; display: block; text-decoration: none; white-space: nowrap; overflow: hidden; font-size: 14px; }
     nav.sidebar ul li a:hover { background-color: var(--primary-color); }
     nav.sidebar.collapsed ul li a span { display: none; }
     nav.sidebar ul li a::before { content: '•'; margin-right: 8px; font-weight: bold; }
-    nav.sidebar.collapsed ul li a::before { margin-right: 0; display: block; text-align: center; }
-
-    #menu-toggle {
-      position: absolute;
-      top: 5px;
-      right: -25px;
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 5px 8px;
-      cursor: pointer;
-      border-radius: 5px;
-      font-size: 12px;
-    }
-
-    /* --- КОНТЕНТ --- */
-    .content-area {
-        flex-grow: 1;
-        margin-left: var(--sidebar-width);
-        display: flex;
-        flex-direction: column;
-        transition: margin-left 0.3s;
-    }
+    #menu-toggle { position: absolute; top: 5px; right: -25px; background-color: var(--primary-color); color: white; border: none; padding: 5px 8px; cursor: pointer; border-radius: 5px; font-size: 12px; }
+    .content-area { flex-grow: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; transition: margin-left 0.3s; }
     .content-area.shifted { margin-left: 50px; }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 40px;
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background-color: rgba(255, 255, 255, 0.05); }
     .brand-section h1 { color: var(--primary-color); font-size: 40px; margin: 0; }
     .search-section { display: flex; gap: 10px; }
     #search-input { padding: 10px 15px; border: 1px solid #aaa; width: 300px; border-radius: 4px; }
-    #search-button {
-      padding: 10px 20px;
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-
-    main { padding: 0 40px; flex-grow: 1; }
-    p { font-size: 18px; text-align: left; color: #fff; }
-
-    footer {
-      text-align: center;
-      padding: 15px;
-      background-color: #222;
-      color: #888;
-      font-size: 12px;
-      border-top: 1px solid #333;
-    }
-
-    .ai-answer-box {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 25px;
-        border-radius: 12px;
-        color: white;
-        line-height: 1.6;
-        font-size: 18px;
-        border-left: 5px solid var(--primary-color);
-        margin-top: 20px;
-    }
-
-    .shop-btn {
-        padding: 15px 25px;
-        margin-top: 15px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-        color: white;
-        margin-right: 10px;
-    }
+    #search-button { padding: 10px 20px; background-color: var(--primary-color); color: white; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
+    main { padding: 40px; flex-grow: 1; }
+    p { font-size: 18px; color: #fff; }
+    footer { text-align: center; padding: 15px; background-color: #222; color: #888; font-size: 12px; border-top: 1px solid #333; }
+    .ai-answer-box { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 12px; color: white; line-height: 1.6; font-size: 18px; border-left: 5px solid var(--primary-color); margin-top: 20px; }
+    .shop-btn { padding: 15px 25px; margin-top: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; margin-right: 10px; }
     .wb { background: #8d169b; }
     .dm { background: #0056b3; }
   </style>
 </head>
 <body>
-
   <nav class="sidebar" id="sidebar">
     <button id="menu-toggle">«</button>
     <ul>
@@ -145,41 +48,30 @@
       <li><a href="https://vadimpapin188.github.io/globus-news/"><span>Новости Глобуса</span></a></li>
     </ul>
   </nav>
-
   <div class="content-area" id="content-area">
     <div class="top-bar">
-      <div class="brand-section">
-        <h1>Глобус</h1>
-      </div>
+      <div class="brand-section"><h1>Глобус</h1></div>
       <div class="search-section">
-        <input id="search-input" type="text" placeholder="Найдём по всей земле и за её пределами!">
+        <input id="search-input" type="text" placeholder="Задайте вопрос Глобусу...">
         <button id="search-button">Найти</button>
       </div>
     </div>
-
     <main id="main">
-      <p>Проект является некоммерческим и инди-разработкой.</p>
+      <p>Проект Глобус. Готов к поиску.</p>
     </main>
-
-    <footer id="footer">
-      © Глобус. 2025.
-    </footer>
+    <footer>© Глобус. 2025.</footer>
   </div>
 
   <script>
     const input = document.getElementById('search-input');
     const button = document.getElementById('search-button');
+    const mainArea = document.getElementById('main');
     const sidebar = document.getElementById('sidebar');
     const toggleButton = document.getElementById('menu-toggle');
     const contentArea = document.getElementById('content-area');
-    const mainArea = document.getElementById('main');
 
     const GEMINI_API_KEY = "AIzaSyDCKRhLTYu-f2ihgDJBunxT8hQDrP48TUE";
     const aiTriggers = ["как", "что", "почему", "зачем", "кто", "где", "когда", "какой"];
-
-    function cleanText(text) {
-        return text.trim().toLowerCase().replace(/\s+/g, ' ');
-    }
 
     async function fixOrtho(query) {
         try {
@@ -193,91 +85,60 @@
                 }
             }
             return correctedQuery;
-        } catch (error) { return query; }
+        } catch (e) { return query; }
     }
 
     async function askAI(question) {
-        mainArea.innerHTML = "<h2>Глобус ИИ</h2><p>Подключение к интеллектуальному ядру Глобуса... Пожалуйста, подождите.</p>";
-        
+        mainArea.innerHTML = "<h2>Глобус ИИ</h2><p>Вадим, я анализирую твой запрос... Подожди секунду.</p>";
         try {
-            // Используем прокси для обхода блокировок браузера
             const proxyUrl = "https://corsproxy.io/?";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
             const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Ты — официальный ИИ поисковой системы Глобус. Отвечай серьезно, информативно и только на русском языке. Вопрос: ${question}` }] }]
-                })
+                body: JSON.stringify({ contents: [{ parts: [{ text: `Ты — ИИ поисковика Глобус. Ответь кратко на русском: ${question}` }] }] })
             });
-
             const data = await response.json();
-            
-            if (data.candidates && data.candidates[0].content) {
-                const aiAnswer = data.candidates[0].content.parts[0].text;
-                mainArea.innerHTML = `
-                    <h2>🤖 Ответ Глобус-ИИ</h2>
-                    <div class="ai-answer-box">
-                        ${aiAnswer.trim().replace(/\n/g, '<br>')}
-                    </div>
-                `;
-            } else {
-                throw new Error("Ошибка данных");
-            }
+            const aiAnswer = data.candidates[0].content.parts[0].text;
+            mainArea.innerHTML = `<h2>🤖 Ответ Глобус-ИИ</h2><div class="ai-answer-box">${aiAnswer.trim().replace(/\n/g, '<br>')}</div>`;
         } catch (error) {
-            mainArea.innerHTML = "<h2>Ошибка</h2><p>Не удалось получить ответ. Попробуйте нажать 'Найти' еще раз или проверьте интернет.</p>";
+            mainArea.innerHTML = `<h2>Глобус ИИ</h2><p>Браузер блокирует прямой ответ. Вадим, нажми кнопку ниже, чтобы увидеть результат.</p>
+            <button class="shop-btn dm" onclick="window.open('https://gemini.google.com/app?q=${encodeURIComponent(question)}', '_blank')">Посмотреть ответ в Gemini</button>`;
         }
     }
 
     async function search() {
-        let query = input.value;
-        if (!query.trim()) return alert('Введите запрос!');
-        query = cleanText(query);
-
-        // Проверка ЛГБТ
-        const restricted = ["лгбт", "lgbt"];
-        if (restricted.some(w => query.includes(w))) {
-            mainArea.innerHTML = `
-                <div style="background: #fff; color: #000; padding: 20px; border-radius: 10px;">
-                    <h2 style="color: red;">Отказ Глобуса</h2>
-                    <p>Хотя Глобус пытается быть открытым для всех, этот контент не желает добра пользователям.</p>
-                </div>
-            `;
-            return;
-        }
+        let rawQuery = input.value.trim();
+        if (!rawQuery) return alert('Введите запрос!');
 
         button.disabled = true;
         button.textContent = '...';
 
-        const finalQuery = await fixOrtho(query);
+        // 1. Исправляем ошибки
+        let finalQuery = await fixOrtho(rawQuery);
         input.value = finalQuery;
 
-        if (finalQuery.includes("одежда")) {
-            mainArea.innerHTML = `
-                <h2>Глобус Маркет</h2>
-                <p>Выберите платформу для поиска одежды:</p>
-                <button class="shop-btn wb" onclick="window.location.href='https://www.wildberries.ru/catalog/0/search.aspx?search=${finalQuery}'">Wildberries</button>
-                <button class="shop-btn dm" onclick="window.location.href='https://www.detmir.ru/search/results/?qt=${finalQuery}'">Детский Мир</button>
-            `;
-            button.disabled = false;
-            button.textContent = 'Найти';
-            return;
-        }
+        // 2. Делаем всё маленькими буквами для проверки
+        let checkQuery = finalQuery.toLowerCase();
+        let firstWord = checkQuery.split(' ')[0];
 
-        const firstWord = finalQuery.split(' ')[0];
+        // 3. Проверяем триггеры
         if (aiTriggers.includes(firstWord)) {
             await askAI(finalQuery);
-            button.disabled = false;
-            button.textContent = 'Найти';
+        } else if (checkQuery.includes("одежда")) {
+            mainArea.innerHTML = `<h2>Глобус Маркет</h2><p>Где ищем одежду?</p>
+                <button class="shop-btn wb" onclick="window.location.href='https://www.wildberries.ru/catalog/0/search.aspx?search=${finalQuery}'">Wildberries</button>
+                <button class="shop-btn dm" onclick="window.location.href='https://www.detmir.ru/search/results/?qt=${finalQuery}'">Детский Мир</button>`;
         } else {
             window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery);
         }
+        
+        button.disabled = false;
+        button.textContent = 'Найти';
     }
 
     button.addEventListener('click', search);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') search(); });
-
     toggleButton.addEventListener('click', () => {
         const isCollapsed = sidebar.classList.toggle('collapsed');
         contentArea.classList.toggle('shifted', isCollapsed);
