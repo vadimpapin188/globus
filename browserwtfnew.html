@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Что нового | Browser Update</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-main: #333;
+            --accent-color: #2563eb;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .update-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .update-item {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .update-item::before {
+            content: "•";
+            color: var(--accent-color);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 5px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--accent-color);
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .home-btn {
+            background-color: #10b981;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 id="welcome-msg">Что нового?</h1>
+    
+    <ul class="update-list">
+        <li class="update-item"><strong>Персонализация:</strong> Теперь браузер учитывает ваши предпочтения.</li>
+        <li class="update-item"><strong>DuckDuckGo:</strong> Поисковик по умолчанию для защиты конфиденциальности.</li>
+        <li class="update-item"><strong>Навигация:</strong> Добавлена кнопка быстрого возврата на главную.</li>
+    </ul>
+
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" id="dg-search" placeholder="Поиск в DuckDuckGo...">
+            <button onclick="search()">Найти</button>
+        </div>
+        <button class="home-btn" onclick="goHome()">Главная страница браузера</button>
+    </div>
+</div>
+
+<script>
+    // Персонализация: Приветствие
+    const userName = "Вадим"; 
+    document.getElementById('welcome-msg').innerText = `Что нового, ${userName}?`;
+
+    // Функция поиска DuckDuckGo
+    function search() {
+        const query = document.getElementById('dg-search').value;
+        if (query) {
+            window.location.href = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+        }
+    }
+
+    // Кнопка Главная страница
+    function goHome() {
+        // Здесь можно указать внутренний URL твоей главной страницы
+        window.location.href = "about:blank"; 
+        console.log("Переход на главную страницу...");
+    }
+
+    // Обработка Enter в поиске
+    document.getElementById('dg-search').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            search();
+        }
+    });
+</script>
+
+</body>
+</html>
