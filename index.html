@@ -44,11 +44,7 @@
     .shop-btn { padding: 15px 25px; margin-top: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; margin-right: 10px; }
     .wb { background: #8d169b; }
     .dm { background: #0056b3; }
-    a {
-
-    color: red;
-      text-decoration: none;
-    }
+    a { color: red; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -86,7 +82,6 @@
 
     const aiTriggers = ["как", "что", "почему", "зачем", "кто", "где", "когда", "какой"];
 
-    // Снег
     function createSnow() {
         const snowflake = document.createElement('div');
         snowflake.classList.add('snowflake');
@@ -139,10 +134,13 @@
     async function search() {
         let rawQuery = input.value.trim();
         if (!rawQuery) return alert('Введите запрос!');
+        
         button.disabled = true;
         button.textContent = '...';
+        
         let finalQuery = await fixOrtho(rawQuery);
         input.value = finalQuery;
+        
         let checkQuery = finalQuery.toLowerCase();
         let firstWord = checkQuery.split(' ')[0];
 
@@ -151,8 +149,11 @@
         } else if (checkQuery.includes("одежда")) {
             mainArea.innerHTML = `<h2>Глобус Маркет</h2><button class="shop-btn wb" onclick="window.location.href='https://www.wildberries.ru/catalog/0/search.aspx?search=${finalQuery}'">Wildberries</button><button class="shop-btn dm" onclick="window.location.href='https://www.detmir.ru/search/results/?qt=${finalQuery}'">Детский Мир</button>`;
         } else {
-            window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery);
+            // ЗАМЕНА ПРОБЕЛОВ НА ДЕФИСЫ ПЕРЕД ПЕРЕХОДОМ
+            let slugQuery = finalQuery.replace(/\s+/g, '-');
+            window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(slugQuery);
         }
+        
         button.disabled = false;
         button.textContent = 'Найти';
     }
@@ -167,6 +168,3 @@
   </script>
 </body>
 </html>
-
-
-
