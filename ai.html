@@ -2,61 +2,63 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Gemini AI Chat</title>
+    <title>AI Chat 2026</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .chat-container { width: 100%; max-width: 600px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        #output { white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; min-height: 100px; margin-top: 20px; }
-        textarea { width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
-        button:hover { background: #1557b0; }
-        .loader { color: #666; font-style: italic; }
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: white; display: flex; justify-content: center; padding: 20px; }
+        .chat-container { width: 100%; max-width: 600px; background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #333; }
+        #output { white-space: pre-wrap; background: #252525; padding: 15px; border-radius: 8px; border: 1px solid #444; min-height: 150px; margin-top: 20px; line-height: 1.5; }
+        textarea { width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #2d2d2d; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
+        textarea:focus { border-color: #00ff88; }
+        button { background: #00ff88; color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; font-weight: bold; }
+        button:hover { background: #00cc6e; }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
-    <h2>Gemini AI 0.00 ₸</h2>
-    <textarea id="prompt" placeholder="Введите ваш вопрос здесь..."></textarea>
-    <button onclick="sendToAI()">Отправить запрос</button>
-    <div id="output">Здесь появится ответ...</div>
+    <h2>Groq AI (Fast & Free)</h2>
+    <textarea id="prompt" placeholder="Yапишите свой вопрос здесь..."></textarea>
+    <button onclick="askAI()">Запустить инлект</button>
+    <div id="output">Результат появится здесь...</div>
 </div>
 
-
-<script type="module">
-    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
-    // Используй свой НОВЫЙ ключ
-    const API_KEY = "AIzaSyCQxhxowd5sc5UMYNZ10wzTI7e-1KSbsFw"; 
-    
-    // ПРИНУДИТЕЛЬНО указываем версию v1, чтобы избежать ошибки 404
-    const genAI = new GoogleGenerativeAI(API_KEY);
-
-    window.sendToAI = async function() {
-        const promptInput = document.getElementById('prompt');
+<script>
+    async function askAI() {
+        const promptText = document.getElementById('prompt').value;
         const outputDiv = document.getElementById('output');
         
-        if (!promptInput.value) return;
-        outputDiv.innerHTML = '<span class="loader">Запрос к v1 API...</span>';
+        // ВСТАВЬ СВОЙ КЛЮЧ GROQ СЮДА
+        const API_KEY = "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";
+
+        if (!promptText) returЛЮЧ_GROQn;
+        outputDiv.innerText = "⚡ Думаю очень быстро...";
 
         try {
-            // Указываем модель. В 2026 году попробуй также "gemini-1.5-flash-8b" 
-            // Она самая легкая и часто доступна там, где другие выдают 404.
-            const model = genAI.getGenerativeModel(
-                { model: "gemini-1.5-flash-8b" }, 
-                { apiVersion: "v1" } // Вот это исправление ошибки v1beta
-            );
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    // Модель Llama 3 самая мощная и бесплатная сейчас
+                    model: "llama-3.3-70b-versatile", 
+                    messages: [{ role: "user", content: promptText }]
+                })
+            });
+
+            const data = await response.json();
             
-            const result = await model.generateContent(promptInput.value);
-            const response = await result.response;
-            
-            outputDiv.innerText = response.text();
+            if (data.choices && data.choices[0]) {
+                outputDiv.innerText = data.choices[0].message.content;
+            } else {
+                outputDiv.innerText = "Ошибка API: " + JSON.stringify(data);
+            }
         } catch (error) {
-            console.error("Детали:", error);
-            outputDiv.innerHTML = `<b style="color:red">Ошибка:</b> ${error.message} <br>
-            <small>Попробуй сменить модель на <b>gemini-1.5-flash-8b</b> в коде.</small>`;
+            outputDiv.innerText = "Ошибка соединения: " + error.message;
         }
     }
 </script>
+
 </body>
 </html>
