@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Gemini AI Chat</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .chat-container { width: 100%; max-width: 600px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #output { white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; min-height: 100px; margin-top: 20px; }
+        textarea { width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
+        button:hover { background: #1557b0; }
+        .loader { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <h2>Gemini AI 0.00 ₸</h2>
+    <textarea id="prompt" placeholder="Введите ваш вопрос здесь..."></textarea>
+    <button onclick="sendToAI()">Отправить запрос</button>
+    <div id="output">Здесь появится ответ...</div>
+</div>
+
+
+<script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+    // Используй свой НОВЫЙ ключ
+    const API_KEY = "AIzaSyCQxhxowd5sc5UMYNZ10wzTI7e-1KSbsFw"; 
+    
+    // ПРИНУДИТЕЛЬНО указываем версию v1, чтобы избежать ошибки 404
+    const genAI = new GoogleGenerativeAI(API_KEY);
+
+    window.sendToAI = async function() {
+        const promptInput = document.getElementById('prompt');
+        const outputDiv = document.getElementById('output');
+        
+        if (!promptInput.value) return;
+        outputDiv.innerHTML = '<span class="loader">Запрос к v1 API...</span>';
+
+        try {
+            // Указываем модель. В 2026 году попробуй также "gemini-1.5-flash-8b" 
+            // Она самая легкая и часто доступна там, где другие выдают 404.
+            const model = genAI.getGenerativeModel(
+                { model: "gemini-1.5-flash-8b" }, 
+                { apiVersion: "v1" } // Вот это исправление ошибки v1beta
+            );
+            
+            const result = await model.generateContent(promptInput.value);
+            const response = await result.response;
+            
+            outputDiv.innerText = response.text();
+        } catch (error) {
+            console.error("Детали:", error);
+            outputDiv.innerHTML = `<b style="color:red">Ошибка:</b> ${error.message} <br>
+            <small>Попробуй сменить модель на <b>gemini-1.5-flash-8b</b> в коде.</small>`;
+        }
+    }
+</script>
+</body>
+</html>
