@@ -132,31 +132,39 @@
     }
 
     async function search() {
-        let rawQuery = input.value.trim();
-        if (!rawQuery) return alert('Введите запрос!');
-        
-        button.disabled = true;
-        button.textContent = '...';
-        
-        let finalQuery = await fixOrtho(rawQuery);
-        input.value = finalQuery;
-        
-        let checkQuery = finalQuery.toLowerCase();
-        let firstWord = checkQuery.split(' ')[0];
+    let rawQuery = input.value.trim();
+    if (!rawQuery) return alert('Введите запрос!');
+    
+    button.disabled = true;
+    button.textContent = '...';
+    
+    // 1. Исправляем орфографию
+    let finalQuery = await fixOrtho(rawQuery);
+    
+    // 2. Перевод в нижний регистр
+    finalQuery = finalQuery.toLowerCase();
+    
+    // 3. Удаление знаков препинания (оставляем только буквы, цифры и пробелы)
+    // Это уберет ?, !, ., ,, :, ; и прочие символы
+    finalQuery = finalQuery.replace(/[^\w\sа-яё0-9]/gi, '');
+    
+    input.value = finalQuery;
+    
+    let firstWord = finalQuery.split(' ')[0];
 
-        if (aiTriggers.includes(firstWord)) {
-            await askAI(finalQuery);
-        } else if (checkQuery.includes("одежда")) {
-            mainArea.innerHTML = `<h2>Глобус Маркет</h2><button class="shop-btn wb" onclick="window.location.href='https://www.wildberries.ru/catalog/0/search.aspx?search=${finalQuery}'">Wildberries</button><button class="shop-btn dm" onclick="window.location.href='https://www.detmir.ru/search/results/?qt=${finalQuery}'">Детский Мир</button>`;
-        } else {
-            // ЗАМЕНА ПРОБЕЛОВ НА ДЕФИСЫ ПЕРЕД ПЕРЕХОДОМ
-            let slugQuery = finalQuery.replace(/\s+/g, '-');
-            window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(slugQuery);
-        }
-        
-        button.disabled = false;
-        button.textContent = 'Найти';
+    if (aiTriggers.includes(firstWord)) {
+        await askAI(finalQuery);
+    } else if (finalQuery.includes("одежда")) {
+        mainArea.innerHTML = `<h2>Глобус Маркет</h2><button class="shop-btn wb" onclick="window.location.href='https://www.wildberries.ru/catalog/0/search.aspx?search=${finalQuery}'">Wildberries</button><button class="shop-btn dm" onclick="window.location.href='https://www.detmir.ru/search/results/?qt=${finalQuery}'">Детский Мир</button>`;
+    } else {
+        // 4. Замена пробелов на дефисы для URL
+        let slugQuery = finalQuery.replace(/\s+/g, '-');
+        window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(slugQuery);
     }
+    
+    button.disabled = false;
+    button.textContent = 'Найти';
+}
 
     button.addEventListener('click', search);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') search(); });
@@ -168,3 +176,4 @@
   </script>
 </body>
 </html>
+
