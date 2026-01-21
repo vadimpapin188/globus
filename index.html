@@ -66,6 +66,7 @@
         <button id="search-button">Найти</button>
       </div>
     </div>
+    <div class="recoomended-sites"><h1>Рекомендуемые сайты</h1><p><a href="google.com">Google</a></p><p><a href="bing.com">Bing</a></p>
     <main id="main">
       <p>Найдём по всей земле и за её пределами!</p>
     </main>
@@ -110,7 +111,7 @@
     }
 
     async function askAI(question) {
-        mainArea.innerHTML = "<h2>Глобус ИИ</h2><p>Вадим, подключаюсь к скоростному каналу... Секунду!</p>";
+        mainArea.innerHTML = "<h2>Вам чай с сахаром? Или с моими слезами...</h2><p>Приносим извинения, но сервис Глобус Ассистент больше не работает.</p>";
         try {
             const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
@@ -118,16 +119,16 @@
                 body: JSON.stringify({
                     "model": "mistralai/mistral-7b-instruct:free",
                     "messages": [
-                        {"role": "system", "content": "Ты — серьезный ИИ системы Глобус. Отвечай только на русском."},
+                        {"role": "system", "content": ""},
                         {"role": "user", "content": question}
                     ]
                 })
             });
             const data = await aiResponse.json();
             const aiAnswer = data.choices[0].message.content;
-            mainArea.innerHTML = `<h2>🤖 Ответ Глобус-ИИ</h2><div class="ai-answer-box">${aiAnswer.trim().replace(/\n/g, '<br>')}</div>`;
+            mainArea.innerHTML = `<h2></h2><div class="ai-answer-box">${aiAnswer.trim().replace(/\n/g, '<br>')}</div>`;
         } catch (error) {
-            mainArea.innerHTML = `<h2>Ошибка</h2><button class="shop-btn dm" onclick="window.location.href='https://www.google.com/search?q=${question}'">Найти в Google</button>`;
+            mainArea.innerHTML = `<h2>Ошибка</h2><button class="shop-btn dm" onclick="window.location.href='https://www.google.com/search?q=${question}'">Сервис недоступен.</button>`;
         }
     }
 
@@ -176,4 +177,5 @@
   </script>
 </body>
 </html>
+
 
