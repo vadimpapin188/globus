@@ -6,73 +6,75 @@
   <title>Глобус - Поиск и не только!</title>
   <link rel="icon" href="favicon.png.png" type="image/png">
   <style>
-    :root {
-      --primary-color: #C0C0C0; 
-      --secondary-color: #ffffff;
-      --background-color: #051937; 
-      --sidebar-bg: #1a2a3a;
-      --sidebar-width: 200px;
-    }
-    body { margin: 0; font-family: Arial, sans-serif; background-color: var(--background-color); color: var(--secondary-color); display: flex; min-height: 100vh; overflow-x: hidden; }
-    
-    /* Снежинки */
-    .snowflake { color: #fff; font-size: 1em; position: fixed; top: -10%; z-index: 9999; animation: snowflakes-fall 10s linear infinite; }
-    @keyframes snowflakes-fall { 0% { top: -10%; } 100% { top: 100%; } }
+  /* ... твои старые стили ... */
 
-    nav.sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: white; position: fixed; height: 100%; padding-top: 10px; box-sizing: border-box; z-index: 100; transition: width 0.3s; }
-    nav.sidebar.collapsed { width: 50px; }
-    nav.sidebar ul { list-style-type: none; padding: 0; margin: 0; }
-    nav.sidebar ul li a { color: white; padding: 10px; display: block; text-decoration: none; white-space: nowrap; overflow: hidden; font-size: 14px; }
-    nav.sidebar ul li a:hover { background-color: var(--primary-color); }
-    
-    #menu-toggle { position: absolute; top: 5px; right: -25px; background-color: var(--primary-color); color: white; border: none; padding: 5px 8px; cursor: pointer; border-radius: 5px; font-size: 12px; }
-    
-    .content-area { flex-grow: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; transition: margin-left 0.3s; }
-    .content-area.shifted { margin-left: 50px; }
-    
-    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background-color: rgba(255, 255, 255, 0.05); }
-    .brand-section h1 { color: var(--primary-color); font-size: 40px; margin: 0; }
-    
-    .search-section { display: flex; gap: 10px; }
-    #search-input { padding: 10px 15px; border: 1px solid #aaa; width: 300px; border-radius: 4px; }
-    #search-button { padding: 10px 20px; background-color: var(--primary-color); color: white; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
-    
-    main { padding: 40px; flex-grow: 1; z-index: 10; }
-    footer { text-align: center; padding: 15px; background-color: #222; color: #888; font-size: 12px; }
-    
-    .ai-answer-box { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 12px; color: white; line-height: 1.6; font-size: 18px; border-left: 5px solid var(--primary-color); margin-top: 20px; }
-    .shop-btn { padding: 15px 25px; margin-top: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; margin-right: 10px; }
-    .wb { background: #8d169b; }
-    .dm { background: #0056b3; }
-    a { color: red; text-decoration: none; }
-  </style>
-</head>
-<body>
-  <nav class="sidebar" id="sidebar">
-    <button id="menu-toggle">«</button>
-    <ul>
-      <li><a href="https://vadimpapin188.github.io/globus"><span>Главная (вы тут)</span></a></li>
-      <li><a href="#"><span>О нас</span></a></li>
-      <li><a href="#"><span>Новое</span></a></li>
-      <li><a href="https://vadimpapin188.github.io/globus-news/"><span>Новости</span></a></li>
-    </ul>
-  </nav>
+  .recommended-section {
+    margin-bottom: 30px;
+  }
 
-  <div class="content-area" id="content-area">
-    <div class="top-bar">
-      <div class="brand-section"><h1>Глобус</h1></div>
-      <div class="search-section">
-        <input id="search-input" type="text" placeholder="...и по галактиеке найдём!">
-        <button id="search-button">Найти</button>
-      </div>
+  .recommended-section h2 {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+  }
+
+  .sites-grid {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .site-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .site-card:hover {
+    background: var(--primary-color);
+    color: #051937;
+    transform: translateY(-2px);
+  }
+</style>
+
+<div class="content-area" id="content-area">
+  <div class="top-bar">
+    <div class="brand-section"><h1>Глобус</h1></div>
+    <div class="search-section">
+      <input id="search-input" type="text" placeholder="...и по галактике найдём!">
+      <button id="search-button">Найти</button>
     </div>
-    <div class="recoomended-sites"><h1>Рекомендуемые сайты</h1><p><a href="google.com">Google</a></p><p><a href="bing.com">Bing</a></p>
-    <main id="main">
-      <p>Найдём по всей земле и за её пределами!</p>
-    </main>
-    <footer>© Глобус. 2025.</footer>
   </div>
 
+  <main id="main">
+    <section class="recommended-section">
+      <h2>Рекомендуемые сайты</h2>
+      <div class="sites-grid">
+        <a href="https://google.com" target="_blank" class="site-card">
+          <span>🔍</span> Google
+        </a>
+        <a href="https://bing.com" target="_blank" class="site-card">
+          <span>🌐</span> Bing
+        </a>
+        <a href="https://ya.ru" target="_blank" class="site-card">
+          <span>Я</span> Яндекс
+        </a>
+      </div>
+    </section>
+
+    <p>Найдём по всей земле и за её пределами!</p>
+  </main>
+  
+  <footer>© Глобус. 2025.</footer>
+</div>
   <script>
     const input = document.getElementById('search-input');
     const button = document.getElementById('search-button');
@@ -177,5 +179,6 @@
   </script>
 </body>
 </html>
+
 
 
