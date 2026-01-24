@@ -15,9 +15,7 @@
     }
     body { margin: 0; font-family: Arial, sans-serif; background-color: var(--background-color); color: var(--secondary-color); display: flex; min-height: 100vh; overflow-x: hidden; }
     
-    /* Снежинки */
-    .snowflake { color: #fff; font-size: 1em; position: fixed; top: -10%; z-index: 9999; animation: snowflakes-fall 10s linear infinite; }
-    @keyframes snowflakes-fall { 0% { top: -10%; } 100% { top: 100%; } }
+    
 
     nav.sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: white; position: fixed; height: 100%; padding-top: 10px; box-sizing: border-box; z-index: 100; transition: width 0.3s; }
     nav.sidebar.collapsed { width: 50px; }
@@ -64,6 +62,50 @@
     .shop-btn { padding: 15px 25px; margin-top: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; margin-right: 10px; }
     .wb { background: #8d169b; }
     .dm { background: #0056b3; }
+
+    /* Правила для телефонов */
+@media (max-width: 767px) {
+    body {
+        flex-direction: column;
+    }
+
+    nav.sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 5px;
+    }
+
+    /* Делаем шапку колонкой */
+    .top-bar {
+        flex-direction: column; 
+        padding: 15px;
+        display: flex;
+    }
+
+    /* Поиск ставим первым (сверху) */
+    .search-section {
+        order: -1; 
+        width: 100%;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Заголовок пойдет ниже поиска */
+    .brand-section {
+        order: 1;
+        text-align: center;
+    }
+
+    #search-input {
+        width: 80%;
+    }
+
+    .content-area, .content-area.shifted {
+        margin-left: 0;
+    }
+}
   </style>
 </head>
 <body>
@@ -114,17 +156,7 @@
 
     const aiTriggers = ["как", "что", "почему", "зачем", "кто", "где", "когда", "какой"];
 
-    function createSnow() {
-        const snowflake = document.createElement('div');
-        snowflake.classList.add('snowflake');
-        snowflake.innerHTML = '❄';
-        snowflake.style.left = Math.random() * 100 + 'vw';
-        snowflake.style.animationDuration = Math.random() * 3 + 7 + 's';
-        snowflake.style.opacity = Math.random();
-        document.body.appendChild(snowflake);
-        setTimeout(() => { snowflake.remove(); }, 10000);
-    }
-    setInterval(createSnow, 400);
+    
 
     async function fixOrtho(query) {
         try {
@@ -199,4 +231,5 @@
   </script>
 </body>
 </html>
+
 
