@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+  <title>Search Globus...</title>
+    
+
+    <script>
+        // Берем запрос из адреса (то, что после ?q=)
+        const query = new URLSearchParams(window.location.search).get('q');
+
+        if (query) {
+            // Заменяем пробелы на дефисы для Google Sites
+            const cleanQuery = query.trim().replace(/\s+/g, '-');
+            window.location.replace("https://sites.google.com/view/globushomett/" + cleanQuery);
+        } else {
+            // Если запроса нет, просто открываем сайт
+            window.location.replace("https://sites.google.com/view/globushomett/");
+        }
+    </script>
+</head>
+<body>
+    Поиск Глобус...
+</body>
+</html>
