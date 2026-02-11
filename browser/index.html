@@ -3,79 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Загрузка | Глобус Браузер</title>
+    <title>Глобус Браузер — Быстрый и надежный</title>
     <style>
+        :root {
+            --primary: #00aaff;
+            --bg: #0b0e14;
+            --card: #161b22;
+            --text: #ffffff;
+            --text-gray: #8b949e;
+        }
+
         body {
-            background-color: #0b0e14; /* Темный космический фон */
-            color: #ffffff;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            scroll-behavior: smooth;
+        }
+
+        /* Шапка */
+        header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 10%;
+            background: rgba(11, 14, 20, 0.9);
+            position: fixed;
+            width: 80%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .logo { font-weight: bold; font-size: 24px; color: var(--primary); }
+        nav a { color: var(--text-gray); text-decoration: none; margin-left: 20px; transition: 0.3s; }
+        nav a:hover { color: var(--primary); }
+
+        /* Главный экран */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
+            background: radial-gradient(circle at center, #1a2332 0%, #0b0e14 100%);
+            padding: 0 20px;
         }
 
-        .card {
-            background: #161b22;
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid #30363d;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
-            max-width: 400px;
-        }
+        .hero h1 { font-size: 4rem; margin-bottom: 10px; text-align: center; }
+        .hero p { font-size: 1.5rem; color: var(--text-gray); margin-bottom: 40px; }
 
-        h1 {
-            color: #58a6ff;
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        p {
-            color: #8b949e;
-            font-size: 16px;
-            line-height: 1.5;
-            margin-bottom: 30px;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: #238636; /* Зеленая кнопка как на GitHub */
+        .btn-main {
+            background: var(--primary);
             color: white;
-            padding: 15px 30px;
+            padding: 20px 50px;
+            border-radius: 50px;
             text-decoration: none;
+            font-size: 20px;
             font-weight: bold;
-            border-radius: 8px;
-            font-size: 18px;
-            transition: background 0.2s, transform 0.2s;
+            transition: 0.3s;
+            box-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
         }
+        .btn-main:hover { transform: scale(1.05); background: #33bbff; }
 
-        .btn:hover {
-            background-color: #2ea043;
-            transform: translateY(-2px);
+        /* Секции с контентом */
+        section { padding: 100px 10%; text-align: center; }
+        .features { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .feature-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 15px;
+            width: 250px;
+            border: 1px solid #30363d;
         }
+        .feature-card h3 { color: var(--primary); }
 
-        .info {
-            margin-top: 25px;
-            font-size: 12px;
-            color: #484f58;
-        }
+        footer { padding: 50px; border-top: 1px solid #30363d; color: var(--text-gray); font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Глобус Браузер</h1>
-        <p>Добро пожаловать в бета-тест! Скачайте легкий браузер для нашей экосистемы.</p>
-        
-        <a href="setup.exe" class="btn">Скачать для Windows</a>
+    <header>
+        <div class="logo">ГЛОБУС</div>
+        <nav>
+            <a href="#features">Функции</a>
+            <a href="#security">Безопасность</a>
+            <a href="setup.exe">Скачать</a>
+        </nav>
+    </header>
 
-        <div class="info">
-            Версия: 1.2 (Бета-тестирование)<br>
-           Глав. Разработчик и Автор идеи: Папин Вадим
-        </div>
+    <div class="hero">
+        <h1>Браузер, созданный для вас</h1>
+        <p>Надежный. Быстрый. Часть экосистемы Глобус.</p>
+        <a href="setup.exe" class="btn-main">Скачать Глобус Браузер</a>
+        <p style="font-size: 14px; margin-top: 15px; color: #555;">Для Windows 10/11</p>
     </div>
+
+    <section id="features">
+        <h2>Почему Глобус?</h2>
+        <div class="features">
+            <div class="feature-card">
+                <h3>Скорость</h3>
+                <p>Потребляет всего 82-92 МБ на одну вкладку.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Виджеты</h3>
+                <p>Умная поисковая строка и быстрые ссылки всегда под рукой.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Легкость</h3>
+                <p>Ничего лишнего. Только интернет и ваши задачи.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="security" style="background: #0d1117;">
+        <h2>Ваша безопасность</h2>
+        <p>Мы используем ядро Chromium, чтобы обеспечить защиту от фишинга и вредоносных сайтов в реальном времени.</p>
+    </section>
+
+    <footer>
+        <p>© 2026 Глобус Inc.,<br>Глав. Разработчик и Автор идеи: Папин Вадим</p>
+    </footer>
 
 </body>
 </html>
