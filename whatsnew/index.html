@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Что нового? — Глобус</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            color: #202124;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 400;
+            margin: 0 0 8px 0;
+        }
+
+        header p {
+            color: #5f6368;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .news-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .post {
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 24px;
+            transition: box-shadow 0.2s;
+        }
+
+        .post:hover {
+            box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+        }
+
+        .post-date {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #70757a;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .post-title {
+            font-size: 20px;
+            margin: 0 0 12px 0;
+            color: #1a73e8;
+            font-weight: 500;
+        }
+
+        .post-content {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #3c4043;
+        }
+
+        /* Индикатор загрузки внизу */
+        #loader {
+            text-align: center;
+            padding: 20px;
+            color: #1a73e8;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Что нового в Глобусе</h1>
+        <p>Последние улучшения и функции нашего поисковика</p>
+    </header>
+
+    <div id="news-feed" class="news-feed"></div>
+    
+    <div id="loader">Загрузка новых постов...</div>
+</div>
+
+<script>
+    let allPosts = []; 
+    let displayedCount = 0; 
+    const limit = 20; 
+
+    const feed = document.getElementById('news-feed');
+    const loader = document.getElementById('loader');
+
+    // Загрузка данных
+    async function loadPosts() {
+        try {
+            // Файл posts.json должен лежать в той же папке
+            const response = await fetch('posts.json');
+            if (!response.ok) throw new Error('Файл не найден');
+            
+            allPosts = await response.json();
+            renderNextBatch();
+        } catch (error) {
+            console.error("Ошибка:", error);
+            feed.innerHTML = "<p>Не удалось загрузить новости. Проверьте файл posts.json.</p>";
+        }
+    }
+
+    // Отрисовка постов по частям
+    function renderNextBatch() {
+        loader.style.display = 'block';
+        
+        // Небольшая задержка, чтобы юзер заметил плавную подгрузку
+        setTimeout(() => {
+            const nextBatch = allPosts.slice(displayedCount, displayedCount + limit);
+            
+            nextBatch.forEach(data => {
+                const post = document.createElement('div');
+                post.className = 'post';
+                post.innerHTML = `
+                    <div class="post-date">${data.date}</div>
+                    <h2 class="post-title">${data.title}</h2>
+                    <div class="post-content">${data.content}</div>
+                `;
+                feed.appendChild(post);
+            });
+
+            displayedCount += nextBatch.length;
+            loader.style.display = 'none';
+        }, 300);
+    }
+
+    // Следим за скроллом
+    window.onscroll = function() {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+            if (displayedCount < allPosts.length) {
+                renderNextBatch();
+            }
+        }
+    };
+
+    loadPosts();
+</script>
+
+</body>
+</html>
