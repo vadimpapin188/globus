@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <title>Глобус - О нас</title>
+    <style>
+      header {
+        text-align: center; /* Исправлена опечатка в aligin */
+        font-family: Arial, sans-serif;
+        color: white;
+        background-color: black;
+        padding: 20px;
+      }
+      .ph {
+        color: #708090;
+      }
+      .dateofjob {
+        text-align: center;
+        font-family: Arial, sans-serif;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Всё что вы можете представить: Глобус.</h1>
+      <p class="ph">О нас</p>
+    </header>
+
+    <div class="dateofjob">
+      <h2>Мы уже работаем: <span id="counter">0</span> дней</h2>
+    </div>
+
+    <script>
+      function updateCounter() {
+        const startDate = new Date('2022-11-08'); // Дата начала работы
+        const today = new Date(); // Текущая дата
+        
+        // Разница в миллисекундах
+        const diffInMs = today - startDate;
+        
+        // Перевод миллисекунд в дни (1000мс * 60с * 60м * 24ч)
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        
+        // Вывод результата в элемент с id="counter"
+        document.getElementById('counter').innerText = diffInDays;
+      }
+
+      // Запуск функции при загрузке страницы
+      updateCounter();
+    </script>
+  </body>
+</html>
