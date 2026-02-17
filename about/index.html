@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <title>Глобус - О нас</title>
     <style>
-      header {
-        text-align: center; /* Исправлена опечатка в aligin */
+      body {
+        margin: 0;
         font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+      }
+      header {
+        text-align: center;
         color: white;
         background-color: black;
         padding: 20px;
@@ -14,11 +18,78 @@
       .ph {
         color: #708090;
       }
-      .dateofjob {
-        text-align: center;
-        font-family: Arial, sans-serif;
-        margin-top: 20px;
+
+      /* Стиль карточки */
+      .card {
+        width: 300px;
+        margin: 30px; /* Отступ от краев, чтобы она была слева */
+        background-color: white;
+        border: 2px solid #333; /* Обводка */
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
       }
+
+      .card-content {
+        padding: 20px;
+      }
+
+      .card h2 {
+        margin: 0 0 15px 0;
+        font-size: 1.2rem;
+        color: #333;
+      }
+
+      /* Дизайн счетчика внизу карточки */
+      .counter-badge {
+        background-color: #007bff; /* Синий цвет фона */
+        color: white;
+        text-align: center;
+        padding: 15px;
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+      
+      .counter-label {
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.8;
+      }
+.h11 {
+text-align: center;
+}
+
+.ser {
+color: #708090;
+}
+
+.weach {
+font-family: "Segoe UI", sans-serif;
+text-align: center;
+}
+
+.projects {
+text-align: center;
+font-family: 'Segoe UI', sans-serif;
+element-align: center;
+}
+
+body {
+font-family: 'Segoe UI', sans-serif;
+}
+
+.project {
+width: 200px; 
+  margin: 30px; 
+  background-color: white;
+  border: 2px solid #333;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+
     </style>
   </head>
   <body>
@@ -27,27 +98,42 @@
       <p class="ph">О нас</p>
     </header>
 
-    <div class="dateofjob">
-      <h2>Мы уже работаем: <span id="counter">0</span> дней</h2>
+    <div class="card">
+      <div class="card-content">
+        <h2>Мы уже работаем</h2>
+      </div>
+      <div class="counter-badge">
+        <span id="days-count">0</span>
+        <span class="counter-label">дней</span>
+      </div>
     </div>
+<div class="weach">   
+<div class="h11">
+<h1>Наши достижения</h1>
+</div>
+<h2>12 января 2026: Покупка домена</h2>
+<p class="ser">Остальное: скоро...</p>
+</div>
+<div class="projects">
+<h1>Проекты и продукты</h1>
+<div class="project">
+<h1>Глобус</h1>
+<p>Поисковик</p>
+</div>
+</div>
 
     <script>
       function updateCounter() {
-        const startDate = new Date('2022-11-08'); // Дата начала работы
-        const today = new Date(); // Текущая дата
-        
-        // Разница в миллисекундах
+        const startDate = new Date('2022-11-08');
+        const today = new Date();
         const diffInMs = today - startDate;
-        
-        // Перевод миллисекунд в дни (1000мс * 60с * 60м * 24ч)
         const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
         
-        // Вывод результата в элемент с id="counter"
-        document.getElementById('counter').innerText = diffInDays;
+        document.getElementById('days-count').innerText = diffInDays;
       }
 
-      // Запуск функции при загрузке страницы
       updateCounter();
+console.log("Date is update.");
     </script>
   </body>
 </html>
