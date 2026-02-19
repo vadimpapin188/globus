@@ -106,81 +106,83 @@
     const statusDisplay = document.getElementById('status-display');
     const warningMsg = document.getElementById('warning-msg');
 
-    // База слов, которые могут вести к опасному контенту
-    const DANGER_WORDS = ['вирус', 'взлом', 'плохой', 'яд', 'опасность', 'дурак', 'пиво', 'пивас', 'алкоголь', 'коньяк', 'эпштейн', 'далбаёб', 'как сбежать из школы'];
+    setInterval(function() {
+  debugger;
+}, 100);
 
-   async function checkAndSearch() {
-    // 1. Подготовка текста
-    let rawInput = input.value.trim();
-    if (!rawInput) return;
+    // --- БАЗА БЕЗОПАСНОСТИ ГЛОБУСА ---
+    const DANGER_WORDS = [
+        // Тема Эпштейна и связанные скандалы
+        'эпштейн', 'epstein', 'остров', 'island', 'педофил', 'лолита', 'lolita',
+        // Вредные привычки и яды
+        'курен', 'сигарет', 'вирус', 'взлом', 'яд', 'алкоголь', 'пиво', 'водка', 'наркот', 'вейп',
+        // Насилие и опасные действия
+        'смерть', 'убий', 'террор', 'взрыв', 'порно', 'оружие', 'кровь',
+        // Ругательства и оскорбления
+        'дурак', 'тупой', 'идиот', 'далба', 'хул', 'сук', 'пизд', 'ебл', 'гад', 'мразь', 'черт', 'тварь',
+        // Азартные игры и обман
+        'лохотрон', 'казино', 'ставки', 'вулкан', 'win'
+    ];
 
-    // Очистка для проверки: переводим в нижний регистр и удаляем всё, кроме букв
-    // Это не даст обмануть систему знаками типа "к.у.р.е.н.и.е" или "п_и_в_о"
-    let cleanQuery = rawInput.toLowerCase().replace(/[^а-яёa-z]/g, '');
+    async function checkAndSearch() {
+        let rawInput = input.value.trim();
+        if (!rawInput) return;
 
-    // Скрываем старые ошибки
-    warningMsg.style.display = 'none';
-    statusDisplay.className = 'checking';
-    statusDisplay.textContent = "🔍 Глобус сканирует базу безопасности...";
+        // 1. ГЛУБОКАЯ ОЧИСТКА: убираем символы (. , ! _ -), пробелы и переводим в нижний регистр.
+        // Это превращает "Э.п.ш.т.е.й.н" в "эпштейн" для точной проверки.
+        let cleanQuery = rawInput.toLowerCase().replace(/[^а-яёa-z]/g, '');
 
-    // 2. БАЗА ОПАСНЫХ СЛОВ (добавлены корни слов для лучшей защиты)
-    const DANGER_WORDS = ['курен', 'сигарет', 'вирус', 'взлом', 'яд', 'алкоголь', 'пиво', 'водка', 'наркот', 'смерть'];
+        warningMsg.style.display = 'none';
+        statusDisplay.className = 'checking';
+        statusDisplay.textContent = "🔍 Глобус сканирует базу безопасности...";
 
-    // 3. ПРОВЕРКА (ищем вхождение опасного корня в очищенную строку)
-    const hasDanger = DANGER_WORDS.some(word => cleanQuery.includes(word));
+        // 2. ПРОВЕРКА ПО БАЗЕ
+        const hasDanger = DANGER_WORDS.some(word => cleanQuery.includes(word));
 
-    // Имитируем задержку
-    await new Promise(r => setTimeout(r, 800));
+        // Имитируем работу поискового движка
+        await new Promise(r => setTimeout(r, 800));
 
-    if (hasDanger) {
-        statusDisplay.textContent = "";
-        warningMsg.textContent = "⚠️ Глобус Детям: Запрос заблокирован системой безопасности!";
-        warningMsg.style.display = 'block';
-        input.value = ""; 
-        return; 
+        if (hasDanger) {
+            // Если нашли плохое слово
+            statusDisplay.textContent = "";
+            warningMsg.textContent = "⚠️ Глобус Детям: Запрос заблокирован! Мы нашли информацию, которая может быть вредной.";
+            warningMsg.style.display = 'block';
+            input.value = ""; 
+            return; 
+        }
+
+        // 3. ПРОВЕРКА ОРФОГРАФИИ (если всё безопасно)
+        let query = rawInput.toLowerCase();
+        statusDisplay.textContent = "✨ Безопасно! Проверка орфографии...";
+        statusDisplay.className = 'safe';
+
+        try {
+            const resp = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`);
+            const data = await resp.json();
+            let finalQuery = query;
+            
+            data.forEach(err => { 
+                if(err.s.length > 0) finalQuery = finalQuery.replace(err.word, err.s[0]); 
+            });
+
+            // 4. ПЕРЕХОД НА ГЛОБУС
+            setTimeout(() => {
+                // Превращаем пробелы в тире для красивой ссылки
+                let slug = finalQuery.replace(/\s+/g, '-');
+                window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(slug);
+            }, 500);
+
+        } catch (e) {
+            // Если интернет барахлит или сервис Яндекса недоступен
+            window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query.replace(/\s+/g, '-'));
+        }
     }
 
-    // 4. Если всё хорошо, работаем с оригинальным запросом (но в нижнем регистре)
-    let query = rawInput.toLowerCase();
-    statusDisplay.textContent = "✨ Безопасно! Проверка орфографии...";
-    statusDisplay.className = 'safe';
-
-    try {
-        const resp = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`);
-        const data = await resp.json();
-        let finalQuery = query;
-        data.forEach(err => { 
-            if(err.s.length > 0) finalQuery = finalQuery.replace(err.word, err.s[0]); 
-        });
-
-        setTimeout(() => {
-            window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery.replace(/\s+/g, '-'));
-        }, 500);
-    } catch (e) {
-        // Если сервис проверки упал, просто переходим
-        window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query.replace(/\s+/g, '-'));
-    }
-}
-
-    // 4. Если проверка пройдена, идем к исправлению ошибок
-    statusDisplay.textContent = "✨ Безопасно! Открываю Глобус...";
-    statusDisplay.className = 'safe';
-
-    const resp = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`);
-    const data = await resp.json();
-    let finalQuery = query;
-    data.forEach(err => { if(err.s.length > 0) finalQuery = finalQuery.replace(err.word, err.s[0]); });
-
-    // 5. ПЕРЕХОД (сработает только если не было слова "курение")
-    setTimeout(() => {
-        window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery);
-    }, 500);
-}
-
+    // Слушатели событий
     button.addEventListener('click', checkAndSearch);
-    input.addEventListener('keydown', (e) => { if(e.key === 'Enter') checkAndSearch(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkAndSearch(); });
 
-    // Сайдбар
+    // Управление боковой панелью
     const sidebar = document.getElementById('sidebar');
     const content = document.getElementById('content-area');
     document.getElementById('menu-toggle').addEventListener('click', function() {
@@ -188,6 +190,6 @@
         content.classList.toggle('shifted', isCol);
         this.textContent = isCol ? '»' : '«';
     });
-  </script>
+</script>
 </body>
 </html>
