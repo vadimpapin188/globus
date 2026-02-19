@@ -190,6 +190,27 @@
         content.classList.toggle('shifted', isCol);
         this.textContent = isCol ? '»' : '«';
     });
+    // Защита от горячих клавиш взлома
+document.addEventListener('keydown', function(e) {
+    // Список запрещенных клавиш:
+    // F12, Ctrl+Shift+I (инспекция), Ctrl+U (исходный код), Ctrl+Shift+J (консоль)
+    if (
+        e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+        (e.ctrlKey && e.shiftKey && e.key === 'J') || 
+        (e.ctrlKey && e.key === 'u') ||
+        (e.ctrlKey && e.key === 'U')
+    ) {
+        e.preventDefault(); // Отменяет действие кнопки
+        alert("Глобус: Доступ к коду защищен!");
+        return false;
+    }
+});
+
+// Запрет правой кнопки мыши (чтобы не открыли "Просмотреть код")
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
 </script>
 </body>
 </html>
