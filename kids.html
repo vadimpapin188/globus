@@ -107,35 +107,60 @@
     const warningMsg = document.getElementById('warning-msg');
 
     // База слов, которые могут вести к опасному контенту
-    const DANGER_WORDS = ['вирус', 'взлом', 'плохой', 'яд', 'опасность', 'дурак', 'пиво', 'пивас', 'алкоголь', 'коньяк'];
+    const DANGER_WORDS = ['вирус', 'взлом', 'плохой', 'яд', 'опасность', 'дурак', 'пиво', 'пивас', 'алкоголь', 'коньяк', 'эпштейн', 'далбаёб', 'как сбежать из школы'];
 
    async function checkAndSearch() {
-    // 1. Берем текст, переводим в нижний регистр
-    let query = input.value.toLowerCase().trim();
-    if (!query) return;
+    // 1. Подготовка текста
+    let rawInput = input.value.trim();
+    if (!rawInput) return;
 
-    // Скрываем старые ошибки и показываем статус проверки
+    // Очистка для проверки: переводим в нижний регистр и удаляем всё, кроме букв
+    // Это не даст обмануть систему знаками типа "к.у.р.е.н.и.е" или "п_и_в_о"
+    let cleanQuery = rawInput.toLowerCase().replace(/[^а-яёa-z]/g, '');
+
+    // Скрываем старые ошибки
     warningMsg.style.display = 'none';
     statusDisplay.className = 'checking';
     statusDisplay.textContent = "🔍 Глобус сканирует базу безопасности...";
 
-    // 2. БАЗА ОПАСНЫХ СЛОВ (проверь, чтобы слово "курение" было здесь)
-    const DANGER_WORDS = ['курение', 'сигареты', 'вирус', 'взлом', 'яд', 'алкоголь'];
+    // 2. БАЗА ОПАСНЫХ СЛОВ (добавлены корни слов для лучшей защиты)
+    const DANGER_WORDS = ['курен', 'сигарет', 'вирус', 'взлом', 'яд', 'алкоголь', 'пиво', 'водка', 'наркот', 'смерть'];
 
-    // 3. САМА ПРОВЕРКА (Самый важный момент!)
-    const hasDanger = DANGER_WORDS.some(word => query.includes(word));
+    // 3. ПРОВЕРКА (ищем вхождение опасного корня в очищенную строку)
+    const hasDanger = DANGER_WORDS.some(word => cleanQuery.includes(word));
 
-    // Имитируем задержку для "глубокого анализа"
-    await new Promise(r => setTimeout(r, 1000));
+    // Имитируем задержку
+    await new Promise(r => setTimeout(r, 800));
 
     if (hasDanger) {
-        // ОСТАНАВЛИВАЕМ ВСЁ ТУТ
         statusDisplay.textContent = "";
-        warningMsg.textContent = "⚠️ Глобус Детям: Обнаружен опасный контент! Запрос '" + query + "' заблокирован.";
+        warningMsg.textContent = "⚠️ Глобус Детям: Запрос заблокирован системой безопасности!";
         warningMsg.style.display = 'block';
-        input.value = ""; // Очищаем поле, чтобы не повторялось
-        return; // <--- ЭТА КОМАНДА НЕ ДАСТ КОДУ ИДТИ ДАЛЬШЕ
+        input.value = ""; 
+        return; 
     }
+
+    // 4. Если всё хорошо, работаем с оригинальным запросом (но в нижнем регистре)
+    let query = rawInput.toLowerCase();
+    statusDisplay.textContent = "✨ Безопасно! Проверка орфографии...";
+    statusDisplay.className = 'safe';
+
+    try {
+        const resp = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`);
+        const data = await resp.json();
+        let finalQuery = query;
+        data.forEach(err => { 
+            if(err.s.length > 0) finalQuery = finalQuery.replace(err.word, err.s[0]); 
+        });
+
+        setTimeout(() => {
+            window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(finalQuery.replace(/\s+/g, '-'));
+        }, 500);
+    } catch (e) {
+        // Если сервис проверки упал, просто переходим
+        window.location.href = 'https://sites.google.com/view/globushomett/' + encodeURIComponent(query.replace(/\s+/g, '-'));
+    }
+}
 
     // 4. Если проверка пройдена, идем к исправлению ошибок
     statusDisplay.textContent = "✨ Безопасно! Открываю Глобус...";
