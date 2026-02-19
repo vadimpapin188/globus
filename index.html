@@ -186,6 +186,16 @@
 
     const aiTriggers = ["как", "что", "почему", "зачем", "кто", "где", "когда", "какой"];
 
+    // Проверка первого входа
+function checkFirstVisit() {
+    // Проверяем: 1. Нет метки в памяти 2. Мы НЕ на странице welcome
+    if (!localStorage.getItem('wasVisited') && !window.location.pathname.includes('welcome')) {
+        localStorage.setItem('wasVisited', 'true');
+        window.location.href = 'welcome'; 
+    }
+}
+checkFirstVisit();
+
     
 
     async function fixOrtho(query) {
@@ -278,6 +288,7 @@ updateGreeting();
         
 </body>
 </html>
+
 
 
 
