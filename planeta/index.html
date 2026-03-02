@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Глобус Планета</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f0f2f5; }
+        .post { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 10px; background-color: white; }
+        .post-title { font-size: 24px; color: #333; font-weight: bold; }
+        .post-text { color: #555; line-height: 1.5; }
+        .post-author { font-style: italic; color: #888; margin-top: 10px; }
+        .post-likes { margin-top: 10px; font-weight: bold; color: #007bff; }
+        button { padding: 5px 10px; cursor: pointer; }
+button {
+    background-color: #007bff; /* Синий цвет */
+    color: white; /* Белый текст */
+    border: none; /* Без рамки */
+    padding: 8px 16px; /* Размер кнопки */
+    border-radius: 5px; /* Закругленные углы */
+    cursor: pointer; /* Указатель мыши при наведении */
+    font-size: 14px;
+    transition: background-color 0.3s; /* Плавный переход цвета */
+}
+
+button:hover {
+    background-color: #0056b3; /* Темно-синий при наведении */
+}
+    </style>
+</head>
+<body>
+    <h1>Глобус Планета</h1>
+    <div id="posts-container">Загрузка постов...</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        // !!! ДОБАВИЛИ updateDoc и doc !!!
+        import { getFirestore, collection, getDocs, updateDoc, doc, increment } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjPmfYXhpQKTeTweUXiZMl1Abk8h3acmc",
+            authDomain: "globus-planeta.firebaseapp.com",
+            projectId: "globus-planeta",
+            storageBucket: "globus-planeta.firebasestorage.app",
+            messagingSenderId: "52493321547",
+            appId: "1:52493321547:web:0c4a02c78507dc48e154ce",
+            measurementId: "G-0VB6CEE2KY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Функция для лайка
+        window.likePost = async (postId) => {
+            const postRef = doc(db, "posts", postId);
+            // Увеличиваем значение поля likes на 1
+            await updateDoc(postRef, {
+                likes: increment(1)
+            });
+            getPosts(); // Перерисовываем посты, чтобы обновить число
+        }
+
+        async function getPosts() {
+            const container = document.getElementById('posts-container');
+            const querySnapshot = await getDocs(collection(db, "posts"));
+            
+            container.innerHTML = ''; 
+
+            querySnapshot.forEach((doc) => {
+                const post = doc.data();
+                const postId = doc.id; // Получаем ID документа
+                
+                const postHTML = `
+                    <div class="post">
+                        <div class="post-title">${post.title}</div>
+                        <p class="post-text">${post.text}</p>
+                        <div class="post-author">Автор: ${post.autor}</div>
+                        <div class="post-likes">
+                            Лайков: ${post.likes || 0} 
+                            <button onclick="likePost('${postId}')">👍 Лайк</button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += postHTML;
+            });
+        }
+
+        getPosts();
+    </script>
+</body>
+</html>
