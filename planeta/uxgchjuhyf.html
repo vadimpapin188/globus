@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель Админа - Глобус</title>
+    <style>
+        /* Стили для красивого вида */
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f7f6; }
+        .admin-box { background: white; padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        textarea { height: 150px; resize: vertical; }
+        button { background-color: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; }
+        button:hover { background-color: #218838; }
+        #status { text-align: center; margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="admin-box">
+        <h1>Создать пост</h1>
+        <input type="text" id="post-title" placeholder="Заголовок поста">
+        <input type="text" id="post-author" placeholder="Автор поста">
+        <textarea id="post-content" placeholder="Текст поста"></textarea>
+        <button onclick="publishPost()">Опубликовать</button>
+        <p id="status"></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        // !!! ВСТАВЬ СЮДА СВОИ ДАННЫЕ ИЗ FIREBASE !!!
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjPmfYXhpQKTeTweUXiZMl1Abk8h3acmc",
+            authDomain: "globus-planeta.firebaseapp.com",
+            projectId: "globus-planeta",
+            storageBucket: "globus-planeta.firebasestorage.app",
+            messagingSenderId: "52493321547",
+            appId: "1:52493321547:web:0c4a02c78507dc48e154ce",
+            measurementId: "G-0VB6CEE2KY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Функция публикации
+        window.publishPost = async () => {
+            const title = document.getElementById('post-title').value;
+            const author = document.getElementById('post-author').value;
+            const text = document.getElementById('post-content').value;
+            const status = document.getElementById('status');
+
+            // Проверка на заполненность полей
+            if (title === '' || text === '' || author === '') {
+                status.style.color = 'red';
+                status.innerText = 'Заполни все поля!';
+                return;
+            }
+
+            status.style.color = 'blue';
+            status.innerText = 'Публикую...';
+
+            try {
+                // Добавляем документ в коллекцию "posts"
+                await addDoc(collection(db, "posts"), {
+                    title: title,
+                    text: text,
+                    autor: author, // Имя поля, которое используется в главной странице
+                    likes: 0,
+                    createdAt: serverTimestamp() // Время создания
+                });
+                status.style.color = 'green';
+                status.innerText = 'Пост опубликован!';
+                
+                // Очищаем поля после публикации
+                document.getElementById('post-title').value = '';
+                document.getElementById('post-author').value = '';
+                document.getElementById('post-content').value = '';
+            } catch (e) {
+                status.style.color = 'red';
+                status.innerText = 'Ошибка: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
