@@ -29,6 +29,43 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        /* Стили для списка книг */
+        .book-list {
+            list-style: none;
+            padding: 0;
+        }
+        .book-item {
+            background: #f9f9ff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            padding: 15px;
+            transition: 0.3s;
+        }
+        .book-item:hover {
+            border-color: #0056b3;
+            box-shadow: 0 2px 8px rgba(0,86,179,0.1);
+        }
+        .book-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0056b3;
+            text-decoration: none;
+        }
+        .book-title:hover {
+            text-decoration: underline;
+        }
+        .book-meta {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .id-label {
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
         .agreement-link {
             color: #d9534f;
             text-decoration: none;
@@ -51,7 +88,19 @@
         
         <section>
             <h2>Библиотека</h2>
-            <p>Раздел в разработке...</p>
+            <ul class="book-list">
+                <li class="book-item">
+                    <a href="books/1.html" class="book-title">Сказка о Быстром моторчике</a>
+                    <div class="book-meta">
+                        Автор: Вадим Папин | <span class="id-label">ID: 1</span>
+                    </div>
+                </li>
+                
+                <li class="book-item" style="opacity: 0.6;">
+                    <span class="book-title">Новое произведение</span>
+                    <div class="book-meta">Скоро в библиотеке...</div>
+                </li>
+            </ul>
         </section>
     </main>
 
