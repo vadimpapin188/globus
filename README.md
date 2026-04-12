@@ -5,5 +5,7 @@
 Welcome to curated search! We search only on our Data base of sites!!
 Made by Papin Vadim
 You can add sites on Globus in **Indexator**: https://globus-search.online/addtoglobus/
+## Languages
+For Globus i used only JavaScript. 
 Good day!
 
