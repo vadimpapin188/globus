@@ -1,55 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Глобус Змейка</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Глобус Змейка v2.0</title>
     <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #000; }
-        canvas { border: 2px solid #fff; background: #000; }
+        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        #score { font-size: 24px; margin-bottom: 10px; }
+        canvas { border: 4px solid #444; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        
+        /* Кнопки управления */
+        .controls { display: grid; grid-template-columns: repeat(3, 70px); grid-gap: 10px; margin-top: 20px; }
+        .btn { width: 70px; height: 70px; background: #444; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 30px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .btn:active { background: #666; scale: 0.95; }
+        .up { grid-column: 2; }
+        .left { grid-column: 1; }
+        .right { grid-column: 3; }
+        .down { grid-column: 2; }
+        
+        #restart-btn { display: none; margin-top: 15px; padding: 10px 20px; background: #2ecc71; border: none; color: white; border-radius: 5px; font-size: 18px; }
     </style>
 </head>
 <body>
-<canvas id="game" width="400" height="400"></canvas>
+
+<div id="score">Очки: 0</div>
+<canvas id="game" width="300" height="300"></canvas>
+<button id="restart-btn" onclick="resetGame()">Играть снова</button>
+
+<div class="controls">
+    <div class="btn up" onclick="setDir('UP')">▲</div>
+    <div class="btn left" onclick="setDir('LEFT')">◀</div>
+    <div class="btn right" onclick="setDir('RIGHT')">▶</div>
+    <div class="btn down" onclick="setDir('DOWN')">▼</div>
+</div>
+
 <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
-    const box = 20;
-    let snake = [{x: 10 * box, y: 10 * box}];
-    let food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
-    let dir = "RIGHT";
+    const scoreElement = document.getElementById('score');
+    const restartBtn = document.getElementById('restart-btn');
+    
+    const box = 15;
+    let score = 0;
+    let gameInterval;
+    let snake, food, dir, nextDir;
 
-    // Управление для сенсорного экрана
-    canvas.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        const x = touch.clientX - canvas.offsetLeft;
-        const y = touch.clientY - canvas.offsetTop;
-        if (Math.abs(x - snake[0].x) > Math.abs(y - snake[0].y)) {
-            dir = (x > snake[0].x) ? "RIGHT" : "LEFT";
-        } else {
-            dir = (y > snake[0].y) ? "DOWN" : "UP";
-        }
-    });
+    function resetGame() {
+        score = 0;
+        scoreElement.innerHTML = "Очки: 0";
+        dir = "RIGHT";
+        nextDir = "RIGHT";
+        snake = [{x: 10 * box, y: 10 * box}];
+        food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+        restartBtn.style.display = "none";
+        if(gameInterval) clearInterval(gameInterval);
+        gameInterval = setInterval(draw, 120);
+    }
+
+    function setDir(newDir) {
+        if(newDir == "LEFT" && dir != "RIGHT") nextDir = "LEFT";
+        if(newDir == "UP" && dir != "DOWN") nextDir = "UP";
+        if(newDir == "RIGHT" && dir != "LEFT") nextDir = "RIGHT";
+        if(newDir == "DOWN" && dir != "UP") nextDir = "DOWN";
+    }
 
     function draw() {
+        dir = nextDir;
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        for(let i = 0; i < snake.length; i++) {
-            ctx.fillStyle = (i == 0) ? "green" : "lime";
-            ctx.fillRect(snake[i].x, snake[i].y, box, box);
-        }
-
-        ctx.fillStyle = "red";
+        // Рисуем еду
+        ctx.fillStyle = "#e74c3c";
         ctx.fillRect(food.x, food.y, box, box);
+
+        // Рисуем змейку
+        for(let i = 0; i < snake.length; i++) {
+            ctx.fillStyle = (i == 0) ? "#2ecc71" : "#27ae60";
+            ctx.fillRect(snake[i].x, snake[i].y, box, box);
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+        }
 
         let headX = snake[0].x;
         let headY = snake[0].y;
 
         if(dir == "LEFT") headX -= box;
-        if(dir == "RIGHT") headX += box;
         if(dir == "UP") headY -= box;
+        if(dir == "RIGHT") headX += box;
         if(dir == "DOWN") headY += box;
 
         if(headX == food.x && headY == food.y) {
+            score++;
+            scoreElement.innerHTML = "Очки: " + score;
             food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
         } else {
             snake.pop();
@@ -57,9 +99,14 @@
 
         let newHead = { x: headX, y: headY };
 
-        // Проигрыш при столкновении со стеной или собой
+        // Проверка столкновений
         if(headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height || collision(newHead, snake)) {
-            location.reload(); 
+            clearInterval(gameInterval);
+            restartBtn.style.display = "block";
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText("ИГРА ОКОНЧЕНА", 70, 150);
+            return;
         }
 
         snake.unshift(newHead);
@@ -72,7 +119,7 @@
         return false;
     }
 
-    setInterval(draw, 150);
+    resetGame();
 </script>
 </body>
 </html>
