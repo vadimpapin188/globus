@@ -1,149 +1,78 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Что нового | Browser Update</title>
+    <title>Глобус Змейка</title>
     <style>
-        :root {
-            --bg-color: #f4f4f9;
-            --card-bg: #ffffff;
-            --text-main: #333;
-            --accent-color: #2563eb;
-            --border-radius: 8px;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid var(--bg-color);
-            padding-bottom: 0.5rem;
-        }
-
-        .update-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .update-item {
-            margin-bottom: 1rem;
-            padding-left: 1.5rem;
-            position: relative;
-        }
-
-        .update-item::before {
-            content: "•";
-            color: var(--accent-color);
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
-
-        .controls {
-            margin-top: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .search-box {
-            display: flex;
-            gap: 5px;
-        }
-
-        input[type="text"] {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        button {
-            cursor: pointer;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            background-color: var(--accent-color);
-            color: white;
-            transition: opacity 0.2s;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .home-btn {
-            background-color: #10b981;
-        }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #000; }
+        canvas { border: 2px solid #fff; background: #000; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1 id="welcome-msg">Что нового?</h1>
-    
-    <ul class="update-list">
-        <li class="update-item"><strong>Персонализация:</strong> Теперь браузер учитывает ваши предпочтения.</li>
-        <li class="update-item"><strong>DuckDuckGo:</strong> Поисковик по умолчанию для защиты конфиденциальности.</li>
-        <li class="update-item"><strong>Навигация:</strong> Добавлена кнопка быстрого возврата на главную.</li>
-    </ul>
-
-    <div class="controls">
-        <div class="search-box">
-            <input type="text" id="dg-search" placeholder="Поиск в DuckDuckGo...">
-            <button onclick="search()">Найти</button>
-        </div>
-        <button class="home-btn" onclick="goHome()">Главная страница браузера</button>
-    </div>
-</div>
-
+<canvas id="game" width="400" height="400"></canvas>
 <script>
-    // Персонализация: Приветствие
-    const userName = "Вадим"; 
-    document.getElementById('welcome-msg').innerText = `Что нового, ${userName}?`;
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const box = 20;
+    let snake = [{x: 10 * box, y: 10 * box}];
+    let food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+    let dir = "RIGHT";
 
-    // Функция поиска DuckDuckGo
-    function search() {
-        const query = document.getElementById('dg-search').value;
-        if (query) {
-            window.location.href = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
-        }
-    }
-
-    // Кнопка Главная страница
-    function goHome() {
-        // Здесь можно указать внутренний URL твоей главной страницы
-        window.location.href = "about:blank"; 
-        console.log("Переход на главную страницу...");
-    }
-
-    // Обработка Enter в поиске
-    document.getElementById('dg-search').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            search();
+    // Управление для сенсорного экрана
+    canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const x = touch.clientX - canvas.offsetLeft;
+        const y = touch.clientY - canvas.offsetTop;
+        if (Math.abs(x - snake[0].x) > Math.abs(y - snake[0].y)) {
+            dir = (x > snake[0].x) ? "RIGHT" : "LEFT";
+        } else {
+            dir = (y > snake[0].y) ? "DOWN" : "UP";
         }
     });
-</script>
 
+    function draw() {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for(let i = 0; i < snake.length; i++) {
+            ctx.fillStyle = (i == 0) ? "green" : "lime";
+            ctx.fillRect(snake[i].x, snake[i].y, box, box);
+        }
+
+        ctx.fillStyle = "red";
+        ctx.fillRect(food.x, food.y, box, box);
+
+        let headX = snake[0].x;
+        let headY = snake[0].y;
+
+        if(dir == "LEFT") headX -= box;
+        if(dir == "RIGHT") headX += box;
+        if(dir == "UP") headY -= box;
+        if(dir == "DOWN") headY += box;
+
+        if(headX == food.x && headY == food.y) {
+            food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+        } else {
+            snake.pop();
+        }
+
+        let newHead = { x: headX, y: headY };
+
+        // Проигрыш при столкновении со стеной или собой
+        if(headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height || collision(newHead, snake)) {
+            location.reload(); 
+        }
+
+        snake.unshift(newHead);
+    }
+
+    function collision(head, array) {
+        for(let i = 0; i < array.length; i++) {
+            if(head.x == array[i].x && head.y == array[i].y) return true;
+        }
+        return false;
+    }
+
+    setInterval(draw, 150);
+</script>
 </body>
 </html>
