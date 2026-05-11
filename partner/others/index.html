@@ -3,141 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Стать партнёром Глобуса</title>
+    <title>Партнёрская программа Глобус</title>
     <style>
-        /* Основные стили */
+        /* Общие настройки */
         body {
-            font-family: sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
             margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #2c3e50;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
         }
 
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 400px;
-            width: 100%;
+            max-width: 1000px;
+            margin: -40px auto 40px;
+            padding: 0 20px;
         }
 
-        h1 {
-            color: #2c3e50;
-            font-size: 24px;
-            text-align: center;
+        /* Карточки ролей */
+        .roles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-top: 5px solid #3498db;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+
+        .card ul {
+            padding-left: 20px;
+        }
+
+        .card li {
             margin-bottom: 10px;
         }
 
-        p {
-            text-align: center;
-            font-size: 14px;
-            color: #666;
+        /* Информационный блок */
+        .info-section {
+            background: white;
+            margin-top: 40px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        /* Поля формы */
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box; /* Чтобы отступы не раздували ширину */
-        }
-
-        /* Кнопка */
-        button {
-            width: 100%;
-            padding: 12px;
+        .cta-button {
+            display: inline-block;
             background-color: #3498db;
             color: white;
-            border: none;
+            padding: 15px 30px;
+            text-decoration: none;
             border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
             transition: background 0.3s;
         }
 
-        button:hover {
+        .cta-button:hover {
             background-color: #2980b9;
         }
 
-        .success-message {
-            display: none;
-            color: #27ae60;
+        footer {
             text-align: center;
-            margin-top: 15px;
+            padding: 40px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            color: #e67e22;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
 
+<header>
+    <h1>Стань частью команды Глобус</h1>
+    <p>Мы строим поиск будущего вместе</p>
+</header>
+
 <div class="container">
-    <h1>Партнёрство с Глобусом</h1>
-    <p>Помоги нам стать лучше! Выбери роль и оставь свои данные.</p>
-
-    <form id="partnerForm">
-        <div class="form-group">
-            <label for="name">Твоё имя:</label>
-            <input type="text" id="name" placeholder="Как тебя зовут?" required>
+    <div class="roles">
+        <!-- Роль Тестировщика -->
+        <div class="card">
+            <h2>Тестировщик</h2>
+            <p>Твоя задача — проверять стабильность системы и находить уязвимости.</p>
+            <ul>
+                <li>Проверка работы поиска на разных устройствах</li>
+                <li>Поиск багов в интерфейсе</li>
+                <li>Отчёты об ошибках напрямую разработчику</li>
+            </ul>
         </div>
 
-        <div class="form-group">
-            <label for="role">Кем хочешь стать?</label>
-            <select id="role">
-                <option value="tester">Тестировщик (искать ошибки)</option>
-                <option value="idea">Идеист (предлагать функции)</option>
-                <option value="both">И то, и другое</option>
-            </select>
+        <!-- Роль Идеиста -->
+        <div class="card" style="border-top-color: #9b59b6;">
+            <h2>Идеист</h2>
+            <p>Человек, который придумывает, куда проекту двигаться дальше.</p>
+            <ul>
+                <li>Проектирование новых функций</li>
+                <li>Разработка концепций для обновлений</li>
+                <li>Участие в обсуждении дизайна</li>
+            </ul>
         </div>
+    </div>
 
-        <div class="form-group">
-            <label for="contact">Контакт для связи:</label>
-            <input type="text" id="contact" placeholder="Номер телефона или электронная почта" required>
-        </div>
-
-        <div class="form-group">
-            <label for="message">Почему хочешь помочь?</label>
-            <textarea id="message" rows="3" placeholder="Пару слов о себе..."></textarea>
-        </div>
-
-        <button type="submit">Отправить заявку</button>
-    </form>
-
-    <div id="status" class="success-message">Заявка отправлена! Мы свяжемся с тобой.</div>
+    <div class="info-section">
+        <h2>Почему это важно?</h2>
+        <p>У проекта <b>Глобус</b> уже почти <span class="highlight">100 пользователей</span>. Чтобы развиваться дальше, нам нужны люди, которым не всё равно. Ты получишь опыт работы над реальным продуктом и сможешь увидеть свои идеи в действии.</p>
+        
+        <p><b>Как это работает:</b> Выбери направление, которое тебе ближе, и напиши мне в Telegram или на почту. Мы обсудим задачи и добавим тебя в команду.</p>
+        
+        <a href="https://t.me/твой_ник" class="cta-button">Написать разработчику</a>
+    </div>
 </div>
 
-<script>
-    document.getElementById('partnerForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Чтобы страница не перезагружалась
-
-        // Собираем данные
-        const name = document.getElementById('name').value;
-        const role = document.getElementById('role').value;
-        const contact = document.getElementById('contact').value;
-
-        // В будущем здесь можно настроить отправку на сервер или в Telegram
-        console.log("Новая заявка:", { name, role, contact });
-
-        // Показываем сообщение об успехе
-        document.getElementById('partnerForm').style.display = 'none';
-        document.getElementById('status').style.display = 'block';
-    });
-</script>
+<footer>
+    &copy; 2023-2026 Глобус Поиск. Все права защищены.
+</footer>
 
 </body>
 </html>
