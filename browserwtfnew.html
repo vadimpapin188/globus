@@ -2,11 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Настройки для идеальной работы на мобильных устройствах -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket City</title>
+  <title>Pocket City Pro</title>
   
-  <!-- Подключаем иконки и шрифты -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   
@@ -20,205 +18,324 @@
       height: 100vh;
       overflow: hidden;
       user-select: none;
-      touch-action: manipulation; /* Убирает задержку при нажатии на телефоне */
+      touch-action: manipulation;
     }
 
-    /* Верхняя панель */
     .header {
       background-color: #ff9f1c;
       color: white;
-      padding: 15px;
+      padding: 10px;
       text-align: center;
-      font-size: 28px;
+      font-size: 24px;
       font-weight: bold;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    /* Панель ресурсов */
+    /* Панель ресурсов (теперь тут 3 параметра) */
     .stats {
       display: flex;
       justify-content: space-around;
       background-color: #ffffff;
-      padding: 15px;
-      font-size: 24px;
+      padding: 10px;
+      font-size: 20px;
       font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .money { color: #2ec4b6; }
     .pop { color: #e71d36; }
+    .happy { color: #ffb703; }
 
-    /* Карта города */
+    /* Кнопка расширения */
+    .expand-btn {
+      background-color: #9b59b6;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      margin: 5px 15px 0 15px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #8e44ad;
+    }
+    .expand-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #8e44ad;
+    }
+
+    /* Карта */
     .map-container {
       flex-grow: 1;
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 10px;
+      overflow-y: auto;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr); /* Начинаем с 4 колонок */
       gap: 6px;
       width: 100%;
-      max-width: 500px;
-      aspect-ratio: 5 / 6; /* Пропорции для экрана телефона */
+      max-width: 450px;
     }
     .cell {
       background-color: #81c784;
       border-radius: 10px;
+      aspect-ratio: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 40px;
+      font-size: 32px;
       box-shadow: inset 0 -4px 0 rgba(0,0,0,0.15);
       cursor: pointer;
     }
-    .cell:active {
-      background-color: #66bb6a;
-      transform: translateY(2px);
-      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15);
+    /* Заблокированные клетки */
+    .cell.locked {
+      background-color: #7f8c8d;
+      opacity: 0.4;
+      box-shadow: none;
+      cursor: not-allowed;
     }
 
-    /* Нижнее меню строительства */
-    .toolbar {
+    /* Нижнее меню (с прокруткой, если зданий много) */
+    .toolbar-container {
       background-color: #ffffff;
-      display: flex;
-      justify-content: space-around;
-      padding: 20px 10px 30px 10px;
       box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
+      padding: 10px 0 25px 0;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 0 10px;
+      scrollbar-width: none; /* Скрываем скроллбар */
+    }
+    .toolbar::-webkit-scrollbar {
+      display: none;
     }
     .tool {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       background-color: #f1f2f6;
       border: 4px solid transparent;
       border-radius: 15px;
-      padding: 15px 10px;
-      font-size: 20px;
-      width: 28%;
+      padding: 10px;
+      font-size: 16px;
+      min-width: 75px;
       cursor: pointer;
+      flex-shrink: 0;
     }
     .tool.active {
       border-color: #ff9f1c;
       background-color: #fff3e0;
     }
     .tool i {
-      font-size: 32px;
-      margin-bottom: 8px;
+      font-size: 26px;
+      margin-bottom: 5px;
     }
     .cost {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: bold;
       color: #2ec4b6;
-      margin-top: 5px;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">🏙️ Pocket City</div>
+  <div class="header">🏙️ Pocket City Pro</div>
   
   <div class="stats">
     <div class="stat-item money"><i class="fa-solid fa-coins"></i> <span id="money-display">50</span></div>
     <div class="stat-item pop"><i class="fa-solid fa-users"></i> <span id="pop-display">0</span></div>
+    <div class="stat-item happy"><span id="happy-icon">😐</span> <span id="happy-display">100</span>%</div>
+  </div>
+
+  <div class="expand-btn" onclick="expandMap()">
+    <i class="fa-solid fa-map"></i> Расширить территорию (Цена: $<span id="expand-cost">40</span>)
   </div>
 
   <div class="map-container">
     <div class="grid" id="grid"></div>
   </div>
 
-  <div class="toolbar">
-    <div class="tool active" id="tool-house" onclick="selectTool('house')">
-      <i class="fa-solid fa-house" style="color: #3498db;"></i>
-      <div>House</div>
-      <div class="cost">$10</div>
-    </div>
-    <div class="tool" id="tool-shop" onclick="selectTool('shop')">
-      <i class="fa-solid fa-store" style="color: #e74c3c;"></i>
-      <div>Shop</div>
-      <div class="cost">$20</div>
-    </div>
-    <div class="tool" id="tool-park" onclick="selectTool('park')">
-      <i class="fa-solid fa-tree" style="color: #2ecc71;"></i>
-      <div>Park</div>
-      <div class="cost">$5</div>
+  <div class="toolbar-container">
+    <div class="toolbar">
+      <div class="tool active" id="tool-house" onclick="selectTool('house')">
+        <i class="fa-solid fa-house" style="color: #3498db;"></i>
+        <div>Дом</div>
+        <div class="cost">$10</div>
+      </div>
+      <div class="tool" id="tool-shop" onclick="selectTool('shop')">
+        <i class="fa-solid fa-store" style="color: #e74c3c;"></i>
+        <div>Магазин</div>
+        <div class="cost">$25</div>
+      </div>
+      <div class="tool" id="tool-park" onclick="selectTool('park')">
+        <i class="fa-solid fa-tree" style="color: #2ecc71;"></i>
+        <div>Парк</div>
+        <div class="cost">$8</div>
+      </div>
+      <div class="tool" id="tool-factory" onclick="selectTool('factory')">
+        <i class="fa-solid fa-industry" style="color: #7f8c8d;"></i>
+        <div>Завод</div>
+        <div class="cost">$60</div>
+      </div>
+      <div class="tool" id="tool-hospital" onclick="selectTool('hospital')">
+        <i class="fa-solid fa-hospital" style="color: #e67e22;"></i>
+        <div>Больница</div>
+        <div class="cost">$80</div>
+      </div>
     </div>
   </div>
 
   <script>
-    // Переменные для хранения данных игры
+    // Игровые переменные
     let money = 50;
-    let population = 0;
-    let income = 0;
+    let basePopulation = 0; // Настоящее население по зданиям
+    let currentPopulation = 0; // Отображаемое население (с учетом экологии)
     let currentTool = 'house';
+    
+    // Механика расширения
+    let gridColumns = 4;
+    let maxCells = 16; // Начинаем с 16 клеток (4х4)
+    let expandCost = 40;
 
-    // Информация о зданиях
+    // Подсчет типов зданий для баланса
+    let buildings = { house: 0, shop: 0, park: 0, factory: 0, hospital: 0 };
+
     const tools = {
       house: { cost: 10, icon: '<i class="fa-solid fa-house" style="color: #3498db;"></i>' },
-      shop: { cost: 20, icon: '<i class="fa-solid fa-store" style="color: #e74c3c;"></i>' },
-      park: { cost: 5, icon: '<i class="fa-solid fa-tree" style="color: #2ecc71;"></i>' }
+      shop: { cost: 25, icon: '<i class="fa-solid fa-store" style="color: #e74c3c;"></i>' },
+      park: { cost: 8, icon: '<i class="fa-solid fa-tree" style="color: #2ecc71;"></i>' },
+      factory: { cost: 60, icon: '<i class="fa-solid fa-industry" style="color: #7f8c8d;"></i>' },
+      hospital: { cost: 80, icon: '<i class="fa-solid fa-hospital" style="color: #e67e22;"></i>' }
     };
 
     const gridEl = document.getElementById('grid');
     const moneyEl = document.getElementById('money-display');
     const popEl = document.getElementById('pop-display');
+    const happyEl = document.getElementById('happy-display');
+    const happyIconEl = document.getElementById('happy-icon');
+    const expandCostEl = document.getElementById('expand-cost');
 
-    // Рисуем карту (30 клеток)
-    for (let i = 0; i < 30; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.onclick = () => build(cell);
-      gridEl.appendChild(cell);
+    // Генерация начальной карты 6х6, но доступно только 4х4
+    const totalMapSize = 36; // Всего 36 клеток макс (6х6)
+    
+    function createMap() {
+      gridEl.innerHTML = '';
+      gridEl.style.gridTemplateColumns = `repeat(${gridColumns}, 1fr)`;
+      
+      for (let i = 0; i < maxCells; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+        cell.onclick = () => build(cell);
+        gridEl.appendChild(cell);
+      }
     }
 
-    // Функция выбора здания в меню
+    // Расширение территории
+    function expandMap() {
+      if (money >= expandCost) {
+        if (gridColumns < 6) {
+          money -= expandCost;
+          gridColumns++;
+          maxCells = gridColumns * gridColumns;
+          expandCost = Math.floor(expandCost * 2.5); // Цена растет в 2.5 раза!
+          
+          createMap();
+          updateUI();
+        } else {
+          alert("Достигнут максимальный размер города для мобильного экрана!");
+        }
+      } else {
+        alert("Не хватает денег для расширения!");
+      }
+    }
+
     function selectTool(toolName) {
       currentTool = toolName;
-      // Убираем выделение со всех кнопок
       document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
-      // Добавляем выделение на нажатую кнопку
       document.getElementById('tool-' + toolName).classList.add('active');
     }
 
-    // Функция постройки
     function build(cell) {
-      // Проверяем, пустое ли место
-      if (cell.innerHTML !== '') return; 
+      if (cell.innerHTML !== '' || cell.classList.contains('locked')) return; 
       
       let tool = tools[currentTool];
       
-      // Проверяем, хватает ли денег
       if (money >= tool.cost) {
         money -= tool.cost;
         cell.innerHTML = tool.icon;
         
-        // Применяем бонусы от зданий
-        if (currentTool === 'house') population += 4;
-        if (currentTool === 'shop') income += 2; // Магазин дает 2 монеты в секунду
-        if (currentTool === 'park') population += 1;
+        // Регистрируем постройку
+        buildings[currentTool]++;
+        
+        // Считаем базовое население
+        if (currentTool === 'house') basePopulation += 5;
         
         updateUI();
+      }
+    }
+
+    // Расчет счастья и доходов
+    function calculateStats() {
+      // 1 парк может обслужить 1 дом или 1 завод. Больница дает огромный бонус к счастью.
+      let badPlaces = buildings.house + (buildings.factory * 2);
+      let goodPlaces = buildings.park + (buildings.hospital * 3);
+      
+      let happiness = 100;
+      if (badPlaces > 0) {
+        let ratio = goodPlaces / badPlaces;
+        if (ratio < 1) {
+          happiness = Math.floor(ratio * 100);
+        }
+      }
+      if (happiness < 20) happiness = 20; // Ниже 20% не падает
+
+      // Зависимость населения от счастья
+      if (happiness < 50) {
+        // Люди уезжают, если им грустно
+        currentPopulation = Math.floor(basePopulation * (happiness / 100));
       } else {
-        // Если денег нет, клетка трясется (эффект)
-        cell.style.transform = 'translateX(5px)';
-        setTimeout(() => cell.style.transform = 'translateX(-5px)', 100);
-        setTimeout(() => cell.style.transform = 'translateX(0)', 200);
+        currentPopulation = basePopulation;
       }
+
+      // Смайлик счастья
+      if (happiness > 80) happyIconEl.innerText = '😀';
+      else if (happiness > 50) happyIconEl.innerText = '😐';
+      else happyIconEl.innerText = '😡';
+
+      // Считаем доход
+      // Магазин дает +2, Завод дает +10, но если люди злые (настроение < 40), магазины приносят в 2 раза меньше
+      let shopIncome = buildings.shop * (happiness < 40 ? 1 : 2);
+      let factoryIncome = buildings.factory * 10;
+      let totalIncome = shopIncome + factoryIncome;
+
+      return { happiness, totalIncome };
     }
 
-    // Обновление цифр на экране
     function updateUI() {
+      let stats = calculateStats();
       moneyEl.innerText = money;
-      popEl.innerText = population;
+      popEl.innerText = currentPopulation;
+      happyEl.innerText = stats.happiness;
+      expandCostEl.innerText = expandCost;
     }
 
-    // Игровой таймер: получаем прибыль каждую секунду (1000 миллисекунд)
+    // Каждую секунду капают деньги и обновляются жильцы
     setInterval(() => {
-      if (income > 0) {
-        money += income;
-        updateUI();
-      }
+      let stats = calculateStats();
+      money += stats.totalIncome;
+      updateUI();
     }, 1000);
+
+    // Старт игры
+    createMap();
+    updateUI();
   </script>
 </body>
 </html>
