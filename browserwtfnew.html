@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket City: Mega Update</title>
+  <title>YouTown: Mega Evolution</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
@@ -22,19 +22,19 @@
       transition: background-color 2s;
     }
 
-    /* Эффект дождя */
     body.rainy {
       background-color: #5d7a8c;
     }
 
     .header {
-      background-color: #ff9f1c;
+      background-color: #e71d36; /* Сделали яркий сочный цвет */
       color: white;
       padding: 10px;
       text-align: center;
-      font-size: 24px;
+      font-size: 26px;
       font-weight: bold;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      letter-spacing: 1px;
     }
 
     .stats {
@@ -249,13 +249,14 @@
   <!-- Модалка достижений -->
   <div class="modal-screen" id="achieve-modal">
     <div class="modal-content">
-      <div style="margin-bottom: 15px; color: #f1c40f;">🏆 Достижения города</div>
+      <div style="margin-bottom: 15px; color: #f1c40f;">🏆 Достижения YouTown</div>
       <div id="achieve-list"></div>
       <button class="up-btn close-btn" onclick="closeAchieveModal()">Закрыть</button>
     </div>
   </div>
 
-  <div class="header">🏙️ Pocket City: Mega Evolution</div>
+  <!-- Обновили название в шапке -->
+  <div class="header">🎮 YouTown: Экономика и Кризисы</div>
   
   <div class="alert-banner" id="alert-banner">Магазинам нужны ресурсы! Снабжение прервано!</div>
   <div class="alert-banner" id="shop-no-money-banner" style="background-color: #7f8c8d;">🚫 Магазины пустуют 38 сек. Прибыль остановлена!</div>
@@ -310,7 +311,7 @@
     let mapData = new Array(36).fill('');       
     let upgradesData = new Array(36).fill('');  
     let firesData = new Array(36).fill(false); 
-    let brokenData = new Array(36).fill(false); // Фишка: Разрушенные здания (НЛО)
+    let brokenData = new Array(36).fill(false); 
 
     let shopNoHospitalTimer = 0; 
     let shopNoFactoryTimer = 0; 
@@ -321,13 +322,10 @@
     let taxReformTimer = 0;
     let taxCooldown = 0;
 
-    // Новые переменные под фишки
     let isRainy = false;
-    let rainyTimer = 0;
     let bankLoanActive = false;
     let bankLoanLeftToPay = 0;
 
-    // Ачивки
     let achievements = {
       millionaire: false,
       megacity: false,
@@ -386,18 +384,17 @@
       } catch(e) {}
     }
 
-    // Фишка: Автосохранение данных
     function saveGame() {
       if(isGameOver) return;
       let state = {
         money, gridColumns, maxCells, expandCost, mapData, upgradesData, firesData, brokenData,
         shopNoHospitalTimer, shopNoFactoryTimer, activeEpidemic, epidemicLosses, achievements, bankLoanActive, bankLoanLeftToPay
       };
-      localStorage.setItem('pocket_city_save', JSON.stringify(state));
+      localStorage.setItem('youtown_save', JSON.stringify(state));
     }
 
     function loadGame() {
-      let saved = localStorage.getItem('pocket_city_save');
+      let saved = localStorage.getItem('youtown_save');
       if(!saved) return;
       try {
         let state = JSON.parse(saved);
@@ -409,12 +406,12 @@
         achievements = state.achievements || achievements;
         bankLoanActive = state.bankLoanActive || false;
         bankLoanLeftToPay = state.bankLoanLeftToPay || 0;
-      } catch(e) { console.log("Ошибка загрузки данных"); }
+      } catch(e) { console.log("Ошибка загрузки"); }
     }
 
     function clearSave() {
-      localStorage.removeItem('pocket_city_save');
-      alert("Сохранение удалено! Игра начнется заново.");
+      localStorage.removeItem('youtown_save');
+      alert("Город стерт из памяти! Начинаем заново.");
       restartGame();
     }
 
@@ -428,7 +425,7 @@
         cell.id = 'cell-' + i;
         
         if (brokenData[i]) {
-          cell.innerHTML = '❌'; // Сломано НЛО
+          cell.innerHTML = '❌'; 
         } else if (firesData[i]) {
           cell.innerHTML = '🔥';
         } else if (mapData[i] !== '') {
@@ -455,7 +452,6 @@
     function handleCellClick(cell, index) {
       if (isGameOver) return;
 
-      // Ремонт после НЛО
       if (brokenData[index]) {
         let costToFix = Math.floor(tools[mapData[index]].cost / 2);
         if (money >= costToFix) {
@@ -464,7 +460,7 @@
           playSound('build');
           createMap(); updateUI();
         } else {
-          alert(`Нужно $${costToFix} на восстановление!`);
+          alert(`Нужно $${costToFix} на ремонт здания!`);
         }
         return;
       }
@@ -473,7 +469,7 @@
         if (money >= 15) {
           money -= 15; firesData[index] = false;
           createMap(); updateUI();
-        } else { alert("Нужно $15!"); }
+        }
         return;
       }
 
@@ -493,12 +489,9 @@
     }
 
     function takeBankLoan() {
-      if(bankLoanActive) { alert("Вы уже взяли кредит!"); return; }
-      money += 100;
-      bankLoanActive = true;
-      bankLoanLeftToPay = 120;
-      bankBanner.style.display = 'block';
-      updateUI();
+      if(bankLoanActive) { alert("Кредитная линия уже занята!"); return; }
+      money += 100; bankLoanActive = true; bankLoanLeftToPay = 120;
+      bankBanner.style.display = 'block'; updateUI();
     }
 
     function toggleTaxReform() {
@@ -560,170 +553,4 @@
 
     function calculateStats() {
       let totalIncome = 0, totalPopulation = 0, baseHappiness = 100;
-      let houseCount = 0, shopCount = 0, factoryCount = 0, parkCount = 0, hospitalCount = 0, hasInfrastructureUpgrade = false;
-
-      for (let i = 0; i < maxCells; i++) {
-        if (firesData[i] || brokenData[i]) continue;
-        if (mapData[i] === 'house') houseCount++;
-        if (mapData[i] === 'shop') shopCount++;
-        if (mapData[i] === 'factory') {
-          factoryCount++;
-          if (upgradesData[i] === 'ТЭЦ' || upgradesData[i] === 'ТВЦ' || upgradesData[i] === 'ТЦ') hasInfrastructureUpgrade = true;
-        }
-        if (mapData[i] === 'park') parkCount++;
-        if (mapData[i] === 'hospital') hospitalCount++;
-        
-        if (mapData[i] === 'shop' && shopNoFactoryTimer < 38) totalIncome += isTaxReformActive ? 6 : (isRainy ? 2 : 3); // Погода режет доход
-        if (mapData[i] === 'factory') totalIncome += isTaxReformActive ? 24 : 12;
-      }
-
-      if (hospitalCount > 0) {
-        if(activeEpidemic) achievements.survivor = true;
-        activeEpidemic = null; shopNoHospitalTimer = 0; virusBanner.style.display = 'none'; shopMedBanner.style.display = 'none';
-      }
-
-      let penalty = 0;
-      if (isTaxReformActive) penalty += 20;
-
-      // Фишка Энергосети: ТЭЦ меняет штраф на БОНУС к счастью
-      for (let i = 0; i < maxCells; i++) {
-        if (firesData[i] || brokenData[i]) continue;
-        if (mapData[i] === 'house') {
-          totalPopulation += 6;
-          getNeighbors(i).forEach(n => {
-            if (mapData[n] === 'factory') {
-              if(upgradesData[n] === 'ТЭЦ') penalty -= 10; // Энергия греет дом!
-              else penalty += 20; // Грязный завод бесит
-            }
-            if (mapData[n] === 'shop') penalty += 8;   
-          });
-        }
-      }
-
-      // Дождь улучшает работу парков
-      let parkEfficiency = isRainy ? (parkCount * 2) : parkCount;
-      if (houseCount > (parkEfficiency + hospitalCount * 2)) {
-        penalty += (houseCount - (parkEfficiency + hospitalCount * 2)) * 10;
-      }
-
-      if (shopCount > 0 && factoryCount < 2) {
-        alertBanner.style.display = 'block'; 
-      } else {
-        alertBanner.style.display = 'none'; shopNoFactoryTimer = 0; shopNoMoneyBanner.style.display = 'none';
-      }
-
-      if (shopCount > 0 && factoryCount < 2 && shopNoFactoryTimer >= 38) shopNoMoneyBanner.style.display = 'block';
-      if (houseCount > 0 && !hasInfrastructureUpgrade) penalty += 35;
-      if (shopCount > 0 && hospitalCount === 0 && shopNoHospitalTimer >= 150) { penalty += 40; shopMedBanner.style.display = 'block'; }
-      if (activeEpidemic === 'sad') penalty += 50;
-
-      let finalHappiness = Math.max(0, Math.min(100, baseHappiness - penalty));
-      let activePopulation = Math.max(0, Math.floor(totalPopulation * (finalHappiness / 100)) - epidemicLosses);
-
-      if (money >= 500) achievements.millionaire = true;
-      if (finalHappiness === 0 && houseCount > 0) triggerGameOver("Жители устроили бунт и покинули город!");
-
-      happyIconEl.innerText = finalHappiness > 75 ? '😀' : (finalHappiness > 35 ? '😐' : '😡');
-      return { happiness: finalHappiness, income: totalIncome, population: activePopulation };
-    }
-
-    function updateUI() {
-      if (isGameOver) return;
-      let stats = calculateStats();
-      moneyEl.innerText = money; popEl.innerText = stats.population; happyEl.innerText = stats.happiness; expandCostEl.innerText = expandCost;
-    }
-
-    function triggerManualEpidemic() { activeEpidemic = 'sad'; virusBanner.style.display = 'block'; updateUI(); }
-    
-    // Фишка: Нашествие НЛО
-    function triggerManualUFO() {
-      let built = [];
-      for(let i=0; i<maxCells; i++) if(mapData[i] !== '' && !brokenData[i]) built.push(i);
-      if(built.length === 0) return;
-      let target = built[Math.floor(Math.random() * built.length)];
-      brokenData[target] = true;
-      ufoBanner.style.display = 'block'; playSound('ufo'); createMap(); updateUI();
-      setTimeout(() => ufoBanner.style.display = 'none', 5000);
-    }
-
-    function triggerGameOver(text) { isGameOver = true; gameOverReason.innerText = text; gameOverScreen.style.display = 'flex'; }
-
-    function openAchieveModal() {
-      achieveModal.style.display = 'flex';
-      document.getElementById('achieve-list').innerHTML = `
-        <div class="achieve-item">💰 Миллионер ($500): ${achievements.millionaire ? '✅ Открыто' : '❌ Закрыто'}</div>
-        <div class="achieve-item">🗺️ Мегаполис (Сетка 6х6): ${achievements.megacity ? '✅ Открыто' : '❌ Закрыто'}</div>
-        <div class="achieve-item">🦠 Выживший (Вылечить вирус): ${achievements.survivor ? '✅ Открыто' : '❌ Закрыто'}</div>
-      `;
-    }
-    function closeAchieveModal() { achieveModal.style.display = 'none'; }
-
-    function restartGame() {
-      money = 60; isGameOver = false; gridColumns = 4; maxCells = 16; expandCost = 40;
-      shopNoHospitalTimer = 0; shopNoFactoryTimer = 0; activeEpidemic = null; epidemicLosses = 0;
-      bankLoanActive = false; bankLoanLeftToPay = 0;
-      mapData.fill(''); upgradesData.fill(''); firesData.fill(false); brokenData.fill(false);
-      document.querySelectorAll('.alert-banner, .virus-banner').forEach(b => b.style.display = 'none');
-      gameOverScreen.style.display = 'none'; createMap(); updateUI();
-    }
-
-    // Главный секундный цикл игры
-    setInterval(() => {
-      if (isGameOver) return;
-      
-      let activeFactories = mapData.filter(t => t === 'factory').length;
-      if (mapData.includes('shop') && activeFactories < 2) shopNoFactoryTimer++;
-      if (mapData.includes('shop') && !mapData.includes('hospital')) shopNoHospitalTimer++;
-      if (activeEpidemic === 'fast') epidemicLosses += 3;
-
-      // Логика кредита
-      if (bankLoanActive) {
-        money -= 5;
-        bankLoanLeftToPay -= 5;
-        if(bankLoanLeftToPay <= 0) { bankLoanActive = false; bankBanner.style.display = 'none'; }
-      }
-
-      if (isTaxReformActive) {
-        taxReformTimer--;
-        if (taxReformTimer <= 0) { isTaxReformActive = false; taxBtnEl.classList.remove('active'); }
-      }
-      if (taxCooldown > 0) {
-        taxCooldown--;
-        taxBtnEl.innerText = taxCooldown > 0 ? `⏱️ Налоги (${taxCooldown}s)` : "📈 Налоги х2";
-      }
-
-      let stats = calculateStats();
-      money += stats.income; updateUI();
-    }, 1000);
-
-    // Таймер Погоды: Переключается раз в минуту (для тестов, в оригинале 4 минуты)
-    setInterval(() => {
-      if (isGameOver) return;
-      isRainy = !isRainy;
-      if(isRainy) {
-        document.body.classList.add('rainy'); weatherBanner.style.display = 'block';
-        firesData.fill(false); createMap(); // Дождь тушит огонь!
-      } else {
-        document.body.classList.remove('rainy'); weatherBanner.style.display = 'none';
-      }
-    }, 60000);
-
-    // Случайные пожары (только если нет дождя)
-    setInterval(() => {
-      if (isGameOver || isRainy) return;
-      if (Math.random() * 100 <= 30) {
-        let built = [];
-        for(let i=0; i<maxCells; i++) if(mapData[i] !== '' && !firesData[i] && !brokenData[i]) built.push(i);
-        if(built.length > 0) { firesData[built[Math.floor(Math.random() * built.length)]] = true; playSound('fire'); createMap(); updateUI(); }
-      }
-    }, 45000);
-
-    // Таймер автосохранения (каждые 5 секунд)
-    setInterval(saveGame, 5000);
-
-    loadGame();
-    createMap();
-    updateUI();
-  </script>
-</body>
-</html>
+      let houseCount = 0, shopCount = 0, factoryCoun
