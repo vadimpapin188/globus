@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket City: Infrastructure Fixed</title>
+  <title>Pocket City: Epidemic Update</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
@@ -43,18 +43,29 @@
     .pop { color: #e71d36; }
     .happy { color: #ffb703; }
 
+    /* Баннеры предупреждений */
     .alert-banner {
       display: none;
       background-color: #e71d36;
       color: white;
       text-align: center;
-      padding: 8px;
-      font-size: 14px;
+      padding: 6px;
+      font-size: 13px;
       font-weight: bold;
       animation: blink 1s infinite alternate;
     }
+    .virus-banner {
+      display: none;
+      background-color: #9b59b6;
+      color: white;
+      text-align: center;
+      padding: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      animation: blink 0.5s infinite alternate;
+    }
     @keyframes blink {
-      from { opacity: 0.7; } to { opacity: 1; }
+      from { opacity: 0.6; } to { opacity: 1; }
     }
 
     .expand-btn {
@@ -110,7 +121,7 @@
     .toolbar-container {
       background-color: #ffffff;
       box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
-      padding: 10px 0 25px 0;
+      padding: 10px 0 10px 0;
     }
     .toolbar {
       display: flex;
@@ -137,6 +148,23 @@
     }
     .tool i { font-size: 26px; margin-bottom: 5px; }
     .cost { font-size: 14px; font-weight: bold; color: #2ec4b6; }
+
+    /* Кнопка тестов */
+    .dev-panel {
+      text-align: center;
+      padding-bottom: 20px;
+      background-color: #ffffff;
+    }
+    .test-epidemic-btn {
+      background-color: #2c3e50;
+      color: #e74c3c;
+      border: 2px dashed #e74c3c;
+      padding: 5px 15px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+    }
 
     .modal-screen {
       display: none;
@@ -208,9 +236,12 @@
     </div>
   </div>
 
-  <div class="header">🏙️ Pocket City: Infrastructure</div>
+  <div class="header">🏙️ Pocket City: Epidemic</div>
   
+  <!-- Разные типы баннеров под задачи -->
   <div class="alert-banner" id="alert-banner">Магазинам нужны ресурсы! Постройте заводы!</div>
+  <div class="alert-banner" id="shop-med-banner" style="background-color: #d35400;">⚠️ Магазинам нужны медикаменты из Больниц!</div>
+  <div class="virus-banner" id="virus-banner">☣️ ВСПЫШКА ЭПИДЕМИИ! Срочно постройте Больницу!</div>
 
   <div class="stats">
     <div class="stat-item money"><i class="fa-solid fa-coins"></i> <span id="money-display">60</span></div>
@@ -256,6 +287,11 @@
     </div>
   </div>
 
+  <!-- Кнопка вызова ручной эпидемии -->
+  <div class="dev-panel">
+    <button class="test-epidemic-btn" onclick="triggerManualEpidemic()">☣️ Вызвать эпидемию (Тест)</button>
+  </div>
+
   <script>
     let money = 60;
     let isGameOver = false;
@@ -268,6 +304,11 @@
     let mapData = new Array(36).fill('');       
     let upgradesData = new Array(36).fill('');  
     let selectedFactoryIndex = null;
+
+    // Переменные для новых механик
+    let shopNoHospitalTimer = 0; // Таймер магазинов без больниц
+    let activeEpidemic = null;   // Текущий тип эпидемии ('fast' или 'sad')
+    let epidemicLosses = 0;      // Накопленные потери населения от вируса
 
     const tools = {
       house: { cost: 10, icon: '<i class="fa-solid fa-house" style="color: #3498db;"></i>' },
@@ -284,6 +325,8 @@
     const happyIconEl = document.getElementById('happy-icon');
     const expandCostEl = document.getElementById('expand-cost');
     const alertBanner = document.getElementById('alert-banner');
+    const shopMedBanner = document.getElementById('shop-med-banner');
+    const virusBanner = document.getElementById('virus-banner');
     const gameOverScreen = document.getElementById('game-over');
     const gameOverReason = document.getElementById('game-over-reason');
     const upgradeModal = document.getElementById('upgrade-modal');
@@ -292,7 +335,6 @@
       gridEl.innerHTML = '';
       gridEl.style.gridTemplateColumns = `repeat(${gridColumns}, 1fr)`;
       
-      // Генерируем только видимые на данный момент клетки
       for (let i = 0; i < maxCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'cell';
@@ -350,7 +392,6 @@
       selectedFactoryIndex = null;
     }
 
-    // ИСПРАВЛЕНО: Теперь улучшение просто добавляет бэдж без ломания координат всей карты
     function applyUpgrade(type) {
       if (money >= 40 && selectedFactoryIndex !== null) {
         money -= 40;
@@ -368,22 +409,18 @@
       }
     }
 
-    // Расширение поля (аккуратно увеличивает сетку)
     function expandMap() {
       if (isGameOver) return;
       if (money >= expandCost) {
         if (gridColumns < 6) {
           money -= expandCost;
           
-          // Создаем временную копию старых данных карты
           let oldData = [...mapData];
           let oldUpgrades = [...upgradesData];
           
-          // Зануляем рабочие массивы
           mapData = new Array(36).fill('');
           upgradesData = new Array(36).fill('');
           
-          // Переносим старые здания на правильные новые индексы строки/колонки
           let oldColumns = gridColumns;
           gridColumns++;
           maxCells = gridColumns * gridColumns;
@@ -463,9 +500,18 @@
         if (mapData[i] === 'factory') totalIncome += 12;
       }
 
-      let penalty = 0;
-      let reason = "Жители не выдержали плохой экологии!";
+      // Сброс эпидемии и таймеров, если больница построена
+      if (hospitalCount > 0) {
+        activeEpidemic = null;
+        shopNoHospitalTimer = 0;
+        virusBanner.style.display = 'none';
+        shopMedBanner.style.display = 'none';
+      }
 
+      let penalty = 0;
+      let reason = "Жители не выдержали условий!";
+
+      // 1. Проверка соседства
       for (let i = 0; i < maxCells; i++) {
         if (mapData[i] === 'house') {
           totalPopulation += 6;
@@ -478,10 +524,12 @@
         }
       }
 
+      // 2. Баланс парков
       if (houseCount > (parkCount + hospitalCount * 2)) {
         penalty += (houseCount - (parkCount + hospitalCount * 2)) * 10;
       }
 
+      // 3. Заводы для магазинов
       if (shopCount > 0 && factoryCount < 2) {
         penalty += 25; 
         alertBanner.style.display = 'block'; 
@@ -489,20 +537,46 @@
         alertBanner.style.display = 'none';
       }
 
+      // 4. Отсутствие улучшений ТЭЦ/ТВЦ/ТЦ
       if (houseCount > 0 && !hasInfrastructureUpgrade) {
         penalty += 35; 
         reason = "В городе нет отопления и инфраструктуры (ТЭЦ/ТВЦ/ТЦ)! Все замерзли.";
+      }
+
+      // 5. НОВАЯ ЛОГИКА: Таймер магазинов без больниц (2.5 минуты = 150 секунд)
+      if (shopCount > 0 && hospitalCount === 0) {
+        if (shopNoHospitalTimer >= 150) {
+          penalty += 40; 
+          shopMedBanner.style.display = 'block';
+        }
+      } else {
+        shopMedBanner.style.display = 'none';
+      }
+
+      // 6. НОВАЯ ЛОГИКА: Штраф к счастью, если идет обычная эпидемия
+      if (activeEpidemic === 'sad') {
+        penalty += 50;
+        reason = "В городе бушует вирус! Отсутствие больниц привело к панике.";
       }
 
       let finalHappiness = baseHappiness - penalty;
       if (finalHappiness > 100) finalHappiness = 100;
       if (finalHappiness < 0) finalHappiness = 0;
 
+      // Рассчитываем итоговое население
+      let activePopulation = Math.floor(totalPopulation * (finalHappiness / 100));
+      
+      // Вычитаем потери от быстрого вируса
+      activePopulation -= epidemicLosses;
+      if (activePopulation < 0) activePopulation = 0;
+
+      // Проверка Game Over
       if (finalHappiness === 0 && houseCount > 0) {
         triggerGameOver(reason);
       }
-
-      let activePopulation = Math.floor(totalPopulation * (finalHappiness / 100));
+      if (activePopulation === 0 && houseCount > 0 && activeEpidemic === 'fast') {
+        triggerGameOver("Быстрый вирус уничтожил все население города!");
+      }
 
       if (finalHappiness > 75) happyIconEl.innerText = '😀';
       else if (finalHappiness > 35) happyIconEl.innerText = '😐';
@@ -520,6 +594,33 @@
       expandCostEl.innerText = expandCost;
     }
 
+    // Запуск вируса
+    function startEpidemic() {
+      // Ищем, есть ли больница
+      let hasHospital = mapData.includes('hospital');
+      if (hasHospital) return; // Больница защищает город!
+
+      virusBanner.style.display = 'block';
+      
+      // Шанс 1.8% на быстрый вирус, иначе обычный (на счастье)
+      if (Math.random() * 100 <= 1.8) {
+        activeEpidemic = 'fast';
+      } else {
+        activeEpidemic = 'sad';
+      }
+      updateUI();
+    }
+
+    // Ручной вызов для тестов
+    function triggerManualEpidemic() {
+      if (mapData.includes('hospital')) {
+        alert("В городе есть Больница! Она сразу уничтожит любой вирус. Снесите её или тестируйте без неё.");
+        return;
+      }
+      startEpidemic();
+      alert(`Эпидемия вызвана! Тип вируса: ${activeEpidemic === 'fast' ? 'БЫСТРЫЙ (минус люди)' : 'ОБЫЧНЫЙ (минус счастье)'}`);
+    }
+
     function triggerGameOver(reasonText) {
       isGameOver = true;
       gameOverReason.innerText = reasonText;
@@ -532,25 +633,14 @@
       gridColumns = 4;
       maxCells = 16;
       expandCost = 40;
+      shopNoHospitalTimer = 0;
+      activeEpidemic = null;
+      epidemicLosses = 0;
       mapData = new Array(36).fill('');
       upgradesData = new Array(36).fill('');
       alertBanner.style.display = 'none';
+      shopMedBanner.style.display = 'none';
+      virusBanner.style.display = 'none';
       gameOverScreen.style.display = 'none';
       selectTool('house');
-      createMap();
-      updateUI();
-    }
-
-    setInterval(() => {
-      if (!isGameOver) {
-        let stats = calculateStats();
-        money += stats.income;
-        updateUI();
-      }
-    }, 1000);
-
-    createMap();
-    updateUI();
-  </script>
-</body>
-</html>
+      createM
