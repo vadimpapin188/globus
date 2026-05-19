@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket City: Epidemic Update</title>
+  <title>Pocket City: Ultimate</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
@@ -149,7 +149,6 @@
     .tool i { font-size: 26px; margin-bottom: 5px; }
     .cost { font-size: 14px; font-weight: bold; color: #2ec4b6; }
 
-    /* Кнопка тестов */
     .dev-panel {
       text-align: center;
       padding-bottom: 20px;
@@ -219,16 +218,18 @@
 </head>
 <body>
 
+  <!-- Экран Гейм Овера -->
   <div class="modal-screen game-over-screen" id="game-over">
     <div>💀 ГЕЙМ ОВЕР!</div>
     <div style="font-size: 18px; margin-top: 10px; padding: 0 20px; text-align: center;" id="game-over-reason">Жители не выдержали условий!</div>
     <button class="restart-btn" onclick="restartGame()">Начать заново</button>
   </div>
 
+  <!-- Меню улучшений завода -->
   <div class="modal-screen" id="upgrade-modal">
     <div class="modal-content">
       <div style="margin-bottom: 15px; color: #f1c40f;">🏭 Улучшение Завода</div>
-      <div style="font-size: 14px; margin-bottom: 15px; color: #bdc3c7;">Выберите один апгрейд инфраструктуры для города:</div>
+      <div style="font-size: 14px; margin-bottom: 15px; color: #bdc3c7;">Выберите апгрейд для города:</div>
       <button class="up-btn" onclick="applyUpgrade('ТЭЦ')">Модернизация в ТЭЦ ($40)</button>
       <button class="up-btn" onclick="applyUpgrade('ТВЦ')">Модернизация в ТВЦ ($40)</button>
       <button class="up-btn" onclick="applyUpgrade('ТЦ')">Модернизация в ТЦ ($40)</button>
@@ -236,9 +237,8 @@
     </div>
   </div>
 
-  <div class="header">🏙️ Pocket City: Epidemic</div>
+  <div class="header">🏙️ Pocket City: Ultimate</div>
   
-  <!-- Разные типы баннеров под задачи -->
   <div class="alert-banner" id="alert-banner">Магазинам нужны ресурсы! Постройте заводы!</div>
   <div class="alert-banner" id="shop-med-banner" style="background-color: #d35400;">⚠️ Магазинам нужны медикаменты из Больниц!</div>
   <div class="virus-banner" id="virus-banner">☣️ ВСПЫШКА ЭПИДЕМИИ! Срочно постройте Больницу!</div>
@@ -287,7 +287,6 @@
     </div>
   </div>
 
-  <!-- Кнопка вызова ручной эпидемии -->
   <div class="dev-panel">
     <button class="test-epidemic-btn" onclick="triggerManualEpidemic()">☣️ Вызвать эпидемию (Тест)</button>
   </div>
@@ -305,10 +304,9 @@
     let upgradesData = new Array(36).fill('');  
     let selectedFactoryIndex = null;
 
-    // Переменные для новых механик
-    let shopNoHospitalTimer = 0; // Таймер магазинов без больниц
-    let activeEpidemic = null;   // Текущий тип эпидемии ('fast' или 'sad')
-    let epidemicLosses = 0;      // Накопленные потери населения от вируса
+    let shopNoHospitalTimer = 0; 
+    let activeEpidemic = null;   
+    let epidemicLosses = 0;      
 
     const tools = {
       house: { cost: 10, icon: '<i class="fa-solid fa-house" style="color: #3498db;"></i>' },
@@ -353,6 +351,10 @@
     }
 
     function appendBadge(cell, text) {
+      // Защита от дубликатов бэджей
+      let existingBadge = cell.querySelector('.upgrade-badge');
+      if (existingBadge) existingBadge.remove();
+
       let badge = document.createElement('div');
       badge.className = 'upgrade-badge';
       badge.innerText = text;
@@ -379,7 +381,7 @@
     }
 
     function openUpgradeModal(index) {
-      if(upgradesData[index] !== '') {
+      if(upgradesData[index] && upgradesData[index] !== '') {
         alert("Этот завод уже улучшен!");
         return;
       }
@@ -427,12 +429,12 @@
           expandCost = Math.floor(expandCost * 3); 
           
           for(let i = 0; i < oldData.length; i++) {
-            if (oldData[i] !== '') {
+            if (oldData[i] && oldData[i] !== '') {
               let row = Math.floor(i / oldColumns);
               let col = i % oldColumns;
               let newIndex = row * gridColumns + col;
               mapData[newIndex] = oldData[i];
-              upgradesData[newIndex] = oldUpgrades[i];
+              upgradesData[newIndex] = oldUpgrades[i] || '';
             }
           }
 
@@ -500,7 +502,6 @@
         if (mapData[i] === 'factory') totalIncome += 12;
       }
 
-      // Сброс эпидемии и таймеров, если больница построена
       if (hospitalCount > 0) {
         activeEpidemic = null;
         shopNoHospitalTimer = 0;
@@ -511,7 +512,6 @@
       let penalty = 0;
       let reason = "Жители не выдержали условий!";
 
-      // 1. Проверка соседства
       for (let i = 0; i < maxCells; i++) {
         if (mapData[i] === 'house') {
           totalPopulation += 6;
@@ -524,12 +524,10 @@
         }
       }
 
-      // 2. Баланс парков
       if (houseCount > (parkCount + hospitalCount * 2)) {
         penalty += (houseCount - (parkCount + hospitalCount * 2)) * 10;
       }
 
-      // 3. Заводы для магазинов
       if (shopCount > 0 && factoryCount < 2) {
         penalty += 25; 
         alertBanner.style.display = 'block'; 
@@ -537,13 +535,11 @@
         alertBanner.style.display = 'none';
       }
 
-      // 4. Отсутствие улучшений ТЭЦ/ТВЦ/ТЦ
       if (houseCount > 0 && !hasInfrastructureUpgrade) {
         penalty += 35; 
         reason = "В городе нет отопления и инфраструктуры (ТЭЦ/ТВЦ/ТЦ)! Все замерзли.";
       }
 
-      // 5. НОВАЯ ЛОГИКА: Таймер магазинов без больниц (2.5 минуты = 150 секунд)
       if (shopCount > 0 && hospitalCount === 0) {
         if (shopNoHospitalTimer >= 150) {
           penalty += 40; 
@@ -553,7 +549,6 @@
         shopMedBanner.style.display = 'none';
       }
 
-      // 6. НОВАЯ ЛОГИКА: Штраф к счастью, если идет обычная эпидемия
       if (activeEpidemic === 'sad') {
         penalty += 50;
         reason = "В городе бушует вирус! Отсутствие больниц привело к панике.";
@@ -563,14 +558,11 @@
       if (finalHappiness > 100) finalHappiness = 100;
       if (finalHappiness < 0) finalHappiness = 0;
 
-      // Рассчитываем итоговое население
       let activePopulation = Math.floor(totalPopulation * (finalHappiness / 100));
       
-      // Вычитаем потери от быстрого вируса
       activePopulation -= epidemicLosses;
       if (activePopulation < 0) activePopulation = 0;
 
-      // Проверка Game Over
       if (finalHappiness === 0 && houseCount > 0) {
         triggerGameOver(reason);
       }
@@ -594,15 +586,12 @@
       expandCostEl.innerText = expandCost;
     }
 
-    // Запуск вируса
     function startEpidemic() {
-      // Ищем, есть ли больница
       let hasHospital = mapData.includes('hospital');
-      if (hasHospital) return; // Больница защищает город!
+      if (hasHospital) return; 
 
       virusBanner.style.display = 'block';
       
-      // Шанс 1.8% на быстрый вирус, иначе обычный (на счастье)
       if (Math.random() * 100 <= 1.8) {
         activeEpidemic = 'fast';
       } else {
@@ -611,14 +600,13 @@
       updateUI();
     }
 
-    // Ручной вызов для тестов
     function triggerManualEpidemic() {
       if (mapData.includes('hospital')) {
-        alert("В городе есть Больница! Она сразу уничтожит любой вирус. Снесите её или тестируйте без неё.");
+        alert("В городе есть Больница! Вирус не подействует.");
         return;
       }
       startEpidemic();
-      alert(`Эпидемия вызвана! Тип вируса: ${activeEpidemic === 'fast' ? 'БЫСТРЫЙ (минус люди)' : 'ОБЫЧНЫЙ (минус счастье)'}`);
+      alert(`Эпидемия активирована! Тип: ${activeEpidemic === 'fast' ? 'БЫСТРЫЙ вирус' : 'ОБЫЧНЫЙ вирус'}`);
     }
 
     function triggerGameOver(reasonText) {
@@ -643,4 +631,36 @@
       virusBanner.style.display = 'none';
       gameOverScreen.style.display = 'none';
       selectTool('house');
-      createM
+      createMap();
+      updateUI();
+    }
+
+    setInterval(() => {
+      if (!isGameOver) {
+        if (mapData.includes('shop') && !mapData.includes('hospital')) {
+          shopNoHospitalTimer++;
+        }
+
+        if (activeEpidemic === 'fast') {
+          epidemicLosses += 3;
+        }
+
+        let stats = calculateStats();
+        money += stats.income;
+        updateUI();
+      }
+    }, 1000);
+
+    setInterval(() => {
+      if (!isGameOver) {
+        if (Math.random() * 100 <= 18) {
+          startEpidemic();
+        }
+      }
+    }, 300000);
+
+    createMap();
+    updateUI();
+  </script>
+</body>
+</html>
