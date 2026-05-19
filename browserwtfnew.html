@@ -1,125 +1,224 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Глобус Змейка v2.0</title>
-    <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        #score { font-size: 24px; margin-bottom: 10px; }
-        canvas { border: 4px solid #444; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        
-        /* Кнопки управления */
-        .controls { display: grid; grid-template-columns: repeat(3, 70px); grid-gap: 10px; margin-top: 20px; }
-        .btn { width: 70px; height: 70px; background: #444; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 30px; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .btn:active { background: #666; scale: 0.95; }
-        .up { grid-column: 2; }
-        .left { grid-column: 1; }
-        .right { grid-column: 3; }
-        .down { grid-column: 2; }
-        
-        #restart-btn { display: none; margin-top: 15px; padding: 10px 20px; background: #2ecc71; border: none; color: white; border-radius: 5px; font-size: 18px; }
-    </style>
+  <meta charset="UTF-8">
+  <!-- Настройки для идеальной работы на мобильных устройствах -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pocket City</title>
+  
+  <!-- Подключаем иконки и шрифты -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Varela Round', sans-serif;
+      background-color: #a8d5e2;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      touch-action: manipulation; /* Убирает задержку при нажатии на телефоне */
+    }
+
+    /* Верхняя панель */
+    .header {
+      background-color: #ff9f1c;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Панель ресурсов */
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      background-color: #ffffff;
+      padding: 15px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .money { color: #2ec4b6; }
+    .pop { color: #e71d36; }
+
+    /* Карта города */
+    .map-container {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      width: 100%;
+      max-width: 500px;
+      aspect-ratio: 5 / 6; /* Пропорции для экрана телефона */
+    }
+    .cell {
+      background-color: #81c784;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 40px;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+    .cell:active {
+      background-color: #66bb6a;
+      transform: translateY(2px);
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15);
+    }
+
+    /* Нижнее меню строительства */
+    .toolbar {
+      background-color: #ffffff;
+      display: flex;
+      justify-content: space-around;
+      padding: 20px 10px 30px 10px;
+      box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
+    }
+    .tool {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f1f2f6;
+      border: 4px solid transparent;
+      border-radius: 15px;
+      padding: 15px 10px;
+      font-size: 20px;
+      width: 28%;
+      cursor: pointer;
+    }
+    .tool.active {
+      border-color: #ff9f1c;
+      background-color: #fff3e0;
+    }
+    .tool i {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .cost {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2ec4b6;
+      margin-top: 5px;
+    }
+  </style>
 </head>
 <body>
 
-<div id="score">Очки: 0</div>
-<canvas id="game" width="300" height="300"></canvas>
-<button id="restart-btn" onclick="resetGame()">Играть снова</button>
+  <div class="header">🏙️ Pocket City</div>
+  
+  <div class="stats">
+    <div class="stat-item money"><i class="fa-solid fa-coins"></i> <span id="money-display">50</span></div>
+    <div class="stat-item pop"><i class="fa-solid fa-users"></i> <span id="pop-display">0</span></div>
+  </div>
 
-<div class="controls">
-    <div class="btn up" onclick="setDir('UP')">▲</div>
-    <div class="btn left" onclick="setDir('LEFT')">◀</div>
-    <div class="btn right" onclick="setDir('RIGHT')">▶</div>
-    <div class="btn down" onclick="setDir('DOWN')">▼</div>
-</div>
+  <div class="map-container">
+    <div class="grid" id="grid"></div>
+  </div>
 
-<script>
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const scoreElement = document.getElementById('score');
-    const restartBtn = document.getElementById('restart-btn');
-    
-    const box = 15;
-    let score = 0;
-    let gameInterval;
-    let snake, food, dir, nextDir;
+  <div class="toolbar">
+    <div class="tool active" id="tool-house" onclick="selectTool('house')">
+      <i class="fa-solid fa-house" style="color: #3498db;"></i>
+      <div>House</div>
+      <div class="cost">$10</div>
+    </div>
+    <div class="tool" id="tool-shop" onclick="selectTool('shop')">
+      <i class="fa-solid fa-store" style="color: #e74c3c;"></i>
+      <div>Shop</div>
+      <div class="cost">$20</div>
+    </div>
+    <div class="tool" id="tool-park" onclick="selectTool('park')">
+      <i class="fa-solid fa-tree" style="color: #2ecc71;"></i>
+      <div>Park</div>
+      <div class="cost">$5</div>
+    </div>
+  </div>
 
-    function resetGame() {
-        score = 0;
-        scoreElement.innerHTML = "Очки: 0";
-        dir = "RIGHT";
-        nextDir = "RIGHT";
-        snake = [{x: 10 * box, y: 10 * box}];
-        food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
-        restartBtn.style.display = "none";
-        if(gameInterval) clearInterval(gameInterval);
-        gameInterval = setInterval(draw, 120);
+  <script>
+    // Переменные для хранения данных игры
+    let money = 50;
+    let population = 0;
+    let income = 0;
+    let currentTool = 'house';
+
+    // Информация о зданиях
+    const tools = {
+      house: { cost: 10, icon: '<i class="fa-solid fa-house" style="color: #3498db;"></i>' },
+      shop: { cost: 20, icon: '<i class="fa-solid fa-store" style="color: #e74c3c;"></i>' },
+      park: { cost: 5, icon: '<i class="fa-solid fa-tree" style="color: #2ecc71;"></i>' }
+    };
+
+    const gridEl = document.getElementById('grid');
+    const moneyEl = document.getElementById('money-display');
+    const popEl = document.getElementById('pop-display');
+
+    // Рисуем карту (30 клеток)
+    for (let i = 0; i < 30; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.onclick = () => build(cell);
+      gridEl.appendChild(cell);
     }
 
-    function setDir(newDir) {
-        if(newDir == "LEFT" && dir != "RIGHT") nextDir = "LEFT";
-        if(newDir == "UP" && dir != "DOWN") nextDir = "UP";
-        if(newDir == "RIGHT" && dir != "LEFT") nextDir = "RIGHT";
-        if(newDir == "DOWN" && dir != "UP") nextDir = "DOWN";
+    // Функция выбора здания в меню
+    function selectTool(toolName) {
+      currentTool = toolName;
+      // Убираем выделение со всех кнопок
+      document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
+      // Добавляем выделение на нажатую кнопку
+      document.getElementById('tool-' + toolName).classList.add('active');
     }
 
-    function draw() {
-        dir = nextDir;
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Рисуем еду
-        ctx.fillStyle = "#e74c3c";
-        ctx.fillRect(food.x, food.y, box, box);
-
-        // Рисуем змейку
-        for(let i = 0; i < snake.length; i++) {
-            ctx.fillStyle = (i == 0) ? "#2ecc71" : "#27ae60";
-            ctx.fillRect(snake[i].x, snake[i].y, box, box);
-            ctx.strokeStyle = "black";
-            ctx.strokeRect(snake[i].x, snake[i].y, box, box);
-        }
-
-        let headX = snake[0].x;
-        let headY = snake[0].y;
-
-        if(dir == "LEFT") headX -= box;
-        if(dir == "UP") headY -= box;
-        if(dir == "RIGHT") headX += box;
-        if(dir == "DOWN") headY += box;
-
-        if(headX == food.x && headY == food.y) {
-            score++;
-            scoreElement.innerHTML = "Очки: " + score;
-            food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
-        } else {
-            snake.pop();
-        }
-
-        let newHead = { x: headX, y: headY };
-
-        // Проверка столкновений
-        if(headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height || collision(newHead, snake)) {
-            clearInterval(gameInterval);
-            restartBtn.style.display = "block";
-            ctx.fillStyle = "white";
-            ctx.font = "20px Arial";
-            ctx.fillText("ИГРА ОКОНЧЕНА", 70, 150);
-            return;
-        }
-
-        snake.unshift(newHead);
+    // Функция постройки
+    function build(cell) {
+      // Проверяем, пустое ли место
+      if (cell.innerHTML !== '') return; 
+      
+      let tool = tools[currentTool];
+      
+      // Проверяем, хватает ли денег
+      if (money >= tool.cost) {
+        money -= tool.cost;
+        cell.innerHTML = tool.icon;
+        
+        // Применяем бонусы от зданий
+        if (currentTool === 'house') population += 4;
+        if (currentTool === 'shop') income += 2; // Магазин дает 2 монеты в секунду
+        if (currentTool === 'park') population += 1;
+        
+        updateUI();
+      } else {
+        // Если денег нет, клетка трясется (эффект)
+        cell.style.transform = 'translateX(5px)';
+        setTimeout(() => cell.style.transform = 'translateX(-5px)', 100);
+        setTimeout(() => cell.style.transform = 'translateX(0)', 200);
+      }
     }
 
-    function collision(head, array) {
-        for(let i = 0; i < array.length; i++) {
-            if(head.x == array[i].x && head.y == array[i].y) return true;
-        }
-        return false;
+    // Обновление цифр на экране
+    function updateUI() {
+      moneyEl.innerText = money;
+      popEl.innerText = population;
     }
 
-    resetGame();
-</script>
+    // Игровой таймер: получаем прибыль каждую секунду (1000 миллисекунд)
+    setInterval(() => {
+      if (income > 0) {
+        money += income;
+        updateUI();
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
