@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket City: Infrastructure</title>
+  <title>Pocket City: Infrastructure Fixed</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
@@ -43,7 +43,6 @@
     .pop { color: #e71d36; }
     .happy { color: #ffb703; }
 
-    /* Уведомление на экране */
     .alert-banner {
       display: none;
       background-color: #e71d36;
@@ -96,7 +95,6 @@
       cursor: pointer;
       position: relative;
     }
-    /* Маленькая метка для улучшенных заводов */
     .upgrade-badge {
       position: absolute;
       bottom: 2px;
@@ -140,7 +138,6 @@
     .tool i { font-size: 26px; margin-bottom: 5px; }
     .cost { font-size: 14px; font-weight: bold; color: #2ec4b6; }
 
-    /* Окна Game Over и Улучшений */
     .modal-screen {
       display: none;
       position: fixed;
@@ -176,14 +173,8 @@
       font-family: 'Varela Round', sans-serif;
       font-weight: bold;
     }
-    .close-btn {
-      background-color: #e74c3c;
-      margin-top: 15px;
-    }
-
-    .game-over-screen {
-      background-color: rgba(231, 29, 54, 0.95);
-    }
+    .close-btn { background-color: #e74c3c; margin-top: 15px; }
+    .game-over-screen { background-color: rgba(231, 29, 54, 0.95); }
     .restart-btn {
       background-color: white;
       color: #e71d36;
@@ -200,14 +191,12 @@
 </head>
 <body>
 
-  <!-- Экран Гейм Овера -->
   <div class="modal-screen game-over-screen" id="game-over">
     <div>💀 ГЕЙМ ОВЕР!</div>
     <div style="font-size: 18px; margin-top: 10px; padding: 0 20px; text-align: center;" id="game-over-reason">Жители не выдержали условий!</div>
     <button class="restart-btn" onclick="restartGame()">Начать заново</button>
   </div>
 
-  <!-- Окно улучшений завода -->
   <div class="modal-screen" id="upgrade-modal">
     <div class="modal-content">
       <div style="margin-bottom: 15px; color: #f1c40f;">🏭 Улучшение Завода</div>
@@ -221,7 +210,6 @@
 
   <div class="header">🏙️ Pocket City: Infrastructure</div>
   
-  <!-- Всплывающий баннер предупреждений -->
   <div class="alert-banner" id="alert-banner">Магазинам нужны ресурсы! Постройте заводы!</div>
 
   <div class="stats">
@@ -277,8 +265,8 @@
     let maxCells = 16; 
     let expandCost = 40;
 
-    let mapData = [];       // Тип здания ('house', 'factory' и т.д.)
-    let upgradesData = [];  // Тип улучшения ('', 'ТЭЦ', 'ТВЦ', 'ТЦ')
+    let mapData = new Array(36).fill('');       
+    let upgradesData = new Array(36).fill('');  
     let selectedFactoryIndex = null;
 
     const tools = {
@@ -304,28 +292,15 @@
       gridEl.innerHTML = '';
       gridEl.style.gridTemplateColumns = `repeat(${gridColumns}, 1fr)`;
       
-      let oldData = [...mapData];
-      let oldUpgrades = [...upgradesData];
-      
-      mapData = new Array(maxCells).fill('');
-      upgradesData = new Array(maxCells).fill('');
-      
-      for(let i = 0; i < oldData.length; i++) {
-        let oldRow = Math.floor(i / (gridColumns - 1));
-        let oldCol = i % (gridColumns - 1);
-        let newIndex = oldRow * gridColumns + oldCol;
-        mapData[newIndex] = oldData[i];
-        upgradesData[newIndex] = oldUpgrades[i] || '';
-      }
-
+      // Генерируем только видимые на данный момент клетки
       for (let i = 0; i < maxCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'cell';
-        cell.dataset.index = i;
+        cell.id = 'cell-' + i;
         
         if (mapData[i] !== '') {
           cell.innerHTML = tools[mapData[i]].icon;
-          if (upgradesData[i]) {
+          if (upgradesData[i] !== '') {
             appendBadge(cell, upgradesData[i]);
           }
         }
@@ -345,13 +320,11 @@
     function handleCellClick(cell, index) {
       if (isGameOver) return;
 
-      // ЕСЛИ НАЖАЛИ НА ЗАВОД — открываем улучшения (независимо от выбранного инструмента)
       if (mapData[index] === 'factory') {
         openUpgradeModal(index);
         return;
       }
 
-      // Обычная постройка
       if (mapData[index] !== '') return; 
       
       let tool = tools[currentTool];
@@ -377,13 +350,17 @@
       selectedFactoryIndex = null;
     }
 
+    // ИСПРАВЛЕНО: Теперь улучшение просто добавляет бэдж без ломания координат всей карты
     function applyUpgrade(type) {
       if (money >= 40 && selectedFactoryIndex !== null) {
         money -= 40;
         upgradesData[selectedFactoryIndex] = type;
         
-        // Перерисовываем карту, чтобы обновить значок апгрейда
-        createMap();
+        let cell = document.getElementById('cell-' + selectedFactoryIndex);
+        if (cell) {
+          appendBadge(cell, type);
+        }
+        
         closeUpgradeModal();
         updateUI();
       } else {
@@ -391,14 +368,37 @@
       }
     }
 
+    // Расширение поля (аккуратно увеличивает сетку)
     function expandMap() {
       if (isGameOver) return;
       if (money >= expandCost) {
         if (gridColumns < 6) {
           money -= expandCost;
+          
+          // Создаем временную копию старых данных карты
+          let oldData = [...mapData];
+          let oldUpgrades = [...upgradesData];
+          
+          // Зануляем рабочие массивы
+          mapData = new Array(36).fill('');
+          upgradesData = new Array(36).fill('');
+          
+          // Переносим старые здания на правильные новые индексы строки/колонки
+          let oldColumns = gridColumns;
           gridColumns++;
           maxCells = gridColumns * gridColumns;
           expandCost = Math.floor(expandCost * 3); 
+          
+          for(let i = 0; i < oldData.length; i++) {
+            if (oldData[i] !== '') {
+              let row = Math.floor(i / oldColumns);
+              let col = i % oldColumns;
+              let newIndex = row * gridColumns + col;
+              mapData[newIndex] = oldData[i];
+              upgradesData[newIndex] = oldUpgrades[i];
+            }
+          }
+
           createMap();
           updateUI();
         } else {
@@ -453,7 +453,7 @@
         if (mapData[i] === 'factory') {
           factoryCount++;
           if (upgradesData[i] === 'ТЭЦ' || upgradesData[i] === 'ТВЦ' || upgradesData[i] === 'ТЦ') {
-            hasInfrastructureUpgrade = true; // Есть хотя бы один улучшенный завод
+            hasInfrastructureUpgrade = true;
           }
         }
         if (mapData[i] === 'park') parkCount++;
@@ -466,7 +466,6 @@
       let penalty = 0;
       let reason = "Жители не выдержали плохой экологии!";
 
-      // 1. Проверка соседства (заводы и магазины рядом с домами)
       for (let i = 0; i < maxCells; i++) {
         if (mapData[i] === 'house') {
           totalPopulation += 6;
@@ -479,22 +478,19 @@
         }
       }
 
-      // 2. Баланс парков
       if (houseCount > (parkCount + hospitalCount * 2)) {
         penalty += (houseCount - (parkCount + hospitalCount * 2)) * 10;
       }
 
-      // 3. НОВАЯ ЛОГИКА: Ресурсы для магазинов
       if (shopCount > 0 && factoryCount < 2) {
-        penalty += 25; // Штраф к счастью
-        alertBanner.style.display = 'block'; // Показываем баннер
+        penalty += 25; 
+        alertBanner.style.display = 'block'; 
       } else {
         alertBanner.style.display = 'none';
       }
 
-      // 4. НОВАЯ ЛОГИКА: Отсутствие ТЭЦ / ТВЦ / ТЦ для домов
       if (houseCount > 0 && !hasInfrastructureUpgrade) {
-        penalty += 35; // Люди мерзнут и бунтуют без ТЭЦ/ТВЦ/ТЦ!
+        penalty += 35; 
         reason = "В городе нет отопления и инфраструктуры (ТЭЦ/ТВЦ/ТЦ)! Все замерзли.";
       }
 
@@ -502,7 +498,6 @@
       if (finalHappiness > 100) finalHappiness = 100;
       if (finalHappiness < 0) finalHappiness = 0;
 
-      // Проверка Game Over
       if (finalHappiness === 0 && houseCount > 0) {
         triggerGameOver(reason);
       }
@@ -537,8 +532,8 @@
       gridColumns = 4;
       maxCells = 16;
       expandCost = 40;
-      mapData = [];
-      upgradesData = [];
+      mapData = new Array(36).fill('');
+      upgradesData = new Array(36).fill('');
       alertBanner.style.display = 'none';
       gameOverScreen.style.display = 'none';
       selectTool('house');
