@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket City: Hardcore</title>
+  <title>Pocket City: Infrastructure</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
@@ -43,6 +43,21 @@
     .pop { color: #e71d36; }
     .happy { color: #ffb703; }
 
+    /* Уведомление на экране */
+    .alert-banner {
+      display: none;
+      background-color: #e71d36;
+      color: white;
+      text-align: center;
+      padding: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      animation: blink 1s infinite alternate;
+    }
+    @keyframes blink {
+      from { opacity: 0.7; } to { opacity: 1; }
+    }
+
     .expand-btn {
       background-color: #9b59b6;
       color: white;
@@ -79,6 +94,19 @@
       font-size: 32px;
       box-shadow: inset 0 -4px 0 rgba(0,0,0,0.15);
       cursor: pointer;
+      position: relative;
+    }
+    /* Маленькая метка для улучшенных заводов */
+    .upgrade-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      background: #2c3e50;
+      color: white;
+      font-size: 10px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-weight: bold;
     }
 
     .toolbar-container {
@@ -112,19 +140,49 @@
     .tool i { font-size: 26px; margin-bottom: 5px; }
     .cost { font-size: 14px; font-weight: bold; color: #2ec4b6; }
 
-    /* Экран Конец Игры */
-    .game-over-screen {
+    /* Окна Game Over и Улучшений */
+    .modal-screen {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
-      background-color: rgba(231, 29, 54, 0.95);
+      background-color: rgba(0, 0, 0, 0.85);
       color: white;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 100;
-      font-size: 32px;
+      font-size: 24px;
       font-weight: bold;
+    }
+    .modal-content {
+      background: #34495e;
+      padding: 25px;
+      border-radius: 20px;
+      text-align: center;
+      width: 80%;
+      max-width: 350px;
+      box-shadow: 0 10px 0 #2c3e50;
+    }
+    .up-btn {
+      background-color: #2ecc71;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      margin: 10px 0;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      font-family: 'Varela Round', sans-serif;
+      font-weight: bold;
+    }
+    .close-btn {
+      background-color: #e74c3c;
+      margin-top: 15px;
+    }
+
+    .game-over-screen {
+      background-color: rgba(231, 29, 54, 0.95);
     }
     .restart-btn {
       background-color: white;
@@ -137,24 +195,35 @@
       border: none;
       font-family: 'Varela Round', sans-serif;
       font-weight: bold;
-      box-shadow: 0 5px 0 #b31224;
-    }
-    .restart-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 3px 0 #b31224;
     }
   </style>
 </head>
 <body>
 
-  <div class="game-over-screen" id="game-over">
+  <!-- Экран Гейм Овера -->
+  <div class="modal-screen game-over-screen" id="game-over">
     <div>💀 ГЕЙМ ОВЕР!</div>
-    <div style="font-size: 20px; margin-top: 10px; padding: 0 20px; text-align: center;">Жители не выдержали плохой экологии и шума и покинули город!</div>
+    <div style="font-size: 18px; margin-top: 10px; padding: 0 20px; text-align: center;" id="game-over-reason">Жители не выдержали условий!</div>
     <button class="restart-btn" onclick="restartGame()">Начать заново</button>
   </div>
 
-  <div class="header">🏙️ Pocket City: Hardcore</div>
+  <!-- Окно улучшений завода -->
+  <div class="modal-screen" id="upgrade-modal">
+    <div class="modal-content">
+      <div style="margin-bottom: 15px; color: #f1c40f;">🏭 Улучшение Завода</div>
+      <div style="font-size: 14px; margin-bottom: 15px; color: #bdc3c7;">Выберите один апгрейд инфраструктуры для города:</div>
+      <button class="up-btn" onclick="applyUpgrade('ТЭЦ')">Модернизация в ТЭЦ ($40)</button>
+      <button class="up-btn" onclick="applyUpgrade('ТВЦ')">Модернизация в ТВЦ ($40)</button>
+      <button class="up-btn" onclick="applyUpgrade('ТЦ')">Модернизация в ТЦ ($40)</button>
+      <button class="up-btn close-btn" onclick="closeUpgradeModal()">Отмена</button>
+    </div>
+  </div>
+
+  <div class="header">🏙️ Pocket City: Infrastructure</div>
   
+  <!-- Всплывающий баннер предупреждений -->
+  <div class="alert-banner" id="alert-banner">Магазинам нужны ресурсы! Постройте заводы!</div>
+
   <div class="stats">
     <div class="stat-item money"><i class="fa-solid fa-coins"></i> <span id="money-display">60</span></div>
     <div class="stat-item pop"><i class="fa-solid fa-users"></i> <span id="pop-display">0</span></div>
@@ -208,8 +277,9 @@
     let maxCells = 16; 
     let expandCost = 40;
 
-    // Массив карты, где храним типы построек на каждой клетке
-    let mapData = [];
+    let mapData = [];       // Тип здания ('house', 'factory' и т.д.)
+    let upgradesData = [];  // Тип улучшения ('', 'ТЭЦ', 'ТВЦ', 'ТЦ')
+    let selectedFactoryIndex = null;
 
     const tools = {
       house: { cost: 10, icon: '<i class="fa-solid fa-house" style="color: #3498db;"></i>' },
@@ -225,32 +295,99 @@
     const happyEl = document.getElementById('happy-display');
     const happyIconEl = document.getElementById('happy-icon');
     const expandCostEl = document.getElementById('expand-cost');
+    const alertBanner = document.getElementById('alert-banner');
     const gameOverScreen = document.getElementById('game-over');
+    const gameOverReason = document.getElementById('game-over-reason');
+    const upgradeModal = document.getElementById('upgrade-modal');
 
     function createMap() {
       gridEl.innerHTML = '';
       gridEl.style.gridTemplateColumns = `repeat(${gridColumns}, 1fr)`;
       
-      // Переносим старые данные в новую сетку, заполняя новые клетки пустотой
       let oldData = [...mapData];
+      let oldUpgrades = [...upgradesData];
+      
       mapData = new Array(maxCells).fill('');
+      upgradesData = new Array(maxCells).fill('');
+      
       for(let i = 0; i < oldData.length; i++) {
-        // Высчитываем координаты старых клеток, чтобы они не съехали
         let oldRow = Math.floor(i / (gridColumns - 1));
         let oldCol = i % (gridColumns - 1);
         let newIndex = oldRow * gridColumns + oldCol;
         mapData[newIndex] = oldData[i];
+        upgradesData[newIndex] = oldUpgrades[i] || '';
       }
 
       for (let i = 0; i < maxCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.index = i;
+        
         if (mapData[i] !== '') {
           cell.innerHTML = tools[mapData[i]].icon;
+          if (upgradesData[i]) {
+            appendBadge(cell, upgradesData[i]);
+          }
         }
-        cell.onclick = () => build(cell, i);
+        
+        cell.onclick = () => handleCellClick(cell, i);
         gridEl.appendChild(cell);
+      }
+    }
+
+    function appendBadge(cell, text) {
+      let badge = document.createElement('div');
+      badge.className = 'upgrade-badge';
+      badge.innerText = text;
+      cell.appendChild(badge);
+    }
+
+    function handleCellClick(cell, index) {
+      if (isGameOver) return;
+
+      // ЕСЛИ НАЖАЛИ НА ЗАВОД — открываем улучшения (независимо от выбранного инструмента)
+      if (mapData[index] === 'factory') {
+        openUpgradeModal(index);
+        return;
+      }
+
+      // Обычная постройка
+      if (mapData[index] !== '') return; 
+      
+      let tool = tools[currentTool];
+      if (money >= tool.cost) {
+        money -= tool.cost;
+        mapData[index] = currentTool;
+        cell.innerHTML = tool.icon;
+        updateUI();
+      }
+    }
+
+    function openUpgradeModal(index) {
+      if(upgradesData[index] !== '') {
+        alert("Этот завод уже улучшен!");
+        return;
+      }
+      selectedFactoryIndex = index;
+      upgradeModal.style.display = 'flex';
+    }
+
+    function closeUpgradeModal() {
+      upgradeModal.style.display = 'none';
+      selectedFactoryIndex = null;
+    }
+
+    function applyUpgrade(type) {
+      if (money >= 40 && selectedFactoryIndex !== null) {
+        money -= 40;
+        upgradesData[selectedFactoryIndex] = type;
+        
+        // Перерисовываем карту, чтобы обновить значок апгрейда
+        createMap();
+        closeUpgradeModal();
+        updateUI();
+      } else {
+        alert("Не хватает $40 на улучшение!");
       }
     }
 
@@ -265,7 +402,7 @@
           createMap();
           updateUI();
         } else {
-          alert("Город достиг максимального размера!");
+          alert("Максимальный размер достигнут!");
         }
       } else {
         alert("Не хватает денег!");
@@ -279,19 +416,6 @@
       document.getElementById('tool-' + toolName).classList.add('active');
     }
 
-    function build(cell, index) {
-      if (isGameOver || mapData[index] !== '') return; 
-      
-      let tool = tools[currentTool];
-      if (money >= tool.cost) {
-        money -= tool.cost;
-        mapData[index] = currentTool;
-        cell.innerHTML = tool.icon;
-        updateUI();
-      }
-    }
-
-    // Поиск соседей вокруг клетки для проверки экологии
     function getNeighbors(index) {
       let neighbors = [];
       let row = Math.floor(index / gridColumns);
@@ -316,53 +440,73 @@
       let baseHappiness = 100;
       
       let houseCount = 0;
+      let shopCount = 0;
+      let factoryCount = 0;
       let parkCount = 0;
       let hospitalCount = 0;
       
-      // Считаем общее количество зданий
+      let hasInfrastructureUpgrade = false;
+
       for (let i = 0; i < maxCells; i++) {
         if (mapData[i] === 'house') houseCount++;
+        if (mapData[i] === 'shop') shopCount++;
+        if (mapData[i] === 'factory') {
+          factoryCount++;
+          if (upgradesData[i] === 'ТЭЦ' || upgradesData[i] === 'ТВЦ' || upgradesData[i] === 'ТЦ') {
+            hasInfrastructureUpgrade = true; // Есть хотя бы один улучшенный завод
+          }
+        }
         if (mapData[i] === 'park') parkCount++;
         if (mapData[i] === 'hospital') hospitalCount++;
+        
         if (mapData[i] === 'shop') totalIncome += 3;
         if (mapData[i] === 'factory') totalIncome += 12;
       }
 
-      // Главный расчет штрафов за соседство
       let penalty = 0;
+      let reason = "Жители не выдержали плохой экологии!";
+
+      // 1. Проверка соседства (заводы и магазины рядом с домами)
       for (let i = 0; i < maxCells; i++) {
         if (mapData[i] === 'house') {
           totalPopulation += 6;
           let neighbors = getNeighbors(i);
           
           neighbors.forEach(nIndex => {
-            if (mapData[nIndex] === 'factory') {
-              penalty += 20; // Огромный штраф за завод под окнами!
-            }
-            if (mapData[nIndex] === 'shop') {
-              penalty += 8;  // Штраф за шумный магазин рядом!
-            }
+            if (mapData[nIndex] === 'factory') penalty += 20; 
+            if (mapData[nIndex] === 'shop') penalty += 8;   
           });
         }
       }
 
-      // Общий баланс парков
-      let badPlaces = houseCount;
-      let goodPlaces = parkCount + (hospitalCount * 2);
-      if (badPlaces > goodPlaces) {
-        penalty += (badPlaces - goodPlaces) * 15;
+      // 2. Баланс парков
+      if (houseCount > (parkCount + hospitalCount * 2)) {
+        penalty += (houseCount - (parkCount + hospitalCount * 2)) * 10;
+      }
+
+      // 3. НОВАЯ ЛОГИКА: Ресурсы для магазинов
+      if (shopCount > 0 && factoryCount < 2) {
+        penalty += 25; // Штраф к счастью
+        alertBanner.style.display = 'block'; // Показываем баннер
+      } else {
+        alertBanner.style.display = 'none';
+      }
+
+      // 4. НОВАЯ ЛОГИКА: Отсутствие ТЭЦ / ТВЦ / ТЦ для домов
+      if (houseCount > 0 && !hasInfrastructureUpgrade) {
+        penalty += 35; // Люди мерзнут и бунтуют без ТЭЦ/ТВЦ/ТЦ!
+        reason = "В городе нет отопления и инфраструктуры (ТЭЦ/ТВЦ/ТЦ)! Все замерзли.";
       }
 
       let finalHappiness = baseHappiness - penalty;
       if (finalHappiness > 100) finalHappiness = 100;
       if (finalHappiness < 0) finalHappiness = 0;
 
-      // Если счастье 0 — это Гейм Овер
+      // Проверка Game Over
       if (finalHappiness === 0 && houseCount > 0) {
-        triggerGameOver();
+        triggerGameOver(reason);
       }
 
-      // Изменение населения от настроения
       let activePopulation = Math.floor(totalPopulation * (finalHappiness / 100));
 
       if (finalHappiness > 75) happyIconEl.innerText = '😀';
@@ -381,8 +525,9 @@
       expandCostEl.innerText = expandCost;
     }
 
-    function triggerGameOver() {
+    function triggerGameOver(reasonText) {
       isGameOver = true;
+      gameOverReason.innerText = reasonText;
       gameOverScreen.style.display = 'flex';
     }
 
@@ -393,13 +538,14 @@
       maxCells = 16;
       expandCost = 40;
       mapData = [];
+      upgradesData = [];
+      alertBanner.style.display = 'none';
       gameOverScreen.style.display = 'none';
       selectTool('house');
       createMap();
       updateUI();
     }
 
-    // Игровой цикл времени
     setInterval(() => {
       if (!isGameOver) {
         let stats = calculateStats();
