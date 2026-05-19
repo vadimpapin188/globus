@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket City Pro</title>
+  <title>Pocket City: Hardcore</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
@@ -31,7 +31,6 @@
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    /* Панель ресурсов (теперь тут 3 параметра) */
     .stats {
       display: flex;
       justify-content: space-around;
@@ -39,13 +38,11 @@
       padding: 10px;
       font-size: 20px;
       font-weight: bold;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .money { color: #2ec4b6; }
     .pop { color: #e71d36; }
     .happy { color: #ffb703; }
 
-    /* Кнопка расширения */
     .expand-btn {
       background-color: #9b59b6;
       color: white;
@@ -58,23 +55,16 @@
       cursor: pointer;
       box-shadow: 0 4px 0 #8e44ad;
     }
-    .expand-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 #8e44ad;
-    }
 
-    /* Карта */
     .map-container {
       flex-grow: 1;
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 10px;
-      overflow-y: auto;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr); /* Начинаем с 4 колонок */
       gap: 6px;
       width: 100%;
       max-width: 450px;
@@ -90,15 +80,7 @@
       box-shadow: inset 0 -4px 0 rgba(0,0,0,0.15);
       cursor: pointer;
     }
-    /* Заблокированные клетки */
-    .cell.locked {
-      background-color: #7f8c8d;
-      opacity: 0.4;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
 
-    /* Нижнее меню (с прокруткой, если зданий много) */
     .toolbar-container {
       background-color: #ffffff;
       box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
@@ -109,10 +91,6 @@
       gap: 10px;
       overflow-x: auto;
       padding: 0 10px;
-      scrollbar-width: none; /* Скрываем скроллбар */
-    }
-    .toolbar::-webkit-scrollbar {
-      display: none;
     }
     .tool {
       display: flex;
@@ -126,35 +104,65 @@
       font-size: 16px;
       min-width: 75px;
       cursor: pointer;
-      flex-shrink: 0;
     }
     .tool.active {
       border-color: #ff9f1c;
       background-color: #fff3e0;
     }
-    .tool i {
-      font-size: 26px;
-      margin-bottom: 5px;
-    }
-    .cost {
-      font-size: 14px;
+    .tool i { font-size: 26px; margin-bottom: 5px; }
+    .cost { font-size: 14px; font-weight: bold; color: #2ec4b6; }
+
+    /* Экран Конец Игры */
+    .game-over-screen {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: rgba(231, 29, 54, 0.95);
+      color: white;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      font-size: 32px;
       font-weight: bold;
-      color: #2ec4b6;
+    }
+    .restart-btn {
+      background-color: white;
+      color: #e71d36;
+      padding: 15px 30px;
+      border-radius: 15px;
+      margin-top: 20px;
+      font-size: 22px;
+      cursor: pointer;
+      border: none;
+      font-family: 'Varela Round', sans-serif;
+      font-weight: bold;
+      box-shadow: 0 5px 0 #b31224;
+    }
+    .restart-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 3px 0 #b31224;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">🏙️ Pocket City Pro</div>
+  <div class="game-over-screen" id="game-over">
+    <div>💀 ГЕЙМ ОВЕР!</div>
+    <div style="font-size: 20px; margin-top: 10px; padding: 0 20px; text-align: center;">Жители не выдержали плохой экологии и шума и покинули город!</div>
+    <button class="restart-btn" onclick="restartGame()">Начать заново</button>
+  </div>
+
+  <div class="header">🏙️ Pocket City: Hardcore</div>
   
   <div class="stats">
-    <div class="stat-item money"><i class="fa-solid fa-coins"></i> <span id="money-display">50</span></div>
+    <div class="stat-item money"><i class="fa-solid fa-coins"></i> <span id="money-display">60</span></div>
     <div class="stat-item pop"><i class="fa-solid fa-users"></i> <span id="pop-display">0</span></div>
-    <div class="stat-item happy"><span id="happy-icon">😐</span> <span id="happy-display">100</span>%</div>
+    <div class="stat-item happy"><span id="happy-icon">😀</span> <span id="happy-display">100</span>%</div>
   </div>
 
   <div class="expand-btn" onclick="expandMap()">
-    <i class="fa-solid fa-map"></i> Расширить территорию (Цена: $<span id="expand-cost">40</span>)
+    <i class="fa-solid fa-map"></i> Расширить поле (Цена: $<span id="expand-cost">40</span>)
   </div>
 
   <div class="map-container">
@@ -181,7 +189,7 @@
       <div class="tool" id="tool-factory" onclick="selectTool('factory')">
         <i class="fa-solid fa-industry" style="color: #7f8c8d;"></i>
         <div>Завод</div>
-        <div class="cost">$60</div>
+        <div class="cost">$50</div>
       </div>
       <div class="tool" id="tool-hospital" onclick="selectTool('hospital')">
         <i class="fa-solid fa-hospital" style="color: #e67e22;"></i>
@@ -192,25 +200,22 @@
   </div>
 
   <script>
-    // Игровые переменные
-    let money = 50;
-    let basePopulation = 0; // Настоящее население по зданиям
-    let currentPopulation = 0; // Отображаемое население (с учетом экологии)
+    let money = 60;
+    let isGameOver = false;
     let currentTool = 'house';
     
-    // Механика расширения
     let gridColumns = 4;
-    let maxCells = 16; // Начинаем с 16 клеток (4х4)
+    let maxCells = 16; 
     let expandCost = 40;
 
-    // Подсчет типов зданий для баланса
-    let buildings = { house: 0, shop: 0, park: 0, factory: 0, hospital: 0 };
+    // Массив карты, где храним типы построек на каждой клетке
+    let mapData = [];
 
     const tools = {
       house: { cost: 10, icon: '<i class="fa-solid fa-house" style="color: #3498db;"></i>' },
       shop: { cost: 25, icon: '<i class="fa-solid fa-store" style="color: #e74c3c;"></i>' },
       park: { cost: 8, icon: '<i class="fa-solid fa-tree" style="color: #2ecc71;"></i>' },
-      factory: { cost: 60, icon: '<i class="fa-solid fa-industry" style="color: #7f8c8d;"></i>' },
+      factory: { cost: 50, icon: '<i class="fa-solid fa-industry" style="color: #7f8c8d;"></i>' },
       hospital: { cost: 80, icon: '<i class="fa-solid fa-hospital" style="color: #e67e22;"></i>' }
     };
 
@@ -220,120 +225,189 @@
     const happyEl = document.getElementById('happy-display');
     const happyIconEl = document.getElementById('happy-icon');
     const expandCostEl = document.getElementById('expand-cost');
+    const gameOverScreen = document.getElementById('game-over');
 
-    // Генерация начальной карты 6х6, но доступно только 4х4
-    const totalMapSize = 36; // Всего 36 клеток макс (6х6)
-    
     function createMap() {
       gridEl.innerHTML = '';
       gridEl.style.gridTemplateColumns = `repeat(${gridColumns}, 1fr)`;
       
+      // Переносим старые данные в новую сетку, заполняя новые клетки пустотой
+      let oldData = [...mapData];
+      mapData = new Array(maxCells).fill('');
+      for(let i = 0; i < oldData.length; i++) {
+        // Высчитываем координаты старых клеток, чтобы они не съехали
+        let oldRow = Math.floor(i / (gridColumns - 1));
+        let oldCol = i % (gridColumns - 1);
+        let newIndex = oldRow * gridColumns + oldCol;
+        mapData[newIndex] = oldData[i];
+      }
+
       for (let i = 0; i < maxCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.index = i;
-        cell.onclick = () => build(cell);
+        if (mapData[i] !== '') {
+          cell.innerHTML = tools[mapData[i]].icon;
+        }
+        cell.onclick = () => build(cell, i);
         gridEl.appendChild(cell);
       }
     }
 
-    // Расширение территории
     function expandMap() {
+      if (isGameOver) return;
       if (money >= expandCost) {
         if (gridColumns < 6) {
           money -= expandCost;
           gridColumns++;
           maxCells = gridColumns * gridColumns;
-          expandCost = Math.floor(expandCost * 2.5); // Цена растет в 2.5 раза!
-          
+          expandCost = Math.floor(expandCost * 3); 
           createMap();
           updateUI();
         } else {
-          alert("Достигнут максимальный размер города для мобильного экрана!");
+          alert("Город достиг максимального размера!");
         }
       } else {
-        alert("Не хватает денег для расширения!");
+        alert("Не хватает денег!");
       }
     }
 
     function selectTool(toolName) {
+      if (isGameOver) return;
       currentTool = toolName;
       document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
       document.getElementById('tool-' + toolName).classList.add('active');
     }
 
-    function build(cell) {
-      if (cell.innerHTML !== '' || cell.classList.contains('locked')) return; 
+    function build(cell, index) {
+      if (isGameOver || mapData[index] !== '') return; 
       
       let tool = tools[currentTool];
-      
       if (money >= tool.cost) {
         money -= tool.cost;
+        mapData[index] = currentTool;
         cell.innerHTML = tool.icon;
-        
-        // Регистрируем постройку
-        buildings[currentTool]++;
-        
-        // Считаем базовое население
-        if (currentTool === 'house') basePopulation += 5;
-        
         updateUI();
       }
     }
 
-    // Расчет счастья и доходов
-    function calculateStats() {
-      // 1 парк может обслужить 1 дом или 1 завод. Больница дает огромный бонус к счастью.
-      let badPlaces = buildings.house + (buildings.factory * 2);
-      let goodPlaces = buildings.park + (buildings.hospital * 3);
-      
-      let happiness = 100;
-      if (badPlaces > 0) {
-        let ratio = goodPlaces / badPlaces;
-        if (ratio < 1) {
-          happiness = Math.floor(ratio * 100);
+    // Поиск соседей вокруг клетки для проверки экологии
+    function getNeighbors(index) {
+      let neighbors = [];
+      let row = Math.floor(index / gridColumns);
+      let col = index % gridColumns;
+
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          let r = row + dr;
+          let c = col + dc;
+          if (r >= 0 && r < gridColumns && c >= 0 && c < gridColumns) {
+            neighbors.push(r * gridColumns + c);
+          }
         }
       }
-      if (happiness < 20) happiness = 20; // Ниже 20% не падает
+      return neighbors;
+    }
 
-      // Зависимость населения от счастья
-      if (happiness < 50) {
-        // Люди уезжают, если им грустно
-        currentPopulation = Math.floor(basePopulation * (happiness / 100));
-      } else {
-        currentPopulation = basePopulation;
+    function calculateStats() {
+      let totalIncome = 0;
+      let totalPopulation = 0;
+      let baseHappiness = 100;
+      
+      let houseCount = 0;
+      let parkCount = 0;
+      let hospitalCount = 0;
+      
+      // Считаем общее количество зданий
+      for (let i = 0; i < maxCells; i++) {
+        if (mapData[i] === 'house') houseCount++;
+        if (mapData[i] === 'park') parkCount++;
+        if (mapData[i] === 'hospital') hospitalCount++;
+        if (mapData[i] === 'shop') totalIncome += 3;
+        if (mapData[i] === 'factory') totalIncome += 12;
       }
 
-      // Смайлик счастья
-      if (happiness > 80) happyIconEl.innerText = '😀';
-      else if (happiness > 50) happyIconEl.innerText = '😐';
+      // Главный расчет штрафов за соседство
+      let penalty = 0;
+      for (let i = 0; i < maxCells; i++) {
+        if (mapData[i] === 'house') {
+          totalPopulation += 6;
+          let neighbors = getNeighbors(i);
+          
+          neighbors.forEach(nIndex => {
+            if (mapData[nIndex] === 'factory') {
+              penalty += 20; // Огромный штраф за завод под окнами!
+            }
+            if (mapData[nIndex] === 'shop') {
+              penalty += 8;  // Штраф за шумный магазин рядом!
+            }
+          });
+        }
+      }
+
+      // Общий баланс парков
+      let badPlaces = houseCount;
+      let goodPlaces = parkCount + (hospitalCount * 2);
+      if (badPlaces > goodPlaces) {
+        penalty += (badPlaces - goodPlaces) * 15;
+      }
+
+      let finalHappiness = baseHappiness - penalty;
+      if (finalHappiness > 100) finalHappiness = 100;
+      if (finalHappiness < 0) finalHappiness = 0;
+
+      // Если счастье 0 — это Гейм Овер
+      if (finalHappiness === 0 && houseCount > 0) {
+        triggerGameOver();
+      }
+
+      // Изменение населения от настроения
+      let activePopulation = Math.floor(totalPopulation * (finalHappiness / 100));
+
+      if (finalHappiness > 75) happyIconEl.innerText = '😀';
+      else if (finalHappiness > 35) happyIconEl.innerText = '😐';
       else happyIconEl.innerText = '😡';
 
-      // Считаем доход
-      // Магазин дает +2, Завод дает +10, но если люди злые (настроение < 40), магазины приносят в 2 раза меньше
-      let shopIncome = buildings.shop * (happiness < 40 ? 1 : 2);
-      let factoryIncome = buildings.factory * 10;
-      let totalIncome = shopIncome + factoryIncome;
-
-      return { happiness, totalIncome };
+      return { happiness: finalHappiness, income: totalIncome, population: activePopulation };
     }
 
     function updateUI() {
+      if (isGameOver) return;
       let stats = calculateStats();
       moneyEl.innerText = money;
-      popEl.innerText = currentPopulation;
+      popEl.innerText = stats.population;
       happyEl.innerText = stats.happiness;
       expandCostEl.innerText = expandCost;
     }
 
-    // Каждую секунду капают деньги и обновляются жильцы
-    setInterval(() => {
-      let stats = calculateStats();
-      money += stats.totalIncome;
+    function triggerGameOver() {
+      isGameOver = true;
+      gameOverScreen.style.display = 'flex';
+    }
+
+    function restartGame() {
+      money = 60;
+      isGameOver = false;
+      gridColumns = 4;
+      maxCells = 16;
+      expandCost = 40;
+      mapData = [];
+      gameOverScreen.style.display = 'none';
+      selectTool('house');
+      createMap();
       updateUI();
+    }
+
+    // Игровой цикл времени
+    setInterval(() => {
+      if (!isGameOver) {
+        let stats = calculateStats();
+        money += stats.income;
+        updateUI();
+      }
     }, 1000);
 
-    // Старт игры
     createMap();
     updateUI();
   </script>
