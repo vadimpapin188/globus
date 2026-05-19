@@ -237,6 +237,20 @@
       text-align: left;
       line-height: 1.4;
     }
+    
+    /* Стили для экрана победы */
+    .win-screen {
+      background: linear-gradient(135deg, #1abc9c, #2ecc71) !important;
+      color: #fff !important;
+    }
+    .win-title {
+      font-size: 32px;
+      color: #f1c40f;
+      text-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      margin-bottom: 15px;
+      animation: bounce 0.5s infinite alternate;
+    }
+    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
   </style>
 </head>
 <body>
@@ -246,6 +260,16 @@
     <div>💀 ГЕЙМ ОВЕР!</div>
     <div style="font-size: 18px; margin-top: 10px; padding: 0 20px; text-align: center;" id="game-over-reason">Жители уехали из города!</div>
     <button class="up-btn" style="background: white; color: #e71d36; width:auto; padding:10px 20px;" onclick="restartGame()">Начать заново</button>
+  </div>
+
+  <!-- ЭКРАН ПОБЕДЫ (ФИНАЛ ИГРЫ) -->
+  <div class="modal-screen win-screen" id="win-screen">
+    <div class="win-title">🎉 ИГРА ПРОЙДЕНА! 🎉</div>
+    <div style="font-size: 18px; margin-bottom: 20px; padding: 0 25px; text-align: center;">
+      Вы построили настоящую <b>Мега-Утопию</b>! <br><br>
+      Телевышка транслирует шоу на весь мир, казна ломится от золота, а жители счастливы на все 100%! Вы — лучший мэр в истории!
+    </div>
+    <button class="up-btn" style="background: #2c3e50; color: white; width:auto; padding:12px 25px;" onclick="restartGame()">Играть снова</button>
   </div>
 
   <!-- Меню улучшений заводов -->
@@ -282,10 +306,10 @@
   <div class="modal-screen" id="log-modal">
     <div class="modal-content">
       <div style="margin-bottom: 15px; color: #2ecc71;">📜 Что нового в YouTown?</div>
-      <div class="log-item">🗼 <b>Новое здание — Телевышка!</b> Стоит $1780, приносит целых +65 к счастью! Но требует огромного снабжения заводов (минимум 8 штук), иначе счастье пропадёт.</div>
-      <div class="log-item">📈 <b>4 уровня прокачки вышки:</b> Лучшее качество ➡️ Топ качество ➡️ Больше каналов ➡️ Разные категории. <i>Внимание:</i> на 4-м уровне жители гипнотизируются телеком, и 70% зданий засыпают!</div>
+      <div class="log-item">🏁 <b>Добавлена финальная цель игры!</b> Чтобы полностью пройти игру, накопи $5000, сделай счастье жителей 100% и прокачай Телевышку до 4 уровня!</div>
+      <div class="log-item">🗼 <b>Новое здание — Телевышка!</b> Стоит $1780, приносит целых +65 к счастью! Но требует огромного снабжения заводов (минимум 8 штук).</div>
       <div class="log-item">🗺️ <b>Новые горизонты:</b> Максимальный размер карты расширен до огромной сетки 7х7!</div>
-      <button class="up-btn close-btn" onclick="closeLogModal()">Супер!</button>
+      <button class="up-btn close-btn" onclick="closeLogModal()">Поехали!</button>
     </div>
   </div>
 
@@ -300,6 +324,7 @@
   <div class="alert-banner" id="bank-banner" style="background-color: #d35400;">🏦 Активен кредит! Списание -$5/сек.</div>
   <div class="alert-banner" id="tv-low-factory-banner" style="background-color: #d35400;">🗼 Вышка отключена! Нужно минимум 8 заводов для работы!</div>
   <div class="alert-banner" id="tv-hypno-banner" style="background-color: #8e44ad;">📺 Зомбоящик 4 уровня! 70% зданий парализованы просмотром шоу!</div>
+  <div class="alert-banner" id="quest-banner" style="background-color: #27ae60; display: block;">🎯 Цель: Накопи $5000, сделай 100% счастья и апни Вышку до 4-го лвла!</div>
 
   <div class="stats">
     <div class="stat-item money"><i class="fa-solid fa-coins"></i> $<span id="money-display">60</span></div>
@@ -339,6 +364,7 @@
   <script>
     let money = 60;
     let isGameOver = false;
+    let isGameWon = false; // Триггер победы
     let currentTool = 'house';
     
     let gridColumns = 4;
@@ -349,8 +375,8 @@
     let upgradesData = new Array(49).fill('');  
     let firesData = new Array(49).fill(false); 
     let brokenData = new Array(49).fill(false); 
-    let tvLevels = new Array(49).fill(0);       // Уровни вышек (0-4)
-    let blockedByTv = new Array(49).fill(false); // Загипнотизированные здания
+    let tvLevels = new Array(49).fill(0);       
+    let blockedByTv = new Array(49).fill(false); 
 
     let shopNoHospitalTimer = 0; 
     let shopNoFactoryTimer = 0; 
@@ -409,6 +435,7 @@
     const tvHypnoBanner = document.getElementById('tv-hypno-banner');
 
     const gameOverScreen = document.getElementById('game-over');
+    const winScreen = document.getElementById('win-screen');
     const gameOverReason = document.getElementById('game-over-reason');
     const upgradeModal = document.getElementById('upgrade-modal');
     const tvUpgradeModal = document.getElementById('tv-upgrade-modal');
@@ -421,7 +448,12 @@
         let osc = ctx.createOscillator();
         let gain = ctx.createGain();
         osc.connect(gain); gain.connect(ctx.destination);
-        if (type === 'build') {
+        if (type === 'win') {
+          osc.frequency.setValueAtTime(400, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.3);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'build') {
           osc.frequency.setValueAtTime(300, ctx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
           gain.gain.setValueAtTime(0.1, ctx.currentTime);
@@ -440,16 +472,16 @@
     }
 
     function saveGame() {
-      if(isGameOver) return;
+      if(isGameOver || isGameWon) return;
       let state = {
         money, gridColumns, maxCells, expandCost, mapData, upgradesData, firesData, brokenData, tvLevels, blockedByTv,
         shopNoHospitalTimer, shopNoFactoryTimer, activeEpidemic, epidemicLosses, achievements, bankLoanActive, bankLoanLeftToPay
       };
-      localStorage.setItem('youtown_save_v2', JSON.stringify(state));
+      localStorage.setItem('youtown_save_v3', JSON.stringify(state));
     }
 
     function loadGame() {
-      let saved = localStorage.getItem('youtown_save_v2');
+      let saved = localStorage.getItem('youtown_save_v3');
       if(!saved) return;
       try {
         let state = JSON.parse(saved);
@@ -463,11 +495,11 @@
         achievements = state.achievements || achievements;
         bankLoanActive = state.bankLoanActive || false;
         bankLoanLeftToPay = state.bankLoanLeftToPay || 0;
-      } catch(e) { console.log("Ошибка загрузки данных"); }
+      } catch(e) { console.log("Ошибка загрузки"); }
     }
 
     function clearSave() {
-      localStorage.removeItem('youtown_save_v2');
+      localStorage.removeItem('youtown_save_v3');
       alert("Город стерт из памяти! Начинаем заново.");
       restartGame();
     }
@@ -513,7 +545,7 @@
     }
 
     function handleCellClick(cell, index) {
-      if (isGameOver) return;
+      if (isGameOver || isGameWon) return;
 
       if (brokenData[index]) {
         let costToFix = Math.floor(tools[mapData[index]].cost / 2);
@@ -537,7 +569,7 @@
       }
 
       if (mapData[index] === 'factory') {
-        if (blockedByTv[index]) { alert("Завод парализован телевидением 4 уровня!"); return; }
+        if (blockedByTv[index]) { alert("Завод заблокирован телевидением!"); return; }
         openUpgradeModal(index); return;
       }
 
@@ -564,7 +596,7 @@
     }
 
     function toggleTaxReform() {
-      if (isGameOver || taxCooldown > 0) return;
+      if (isGameOver || isGameWon || taxCooldown > 0) return;
       isTaxReformActive = true; taxReformTimer = 20; taxCooldown = 60;
       taxBtnEl.classList.add('active'); taxBtnEl.innerText = "⏳ Налоги х2";
       updateUI();
@@ -584,7 +616,6 @@
       }
     }
 
-    // Логика управления Телевышкой
     function openTVModal(index) {
       selectedTVIndex = index;
       let lvl = tvLevels[index];
@@ -605,18 +636,14 @@
       money -= 150;
       tvLevels[selectedTVIndex]++;
       
-      if (tvLevels[selectedTVIndex] === 4) {
-        alert("💥 ВНИМАНИЕ: Вы активировали 4-й уровень вышки! Большинство зданий в городе засмотрелись сериалами и заблокированы!");
-      }
-      
       closeTVModal();
       createMap();
       updateUI();
     }
 
     function expandMap() {
-      if (isGameOver || money < expandCost) return;
-      if (gridColumns < 7) {  // Максимум расширения теперь 7х7!
+      if (isGameOver || isGameWon || money < expandCost) return;
+      if (gridColumns < 7) {  
         money -= expandCost;
         let oldData = [...mapData], oldUpgrades = [...upgradesData], oldFires = [...firesData], oldBroken = [...brokenData], oldTv = [...tvLevels];
         
@@ -641,8 +668,6 @@
         }
         if(gridColumns >= 6) achievements.megacity = true;
         createMap(); updateUI();
-      } else {
-        alert("Достигнут максимальный предел расширения YouTown (7х7)!");
       }
     }
 
@@ -670,15 +695,12 @@
       let hasInfrastructureUpgrade = false;
       let hasLevel4TV = false;
 
-      // Считаем общее число чистых заводов и ищем вышку 4 уровня
       for (let i = 0; i < maxCells; i++) {
         if (firesData[i] || brokenData[i]) continue;
         if (mapData[i] === 'factory') factoryCount++;
         if (mapData[i] === 'tvtower' && tvLevels[i] === 4) hasLevel4TV = true;
       }
 
-      // Накладываем блокировку телевидения 4-го уровня (70% случайных рабочих клеток засыпают)
-      // Чтобы блокировка была стабильной между кадрами, завяжем ее на индекс
       for (let i = 0; i < maxCells; i++) {
         if (hasLevel4TV && mapData[i] !== 'tvtower' && mapData[i] !== '' && (i % 3 !== 0)) {
           blockedByTv[i] = true;
@@ -690,7 +712,6 @@
       if (hasLevel4TV) tvHypnoBanner.style.display = 'block';
       else tvHypnoBanner.style.display = 'none';
 
-      // Рассчитываем экономику с учетом блокировок
       let activeTVTowersWorking = 0;
 
       for (let i = 0; i < maxCells; i++) {
@@ -728,7 +749,6 @@
       let penalty = 0;
       if (isTaxReformActive) penalty += 20;
 
-      // Районные бонусы / штрафы
       for (let i = 0; i < maxCells; i++) {
         if (firesData[i] || brokenData[i] || blockedByTv[i]) continue;
         if (mapData[i] === 'house') {
@@ -759,21 +779,25 @@
       if (shopCount > 0 && hospitalCount === 0 && shopNoHospitalTimer >= 150) { penalty += 40; shopMedBanner.style.display = 'block'; }
       if (activeEpidemic === 'sad') penalty += 50;
 
-      // Добавляем мега-бонус счастья от работающих Телевышек (+65 за каждую!)
       let tvBonus = activeTVTowersWorking * 65;
 
       let finalHappiness = Math.max(0, Math.min(100, (baseHappiness - penalty) + tvBonus));
       let activePopulation = Math.max(0, Math.floor(totalPopulation * (Math.min(100, finalHappiness) / 100)) - epidemicLosses);
 
       if (money >= 500) achievements.millionaire = true;
-      if (finalHappiness === 0 && houseCount > 0) triggerGameOver("Жители устроили революцию в YouTown из-за скуки и налогов!");
+      if (finalHappiness === 0 && houseCount > 0) triggerGameOver("Жители устроили революцию!");
+
+      // ПРОВЕРКА УСЛОВИЯ ПОБЕДЫ
+      if (money >= 5000 && finalHappiness === 100 && hasLevel4TV && !isGameWon) {
+        triggerWinGame();
+      }
 
       happyIconEl.innerText = finalHappiness > 85 ? '👑' : (finalHappiness > 50 ? '😀' : (finalHappiness > 25 ? '😐' : '😡'));
       return { happiness: finalHappiness, income: totalIncome, population: activePopulation };
     }
 
     function updateUI() {
-      if (isGameOver) return;
+      if (isGameOver || isGameWon) return;
       let stats = calculateStats();
       moneyEl.innerText = money; popEl.innerText = stats.population; happyEl.innerText = stats.happiness; expandCostEl.innerText = expandCost;
     }
@@ -791,6 +815,13 @@
     }
 
     function triggerGameOver(text) { isGameOver = true; gameOverReason.innerText = text; gameOverScreen.style.display = 'flex'; }
+    
+    // Функция запуска победного экрана
+    function triggerWinGame() {
+      isGameWon = true;
+      playSound('win');
+      winScreen.style.display = 'flex';
+    }
 
     function openAchieveModal() {
       achieveModal.style.display = 'flex';
@@ -806,16 +837,17 @@
     function closeLogModal() { logModal.style.display = 'none'; }
 
     function restartGame() {
-      money = 60; isGameOver = false; gridColumns = 4; maxCells = 16; expandCost = 40;
+      money = 60; isGameOver = false; isGameWon = false; gridColumns = 4; maxCells = 16; expandCost = 40;
       shopNoHospitalTimer = 0; shopNoFactoryTimer = 0; activeEpidemic = null; epidemicLosses = 0;
       bankLoanActive = false; bankLoanLeftToPay = 0;
       mapData.fill(''); upgradesData.fill(''); firesData.fill(false); brokenData.fill(false); tvLevels.fill(0); blockedByTv.fill(false);
       document.querySelectorAll('.alert-banner, .virus-banner').forEach(b => b.style.display = 'none');
-      gameOverScreen.style.display = 'none'; createMap(); updateUI();
+      document.getElementById('quest-banner').style.display = 'block';
+      gameOverScreen.style.display = 'none'; winScreen.style.display = 'none'; createMap(); updateUI();
     }
 
     setInterval(() => {
-      if (isGameOver) return;
+      if (isGameOver || isGameWon) return;
       
       let activeFactories = mapData.filter((t, idx) => t === 'factory' && !firesData[idx] && !brokenData[idx]).length;
       if (mapData.includes('shop') && activeFactories < 2) shopNoFactoryTimer++;
@@ -841,7 +873,7 @@
     }, 1000);
 
     setInterval(() => {
-      if (isGameOver) return;
+      if (isGameOver || isGameWon) return;
       isRainy = !isRainy;
       if(isRainy) {
         document.body.classList.add('rainy'); weatherBanner.style.display = 'block';
@@ -852,7 +884,7 @@
     }, 60000);
 
     setInterval(() => {
-      if (isGameOver || isRainy) return;
+      if (isGameOver || isGameWon || isRainy) return;
       if (Math.random() * 100 <= 30) {
         let built = [];
         for(let i=0; i<maxCells; i++) if(mapData[i] !== '' && !firesData[i] && !brokenData[i]) built.push(i);
