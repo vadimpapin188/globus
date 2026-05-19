@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pocket City: Ultimate</title>
+  <title>Pocket City: Economy & Disasters</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
@@ -68,17 +68,42 @@
       from { opacity: 0.6; } to { opacity: 1; }
     }
 
+    .actions-panel {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 15px 0 15px;
+      gap: 10px;
+    }
+
     .expand-btn {
+      flex-grow: 2;
       background-color: #9b59b6;
       color: white;
       text-align: center;
       padding: 12px;
-      margin: 5px 15px 0 15px;
       border-radius: 12px;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 4px 0 #8e44ad;
+    }
+
+    .tax-btn {
+      flex-grow: 1;
+      background-color: #34495e;
+      color: #f1c40f;
+      text-align: center;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #2c3e50;
+    }
+    .tax-btn.active {
+      background-color: #f1c40f;
+      color: #34495e;
+      box-shadow: 0 4px 0 #d4ac0d;
     }
 
     .map-container {
@@ -237,9 +262,10 @@
     </div>
   </div>
 
-  <div class="header">🏙️ Pocket City: Ultimate</div>
+  <div class="header">🏙️ Pocket City: Economy Fix</div>
   
-  <div class="alert-banner" id="alert-banner">Магазинам нужны ресурсы! Постройте заводы!</div>
+  <div class="alert-banner" id="alert-banner">Магазинам нужны ресурсы! Снабжение прервано!</div>
+  <div class="alert-banner" id="shop-no-money-banner" style="background-color: #7f8c8d;">🚫 Магазины пустуют 38 сек. Прибыль остановлена!</div>
   <div class="alert-banner" id="shop-med-banner" style="background-color: #d35400;">⚠️ Магазинам нужны медикаменты из Больниц!</div>
   <div class="virus-banner" id="virus-banner">☣️ ВСПЫШКА ЭПИДЕМИИ! Срочно постройте Больницу!</div>
 
@@ -249,8 +275,13 @@
     <div class="stat-item happy"><span id="happy-icon">😀</span> <span id="happy-display">100</span>%</div>
   </div>
 
-  <div class="expand-btn" onclick="expandMap()">
-    <i class="fa-solid fa-map"></i> Расширить поле (Цена: $<span id="expand-cost">40</span>)
+  <div class="actions-panel">
+    <div class="expand-btn" onclick="expandMap()">
+      <i class="fa-solid fa-map"></i> Расширить поле ($<span id="expand-cost">40</span>)
+    </div>
+    <div class="tax-btn" id="tax-btn" onclick="toggleTaxReform()">
+      📈 Налоги х2
+    </div>
   </div>
 
   <div class="map-container">
@@ -302,11 +333,18 @@
 
     let mapData = new Array(36).fill('');       
     let upgradesData = new Array(36).fill('');  
+    let firesData = new Array(36).fill(false); // Массив пожаров
     let selectedFactoryIndex = null;
 
     let shopNoHospitalTimer = 0; 
+    let shopNoFactoryTimer = 0; // ИСПРАВЛЕНО: Таймер магазинов без заводов
     let activeEpidemic = null;   
     let epidemicLosses = 0;      
+
+    // Фишки: Налоги и перезарядка
+    let isTaxReformActive = false;
+    let taxReformTimer = 0;
+    let taxCooldown = 0;
 
     const tools = {
       house: { cost: 10, icon: '<i class="fa-solid fa-house" style="color: #3498db;"></i>' },
@@ -322,12 +360,49 @@
     const happyEl = document.getElementById('happy-display');
     const happyIconEl = document.getElementById('happy-icon');
     const expandCostEl = document.getElementById('expand-cost');
+    const taxBtnEl = document.getElementById('tax-btn');
+
     const alertBanner = document.getElementById('alert-banner');
+    const shopNoMoneyBanner = document.getElementById('shop-no-money-banner');
     const shopMedBanner = document.getElementById('shop-med-banner');
     const virusBanner = document.getElementById('virus-banner');
     const gameOverScreen = document.getElementById('game-over');
     const gameOverReason = document.getElementById('game-over-reason');
     const upgradeModal = document.getElementById('upgrade-modal');
+
+    // Генератор звуков на аудио-движке браузера
+    function playSound(type) {
+      try {
+        let ctx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'build') {
+          osc.frequency.setValueAtTime(300, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.1);
+        } else if (type === 'fire') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, ctx.currentTime);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'extinguish') {
+          osc.frequency.setValueAtTime(800, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.2);
+        } else if (type === 'virus') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(100, ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(50, ctx.currentTime + 0.5);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.5);
+        }
+      } catch(e) {}
+    }
 
     function createMap() {
       gridEl.innerHTML = '';
@@ -338,7 +413,9 @@
         cell.className = 'cell';
         cell.id = 'cell-' + i;
         
-        if (mapData[i] !== '') {
+        if (firesData[i]) {
+          cell.innerHTML = '🔥';
+        } else if (mapData[i] !== '') {
           cell.innerHTML = tools[mapData[i]].icon;
           if (upgradesData[i] !== '') {
             appendBadge(cell, upgradesData[i]);
@@ -351,7 +428,6 @@
     }
 
     function appendBadge(cell, text) {
-      // Защита от дубликатов бэджей
       let existingBadge = cell.querySelector('.upgrade-badge');
       if (existingBadge) existingBadge.remove();
 
@@ -364,6 +440,20 @@
     function handleCellClick(cell, index) {
       if (isGameOver) return;
 
+      // Фишка: Механика тушения пожара
+      if (firesData[index]) {
+        if (money >= 15) {
+          money -= 15;
+          firesData[index] = false;
+          playSound('extinguish');
+          createMap();
+          updateUI();
+        } else {
+          alert("Не хватает $15 на вызов пожарных!");
+        }
+        return;
+      }
+
       if (mapData[index] === 'factory') {
         openUpgradeModal(index);
         return;
@@ -375,9 +465,24 @@
       if (money >= tool.cost) {
         money -= tool.cost;
         mapData[index] = currentTool;
-        cell.innerHTML = tool.icon;
+        playSound('build');
+        createMap();
         updateUI();
       }
+    }
+
+    function toggleTaxReform() {
+      if (isGameOver) return;
+      if (taxCooldown > 0) {
+        alert(`Налоги перезаряжаются! Ждите ${taxCooldown} сек.`);
+        return;
+      }
+      isTaxReformActive = true;
+      taxReformTimer = 20;
+      taxCooldown = 60;
+      taxBtnEl.classList.add('active');
+      taxBtnEl.innerText = "⏳ Налоги х2";
+      updateUI();
     }
 
     function openUpgradeModal(index) {
@@ -419,9 +524,11 @@
           
           let oldData = [...mapData];
           let oldUpgrades = [...upgradesData];
+          let oldFires = [...firesData];
           
           mapData = new Array(36).fill('');
           upgradesData = new Array(36).fill('');
+          firesData = new Array(36).fill(false);
           
           let oldColumns = gridColumns;
           gridColumns++;
@@ -435,6 +542,7 @@
               let newIndex = row * gridColumns + col;
               mapData[newIndex] = oldData[i];
               upgradesData[newIndex] = oldUpgrades[i] || '';
+              firesData[newIndex] = oldFires[i];
             }
           }
 
@@ -487,6 +595,9 @@
       let hasInfrastructureUpgrade = false;
 
       for (let i = 0; i < maxCells; i++) {
+        // Если здание горит, оно исключается из расчетов экономики
+        if (firesData[i]) continue;
+
         if (mapData[i] === 'house') houseCount++;
         if (mapData[i] === 'shop') shopCount++;
         if (mapData[i] === 'factory') {
@@ -498,8 +609,13 @@
         if (mapData[i] === 'park') parkCount++;
         if (mapData[i] === 'hospital') hospitalCount++;
         
-        if (mapData[i] === 'shop') totalIncome += 3;
-        if (mapData[i] === 'factory') totalIncome += 12;
+        // НОВАЯ ЛОГИКА: Магазины перестают приносить деньги через 38 секунд без заводов
+        if (mapData[i] === 'shop') {
+          if (shopNoFactoryTimer < 38) {
+            totalIncome += isTaxReformActive ? 6 : 3; // Буст налогов
+          }
+        }
+        if (mapData[i] === 'factory') totalIncome += isTaxReformActive ? 24 : 12;
       }
 
       if (hospitalCount > 0) {
@@ -512,7 +628,11 @@
       let penalty = 0;
       let reason = "Жители не выдержали условий!";
 
+      // Штраф за налоговую реформу
+      if (isTaxReformActive) penalty += 20;
+
       for (let i = 0; i < maxCells; i++) {
+        if (firesData[i]) continue;
         if (mapData[i] === 'house') {
           totalPopulation += 6;
           let neighbors = getNeighbors(i);
@@ -528,11 +648,19 @@
         penalty += (houseCount - (parkCount + hospitalCount * 2)) * 10;
       }
 
+      // Проверка баланса заводов для магазинов
       if (shopCount > 0 && factoryCount < 2) {
         penalty += 25; 
         alertBanner.style.display = 'block'; 
       } else {
         alertBanner.style.display = 'none';
+        shopNoFactoryTimer = 0; // Сбрасываем таймер, если заводы построены
+        shopNoMoneyBanner.style.display = 'none';
+      }
+
+      // Отображение баннера простоя магазинов
+      if (shopCount > 0 && factoryCount < 2 && shopNoFactoryTimer >= 38) {
+        shopNoMoneyBanner.style.display = 'block';
       }
 
       if (houseCount > 0 && !hasInfrastructureUpgrade) {
@@ -591,6 +719,7 @@
       if (hasHospital) return; 
 
       virusBanner.style.display = 'block';
+      playSound('virus');
       
       if (Math.random() * 100 <= 1.8) {
         activeEpidemic = 'fast';
@@ -609,6 +738,23 @@
       alert(`Эпидемия активирована! Тип: ${activeEpidemic === 'fast' ? 'БЫСТРЫЙ вирус' : 'ОБЫЧНЫЙ вирус'}`);
     }
 
+    // Фишка: Механика случайных пожаров
+    function checkForFire() {
+      // Собираем индексы застроенных и не горящих клеток
+      let builtIndexes = [];
+      for(let i=0; i<maxCells; i++) {
+        if(mapData[i] !== '' && !firesData[i]) builtIndexes.push(i);
+      }
+      if(builtIndexes.length === 0) return;
+
+      // Выбираем случайное здание и поджигаем
+      let randomCell = builtIndexes[Math.floor(Math.random() * builtIndexes.length)];
+      firesData[randomCell] = true;
+      playSound('fire');
+      createMap();
+      updateUI();
+    }
+
     function triggerGameOver(reasonText) {
       isGameOver = true;
       gameOverReason.innerText = reasonText;
@@ -622,21 +768,37 @@
       maxCells = 16;
       expandCost = 40;
       shopNoHospitalTimer = 0;
+      shopNoFactoryTimer = 0;
       activeEpidemic = null;
       epidemicLosses = 0;
+      isTaxReformActive = false;
+      taxReformTimer = 0;
+      taxCooldown = 0;
       mapData = new Array(36).fill('');
       upgradesData = new Array(36).fill('');
+      firesData = new Array(36).fill(false);
       alertBanner.style.display = 'none';
+      shopNoMoneyBanner.style.display = 'none';
       shopMedBanner.style.display = 'none';
       virusBanner.style.display = 'none';
       gameOverScreen.style.display = 'none';
+      taxBtnEl.classList.remove('active');
+      taxBtnEl.innerText = "📈 Налоги х2";
       selectTool('house');
       createMap();
       updateUI();
     }
 
+    // Игровой таймер (Раз в секунду)
     setInterval(() => {
       if (!isGameOver) {
+        let activeFactories = mapData.filter(t => t === 'factory').length;
+
+        // ИСПРАВЛЕНО: Считаем время магазинов без заводов
+        if (mapData.includes('shop') && activeFactories < 2) {
+          shopNoFactoryTimer++;
+        }
+
         if (mapData.includes('shop') && !mapData.includes('hospital')) {
           shopNoHospitalTimer++;
         }
@@ -645,12 +807,31 @@
           epidemicLosses += 3;
         }
 
+        // Обновление таймеров Налогов
+        if (isTaxReformActive) {
+          taxReformTimer--;
+          if (taxReformTimer <= 0) {
+            isTaxReformActive = false;
+            taxBtnEl.classList.remove('active');
+            taxBtnEl.innerText = "📈 Налоги х2";
+          }
+        }
+        if (taxCooldown > 0) {
+          taxCooldown--;
+          if (taxCooldown > 0 && !isTaxReformActive) {
+            taxBtnEl.innerText = `⏱️ Налоги (${taxCooldown}s)`;
+          } else if (taxCooldown === 0) {
+            taxBtnEl.innerText = "📈 Налоги х2";
+          }
+        }
+
         let stats = calculateStats();
         money += stats.income;
         updateUI();
       }
     }, 1000);
 
+    // Таймер эпидемий: раз в 5 минут (300 секунд), шанс 18%
     setInterval(() => {
       if (!isGameOver) {
         if (Math.random() * 100 <= 18) {
@@ -658,6 +839,15 @@
         }
       }
     }, 300000);
+
+    // Фишка: Таймер пожаров: раз в 3 минуты (180 секунд), шанс 15%
+    setInterval(() => {
+      if (!isGameOver) {
+        if (Math.random() * 100 <= 15) {
+          checkForFire();
+        }
+      }
+    }, 180000);
 
     createMap();
     updateUI();
