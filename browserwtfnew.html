@@ -625,14 +625,14 @@
         upBtn.style.display = 'none';
       } else {
         upBtn.style.display = 'block';
-        upBtn.innerText = `🔺 Качнуть до ${lvl + 1} уровня ($150)`;
+        upBtn.innerText = `🔺 Качнуть до ${lvl + 1} уровня ($7120)`;
       }
       tvUpgradeModal.style.display = 'flex';
     }
     function closeTVModal() { tvUpgradeModal.style.display = 'none'; selectedTVIndex = null; }
 
     function upgradeTVTower() {
-      if (selectedTVIndex === null || money < 150) { alert("Недостаточно денег ($150)!"); return; }
+      if (selectedTVIndex === null || money < 7120) { alert("Недостаточно денег ($7120)!"); return; }
       money -= 150;
       tvLevels[selectedTVIndex]++;
       
