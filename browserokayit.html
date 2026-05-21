@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Мультяшный Скроллер</title>
+    <style>
+        /* Общие мультяшные стили */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #222;
+            font-family: 'Arial Black', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Игровой экран (вертикальный формат для телефона) */
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            max-height: 700px;
+            border: 6px solid #333;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: #70c5ce; /* Цвет по умолчанию */
+            transition: background 0.5s ease;
+        }
+
+        /* Стили для разных карт */
+        .map-forest { background: linear-gradient(#87CEEB, #228B22) !important; }
+        .map-desert { background: linear-gradient(#FFD700, #FF8C00) !important; }
+        .map-space { background: linear-gradient(#000046, #1CB5E0) !important; }
+
+        /* Интерфейс */
+        #ui {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .bar {
+            background: white;
+            padding: 8px 15px;
+            border: 3px solid #333;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #333;
+        }
+
+        /* Игровой холст */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Меню выбора карты */
+        #menu {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #fff;
+            text-shadow: 4px 4px 0 #ff4a5a;
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn {
+            background: #ffcc00;
+            color: #333;
+            border: 4px solid #333;
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-family: 'Arial Black', sans-serif;
+            cursor: pointer;
+            margin: 10px;
+            width: 200px;
+            box-shadow: 0 6px 0 #cc9900;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #cc9900;
+        }
+
+        /* Кнопки управления для мобилок */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 10;
+        }
+
+        .ctrl-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 4px solid #333;
+            border-radius: 50%;
+            font-size: 30px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 6px 0 #333;
+        }
+
+        .ctrl-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #333;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container" class="map-forest">
+    <!-- Интерфейс -->
+    <div id="ui">
+        <div id="score-box" class="bar">Очки: 0</div>
+        <div id="map-label" class="bar">Лес</div>
+    </div>
+
+    <!-- Холст для игры -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Сенсорное управление -->
+    <div id="controls">
+        <div id="btn-left" class="ctrl-btn">◀</div>
+        <div id="btn-right" class="ctrl-btn">▶</div>
+    </div>
+
+    <!-- Главное меню -->
+    <div id="menu">
+        <h1>ВЫБЕРИ КАРТУ</h1>
+        <button class="btn" onclick="startGame('forest')">🌳 ЛЕС</button>
+        <button class="btn" onclick="startGame('desert')" style="background:#ff9933; box-shadow:0 6px 0 #cc6600;">🌵 ПУСТЫНЯ</button>
+        <button class="btn" onclick="startGame('space')" style="background:#33ccff; box-shadow:0 6px 0 #0099cc;">🚀 КОСМОС</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('game-container');
+    const menu = document.getElementById('menu');
+    const scoreBox = document.getElementById('score-box');
+    const mapLabel = document.getElementById('map-label');
+
+    // Настройка размеров холста
+    function resize() {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Игровые переменные
+    let gameActive = false;
+    let score = 0;
+    let currentMap = 'forest';
+    
+    let player = {
+        x: 0,
+        y: 0,
+        size: 30,
+        speed: 7,
+        dx: 0
+    };
+
+    let items = [];
+    let spawnTimer = 0;
+
+    // Настройки внешнего вида карт
+    const mapSettings = {
+        forest: { name: 'Лес', className: 'map-forest', itemColor: '#FF4A5A', starColor: '#FFCC00' },
+        desert: { name: 'Пустыня', className: 'map-desert', itemColor: '#8B4513', starColor: '#FFD700' },
+        space: { name: 'Космос', className: 'map-space', itemColor: '#LimeGreen', starColor: '#FFFFFF' }
+    };
+
+    // Запуск игры
+    function startGame(mapName) {
+        currentMap = mapName;
+        score = 0;
+        items = [];
+        
+        // Меняем тему
+        container.className = '';
+        container.classList.add(mapSettings[mapName].className);
+        mapLabel.innerText = mapSettings[mapName].name;
+        scoreBox.innerText = "Очки: " + score;
+
+        // Сброс игрока
+        player.x = canvas.width / 2;
+        player.y = canvas.height - 140;
+        player.dx = 0;
+
+        menu.style.display = 'none';
+        gameActive = true;
+    }
+
+    // Управление кнопками телефона
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+
+    btnLeft.addEventListener('touchstart', () => player.dx = -player.speed);
+    btnLeft.addEventListener('touchend', () => player.dx = 0);
+    btnRight.addEventListener('touchstart', () => player.dx = player.speed);
+    btnRight.addEventListener('touchend', () => player.dx = 0);
+
+    // Мышка для теста на ПК через кнопки
+    btnLeft.addEventListener('mousedown', () => player.dx = -player.speed);
+    btnLeft.addEventListener('mouseup', () => player.dx = 0);
+    btnRight.addEventListener('mousedown', () => player.dx = player.speed);
+    btnRight.addEventListener('mouseup', () => player.dx = 0);
+
+    // Управление клавиатурой
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') player.dx = -player.speed;
+        if (e.key === 'ArrowRight' || e.key === 'd') player.dx = player.speed;
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (['ArrowLeft', 'a', 'ArrowRight', 'd'].includes(e.key)) player.dx = 0;
+    });
+
+    // Создание падающих предметов
+    function spawnItem() {
+        spawnTimer++;
+        if (spawnTimer % 40 === 0) {
+            let isStar = Math.random() > 0.4; // 60% что это звезда, 40% препятствие
+            items.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: -30,
+                size: isStar ? 15 : 20,
+                speed: Math.random() * 3 + 4,
+                isStar: isStar
+            });
+        }
+    }
+
+    // Главный цикл обновления
+    function update() {
+        if (!gameActive) return;
+
+        // Движение игрока
+        player.x += player.dx;
+        if (player.x - player.size < 0) player.x = player.size;
+        if (player.x + player.size > canvas.width) player.x = canvas.width - player.size;
+
+        spawnItem();
+
+        // Движение предметов
+        for (let i = items.length - 1; i >= 0; i--) {
+            let item = items[i];
+            item.y += item.speed;
+
+            // Проверка столкновения с игроком
+            let dist = Math.hypot(player.x - item.x, player.y - item.y);
+            if (dist < player.size + item.size) {
+                if (item.isStar) {
+                    score += 10;
+                    scoreBox.innerText = "Очки: " + score;
+                    items.splice(i, 1);
+                } else {
+                    // Столкнулись с препятствием — конец игры
+                    gameActive = false;
+                    menu.style.display = 'flex';
+                    document.querySelector('h1').innerText = "ИГРА ОКОНЧЕНА!\nОЧКИ: " + score;
+                }
+                continue;
+            }
+
+            // Удаление если улетел за экран
+            if (item.y > canvas.height + 50) {
+                items.splice(i, 1);
+            }
+        }
+    }
+
+    // Отрисовка графики
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!gameActive) return;
+
+        // Рисуем предметы
+        items.forEach(item => {
+            ctx.save();
+            ctx.beginPath();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#333';
+            
+            if (item.isStar) {
+                // Рисуем желтую звезду/монетку
+                ctx.fillStyle = mapSettings[currentMap].starColor;
+                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                // Рисуем опасный мультяшный камень
+                ctx.fillStyle = mapSettings[currentMap].itemColor;
+                ctx.rect(item.x - item.size, item.y - item.size, item.size * 2, item.size * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+            ctx.restore();
+        });
+
+        // Рисуем игрока (Симпатичный желтый смайлик)
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        
+        // Тело игрока
+        ctx.beginPath();
+        ctx.arc(0, 0, player.size, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFEB3B';
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#333';
+        ctx.stroke();
+
+        // Глазки
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(-8, -5, 4, 0, Math.PI * 2);
+        ctx.arc(8, -5, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Улыбка
+        ctx.beginPath();
+        ctx.arc(0, 5, 10, 0, Math.PI);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#333';
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // Игровой таймер
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+</script>
+
+</body>
+</html>
