@@ -3,103 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>YouTown: Hardcore Edition</title>
+  <title>YouTown: Mayor Edition</title>
   <style>
-    body { margin: 0; font-family: sans-serif; background: #a8d5e2; height: 100vh; display: flex; flex-direction: column; touch-action: manipulation; }
-    .header { background: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; }
-    .stats { display: flex; justify-content: space-around; background: #fff; padding: 10px; font-weight: bold; }
-    .grid { display: grid; gap: 4px; padding: 10px; flex-grow: 1; grid-template-columns: repeat(4, 1fr); align-content: start; }
-    .cell { background: #81c784; border-radius: 8px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 24px; position: relative; }
-    .badge { position: absolute; bottom: 2px; right: 2px; background: #2c3e50; color: #fff; font-size: 10px; padding: 2px; border-radius: 4px; }
+    body { margin: 0; font-family: sans-serif; background: #a8d5e2; height: 100vh; display: flex; flex-direction: column; }
+    .stats { display: flex; justify-content: space-around; background: #fff; padding: 10px; font-weight: bold; font-size: 13px; }
+    #news { background: #2c3e50; color: #f1c40f; padding: 8px; font-size: 12px; text-align: center; }
+    .grid { display: grid; gap: 4px; padding: 10px; flex-grow: 1; align-content: start; }
+    .cell { background: #81c784; border-radius: 8px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 20px; position: relative; }
     .toolbar { display: flex; gap: 5px; padding: 10px; background: #fff; overflow-x: auto; }
-    .tool { padding: 8px; background: #f1f2f6; border-radius: 8px; text-align: center; font-size: 11px; min-width: 50px; }
-    .active { border: 2px solid #ff9f1c; background: #fff3e0; }
+    .tool { padding: 8px; background: #f1f2f6; border-radius: 8px; text-align: center; font-size: 10px; min-width: 45px; }
+    .active { border: 2px solid #ff9f1c; }
   </style>
 </head>
 <body>
 
-<div class="header">YouTown: Полный контроль</div>
+<div id="news">Добро пожаловать, Мэр!</div>
 <div class="stats">
-  <div>💰 $<span id="money">150</span></div>
-  <div>😊 <span id="happy">100</span>%</div>
+  <div>💰$<span id="money">200</span></div>
+  <div>😊<span id="happy">100</span>%</div>
+  <div>👥<span id="pop">0</span></div>
 </div>
-
 <div class="grid" id="grid"></div>
 <div class="toolbar" id="toolbar"></div>
 
 <script>
-  let money = 150, happiness = 100;
+  let money = 200, happy = 100, pop = 0, gridCols = 4;
   let map = new Array(16).fill(null);
-  let levels = new Array(16).fill(1);
-  let fires = new Array(16).fill(false);
-  let currentTool = 'house';
-
-  const tools = {
-    house: { name: 'Дом', cost: 10, icon: '🏠' },
-    shop: { name: 'Маг', cost: 25, icon: '🛒' },
-    factory: { name: 'Завод', cost: 50, icon: '🏭' },
-    road: { name: 'Дорога', cost: 5, icon: '🛣️' },
-    farm: { name: 'Ферма', cost: 30, icon: '🌾' },
-    lab: { name: 'Лаб.', cost: 200, icon: '🧪' }
+  let tools = {
+    house: { n: 'Дом', c: 10, i: '🏠' }, shop: { n: 'Маг', c: 25, i: '🛒' },
+    factory: { n: 'Завод', c: 50, i: '🏭' }, farm: { n: 'Ферма', c: 30, i: '🌾' },
+    park: { n: 'Парк', c: 40, i: '🌳' }, mayor: { n: 'Мэрия', c: 200, i: '🏛️' }
   };
+  let cur = 'house';
+
+  function news(text) { document.getElementById('news').innerText = text; }
 
   function render() {
     const grid = document.getElementById('grid');
+    grid.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
     grid.innerHTML = '';
     map.forEach((t, i) => {
-      const cell = document.createElement('div');
+      let cell = document.createElement('div');
       cell.className = 'cell';
-      if (fires[i]) {
-        cell.innerText = '🔥';
-        cell.onclick = () => { if(money >= 20) { money -= 20; fires[i] = false; render(); } };
-      } else {
-        cell.innerText = t ? tools[t].icon : '';
-        if (t === 'factory' && levels[i] > 1) {
-          let b = document.createElement('div'); b.className = 'badge'; b.innerText = 'Lvl' + levels[i];
-          cell.appendChild(b);
+      cell.innerText = t ? tools[t].i : '';
+      cell.onclick = () => {
+        if (!map[i] && money >= tools[cur].c) {
+          money -= tools[cur].c; map[i] = cur; render();
         }
-        cell.onclick = () => {
-          if (!t && money >= tools[currentTool].cost) {
-            money -= tools[currentTool].cost;
-            map[i] = currentTool;
-          } else if (t === 'factory' && levels[i] < 2 && money >= 40) {
-            money -= 40; levels[i]++;
-          }
-          render();
-        };
-      }
+      };
       grid.appendChild(cell);
     });
     document.getElementById('money').innerText = money;
-    document.getElementById('happy').innerText = Math.floor(happiness);
+    document.getElementById('happy').innerText = Math.floor(happy);
+    document.getElementById('pop').innerText = pop;
   }
 
   setInterval(() => {
-    let factories = 0, shops = 0;
-    map.forEach(t => { if(t=='factory') factories++; if(t=='shop') shops++; });
+    let farms = [], factories = [], houses = 0, infra = 0;
+    map.forEach((t, i) => {
+      if(t == 'farm') farms.push(i);
+      if(t == 'factory') factories.push(i);
+      if(t == 'house') houses++;
+      if(t == 'park' || t == 'mayor') infra++;
+    });
 
-    // Экономика
-    if (shops > 0) {
-      if (factories < 2) { /* Магазины не работают */ }
-      else { money += shops * (factories * 2); }
-    }
+    // Загрязнение ферм заводами
+    farms.forEach(f => {
+      factories.forEach(fac => {
+        if (Math.abs(f - fac) <= 1) { happy -= 0.5; news("Внимание! Ферма отравлена заводами!"); }
+      });
+    });
 
-    // Катаклизм
-    if (Math.random() < 0.05) {
-      let idx = Math.floor(Math.random()*16);
-      if(map[idx]) { fires[idx] = true; alert("Пожар! Потушите его нажатием на огонь!"); }
-    }
+    // Счастье от отсутствия зданий
+    if (infra == 0) happy -= 0.2;
+    if (farms.length == 0) happy -= 0.5;
+    
+    happy = Math.max(0, Math.min(100, happy));
+    pop = houses * 5;
+    money += (factories.length * 5);
     render();
   }, 2000);
 
-  // Инициализация тулбара
-  Object.keys(tools).forEach(key => {
+  Object.keys(tools).forEach(k => {
     let el = document.createElement('div');
     el.className = 'tool';
-    el.innerHTML = `${tools[key].icon}<br>${tools[key].name}`;
-    el.onclick = () => { currentTool = key; document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active')); el.classList.add('active'); };
+    el.innerHTML = `${tools[k].i}<br>${tools[k].n}`;
+    el.onclick = () => { cur = k; render(); };
     document.getElementById('toolbar').appendChild(el);
   });
+
   render();
 </script>
 </body>
