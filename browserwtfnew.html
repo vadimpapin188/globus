@@ -1,113 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>YouTown: Mega Evolution</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <style>
-    body { margin: 0; font-family: 'Varela Round', sans-serif; background-color: #a8d5e2; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
+    body { margin: 0; font-family: sans-serif; background-color: #a8d5e2; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     .header { background-color: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; }
-    .stats { display: flex; justify-content: space-around; background-color: #ffffff; padding: 10px; font-weight: bold; }
-    .grid { display: grid; gap: 6px; width: 100%; max-width: 440px; margin: auto; padding: 10px; }
-    .cell { background-color: #81c784; border-radius: 10px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; }
-    .toolbar-container { background-color: #ffffff; padding: 10px; overflow-x: auto; display: flex; gap: 10px; }
-    .tool { display: flex; flex-direction: column; align-items: center; background: #f1f2f6; padding: 10px; border-radius: 10px; cursor: pointer; min-width: 60px; font-size: 11px; }
-    .tool.active { border: 2px solid #ff9f1c; }
-    .modal-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); color: white; justify-content: center; align-items: center; z-index: 100; }
+    .stats { display: flex; justify-content: space-around; background: #fff; padding: 10px; font-weight: bold; }
+    .grid { display: grid; gap: 4px; padding: 10px; margin: auto; max-width: 500px; }
+    .cell { background: #81c784; border-radius: 8px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 24px; position: relative; }
+    .toolbar { display: flex; gap: 5px; padding: 10px; background: #fff; overflow-x: auto; }
+    .tool { padding: 10px; background: #f1f2f6; border-radius: 8px; cursor: pointer; text-align: center; font-size: 12px; }
+    .upgrade-badge { position: absolute; bottom: 2px; right: 2px; background: #2c3e50; color: #fff; font-size: 8px; padding: 2px; border-radius: 4px; }
   </style>
 </head>
 <body>
 
-<div class="header">YouTown: Mega Evolution v2.0</div>
+<div class="header">YouTown: Mega Evolution (v3.0)</div>
 <div class="stats">
-  <div class="money">💰 $<span id="money-display">100</span></div>
-  <div class="happy">😊 Счастье: <span id="happy-display">100</span>%</div>
+  <div>💰 $<span id="money">100</span></div>
+  <div>😊 <span id="happy">100</span>%</div>
 </div>
 
 <div class="grid" id="grid" style="grid-template-columns: repeat(4, 1fr);"></div>
 
-<div class="toolbar-container" id="toolbar">
-  <!-- Инструменты -->
-</div>
+<div class="toolbar" id="toolbar"></div>
 
 <script>
-  let money = 200;
-  let happiness = 100;
+  let money = 100, happiness = 100;
   let mapData = new Array(16).fill(null);
+  let upgrades = new Array(16).fill(null);
+  
   const tools = {
     house: { name: 'Дом', cost: 10, icon: '🏠' },
+    shop: { name: 'Маг', cost: 25, icon: '🛒' },
+    factory: { name: 'Завод', cost: 50, icon: '🏭' },
     road: { name: 'Дорога', cost: 5, icon: '🛣️' },
     farm: { name: 'Ферма', cost: 30, icon: '🌾' },
-    lab: { name: 'Лаборатория', cost: 200, icon: '🧪' }
+    lab: { name: 'Лаб.', cost: 200, icon: '🧪' },
+    tvtower: { name: 'Вышка', cost: 500, icon: '🗼' }
   };
   let currentTool = 'house';
 
-  function createMap() {
+  function render() {
     const grid = document.getElementById('grid');
     grid.innerHTML = '';
-    mapData.forEach((val, i) => {
+    mapData.forEach((type, i) => {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      cell.innerText = val ? tools[val].icon : '';
+      cell.innerText = type ? tools[type].icon : '';
+      if (upgrades[i]) {
+        let b = document.createElement('div'); b.className = 'upgrade-badge'; b.innerText = upgrades[i];
+        cell.appendChild(b);
+      }
       cell.onclick = () => {
         if (!mapData[i] && money >= tools[currentTool].cost) {
           money -= tools[currentTool].cost;
           mapData[i] = currentTool;
-          updateUI();
+          render();
         }
       };
       grid.appendChild(cell);
     });
+    document.getElementById('money').innerText = money;
+    document.getElementById('happy').innerText = Math.floor(happiness);
   }
 
-  function updateUI() {
-    document.getElementById('money-display').innerText = money;
-    document.getElementById('happy-display').innerText = Math.floor(happiness);
-    createMap();
-  }
-
-  // Логика игры
+  // Основной цикл
   setInterval(() => {
-    let houses = 0, roads = 0, farms = 0, labs = 0;
+    let houses = 0, roads = 0, farms = 0, labs = 0, factories = 0;
     mapData.forEach(t => {
-      if (t === 'house') houses++;
-      if (t === 'road') roads++;
-      if (t === 'farm') farms++;
-      if (t === 'lab') labs++;
+      if(t === 'house') houses++; if(t === 'road') roads++;
+      if(t === 'farm') farms++; if(t === 'lab') labs++;
+      if(t === 'factory') factories++;
     });
 
-    // Фермы (нужна 1 ферма на 3 дома)
-    if (houses > 0) {
-      if (farms < Math.ceil(houses / 3)) happiness -= 0.5;
-      else happiness += 0.2;
-    }
-
-    // Дороги (дома без дорог)
-    if (houses > 0 && roads < Math.ceil(houses / 2)) happiness -= 0.3;
-
-    // Лаборатория
-    if (labs > 0 && Math.random() < 0.1) {
-      happiness += (Math.random() > 0.5 ? 20 : -20);
-    }
+    // Баланс счастья
+    if (farms < Math.ceil(houses / 3)) happiness -= 0.5; // Нужны фермы
+    if (roads < Math.ceil(houses / 2)) happiness -= 0.3; // Нужны дороги
+    if (labs > 0 && Math.random() < 0.05) happiness += (Math.random() > 0.5 ? 20 : -20);
+    
+    // Катаклизм (случайный пожар)
+    if (Math.random() < 0.01) alert("Пожар в городе!");
 
     happiness = Math.max(0, Math.min(100, happiness));
-    money += (houses * 2); // Доход от домов
-    updateUI();
+    money += (factories * 5); // Доход
+    render();
   }, 1000);
 
-  // Инициализация тулбара
+  // Инициализация
   const tb = document.getElementById('toolbar');
   for (let key in tools) {
-    const div = document.createElement('div');
-    div.className = 'tool';
-    div.innerHTML = `${tools[key].icon}<div>${tools[key].name}</div>`;
-    div.onclick = () => currentTool = key;
-    tb.appendChild(div);
+    let el = document.createElement('div');
+    el.className = 'tool';
+    el.innerHTML = `${tools[key].icon}<br>${tools[key].name}`;
+    el.onclick = () => currentTool = key;
+    tb.appendChild(el);
   }
-
-  createMap();
+  render();
 </script>
 </body>
 </html>
