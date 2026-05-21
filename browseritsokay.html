@@ -1,46 +1,96 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мультяшный Скроллер</title>
+    <title>Cartoon Bot Shooter</title>
     <style>
-        /* Общие мультяшные стили */
+        /* Fun, cartoonish fonts and styling */
         body {
             margin: 0;
             padding: 0;
-            background: #222;
-            font-family: 'Arial Black', sans-serif;
+            background: #1a1a2e;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
+            color: #fff;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* Игровой экран (вертикальный формат для телефона) */
+        /* Vertical mobile screen container */
         #game-container {
             position: relative;
-            width: 100%;
-            max-width: 400px;
+            width: 100vw;
+            max-width: 430px;
             height: 100vh;
-            max-height: 700px;
-            border: 6px solid #333;
-            border-radius: 20px;
+            max-height: 932px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            background: #70c5ce; /* Цвет по умолчанию */
-            transition: background 0.5s ease;
+            border: 4px solid #333;
+            border-radius: 16px;
+            background: #222;
         }
 
-        /* Стили для разных карт */
-        .map-forest { background: linear-gradient(#87CEEB, #228B22) !important; }
-        .map-desert { background: linear-gradient(#FFD700, #FF8C00) !important; }
-        .map-space { background: linear-gradient(#000046, #1CB5E0) !important; }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
 
-        /* Интерфейс */
+        /* Screen overlays (Start, Game Over) */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(20, 20, 40, 0.85);
+            z-index: 10;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ffeb3b;
+            text-shadow: 4px 4px 0px #e91e63;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #e0e0e0;
+        }
+
+        /* Bright, cartoon-style button */
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            background: #4caf50;
+            border: none;
+            border-bottom: 6px solid #388e3c;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.1s;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+        }
+
+        /* In-game UI overlay */
         #ui {
             position: absolute;
             top: 15px;
@@ -48,333 +98,335 @@
             right: 15px;
             display: flex;
             justify-content: space-between;
-            z-index: 10;
-        }
-
-        .bar {
-            background: white;
-            padding: 8px 15px;
-            border: 3px solid #333;
-            border-radius: 12px;
-            font-size: 16px;
+            font-size: 1.2rem;
             font-weight: bold;
-            box-shadow: 0 4px 0 #333;
+            pointer-events: none;
+            z-index: 5;
+            text-shadow: 2px 2px 0px #000;
         }
 
-        /* Игровой холст */
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
+        .ui-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
         }
 
-        /* Меню выбора карты */
-        #menu {
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-            padding: 20px;
+        #map-banner {
+            color: #ffeb3b;
         }
 
-        h1 {
-            color: #fff;
-            text-shadow: 4px 4px 0 #ff4a5a;
-            font-size: 32px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .btn {
-            background: #ffcc00;
-            color: #333;
-            border: 4px solid #333;
-            border-radius: 15px;
-            padding: 12px 30px;
-            font-size: 18px;
-            font-family: 'Arial Black', sans-serif;
-            cursor: pointer;
-            margin: 10px;
-            width: 200px;
-            box-shadow: 0 6px 0 #cc9900;
-            transition: transform 0.1s;
-        }
-
-        .btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #cc9900;
-        }
-
-        /* Кнопки управления для мобилок */
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 30px;
-            z-index: 10;
-        }
-
-        .ctrl-btn {
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.7);
-            border: 4px solid #333;
-            border-radius: 50%;
-            font-size: 30px;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 6px 0 #333;
-        }
-
-        .ctrl-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #333;
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
 
-<div id="game-container" class="map-forest">
-    <!-- Интерфейс -->
-    <div id="ui">
-        <div id="score-box" class="bar">Очки: 0</div>
-        <div id="map-label" class="bar">Лес</div>
+    <div id="game-container">
+        <!-- Top UI -->
+        <div id="ui">
+            <div class="ui-box">Score: <span id="score-val">0</span></div>
+            <div class="ui-box" id="map-banner">Map 1: Candy Hills</div>
+            <div class="ui-box">HP: <span id="hp-val">3</span></div>
+        </div>
+
+        <!-- Canvas for the action -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h1>BOT SMASHER</h1>
+            <p>Drag or move your finger to dodge and destroy the bots!</p>
+            <button class="btn" onclick="startGame()">Play</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen hidden">
+            <h1>GAME OVER</h1>
+            <p>You did great! Total Score: <span id="final-score">0</span></p>
+            <button class="btn" onclick="startGame()">Try Again</button>
+        </div>
     </div>
 
-    <!-- Холст для игры -->
-    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-    <!-- Сенсорное управление -->
-    <div id="controls">
-        <div id="btn-left" class="ctrl-btn">◀</div>
-        <div id="btn-right" class="ctrl-btn">▶</div>
-    </div>
+        // UI elements
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const scoreVal = document.getElementById('score-val');
+        const finalScore = document.getElementById('final-score');
+        const hpVal = document.getElementById('hp-val');
+        const mapBanner = document.getElementById('map-banner');
 
-    <!-- Главное меню -->
-    <div id="menu">
-        <h1>ВЫБЕРИ КАРТУ</h1>
-        <button class="btn" onclick="startGame('forest')">🌳 ЛЕС</button>
-        <button class="btn" onclick="startGame('desert')" style="background:#ff9933; box-shadow:0 6px 0 #cc6600;">🌵 ПУСТЫНЯ</button>
-        <button class="btn" onclick="startGame('space')" style="background:#33ccff; box-shadow:0 6px 0 #0099cc;">🚀 КОСМОС</button>
-    </div>
-</div>
+        // Set internal game resolution
+        const GAME_WIDTH = 400;
+        const GAME_HEIGHT = 700;
+        canvas.width = GAME_WIDTH;
+        canvas.height = GAME_HEIGHT;
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('game-container');
-    const menu = document.getElementById('menu');
-    const scoreBox = document.getElementById('score-box');
-    const mapLabel = document.getElementById('map-label');
+        // Game state variables
+        let gameActive = false;
+        let score = 0;
+        let hp = 3;
+        let currentMapIndex = 0;
+        let lastShotTime = 0;
+        let botSpawnTimer = 0;
 
-    // Настройка размеров холста
-    function resize() {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+        // Game objects arrays
+        let player = { x: 200, y: 600, radius: 25, speed: 15 };
+        let bullets = [];
+        let bots = [];
+        let particles = [];
 
-    // Игровые переменные
-    let gameActive = false;
-    let score = 0;
-    let currentMap = 'forest';
-    
-    let player = {
-        x: 0,
-        y: 0,
-        size: 30,
-        speed: 7,
-        dx: 0
-    };
+        // Definition of our cartoon maps
+        const maps = [
+            { name: "Map 1: Candy Hills", bg: "#7ed6df", ground: "#22a6b3", botColor: "#ff7675" },
+            { name: "Map 2: Neon City", bg: "#2c3e50", ground: "#130f40", botColor: "#00d2d3" },
+            { name: "Map 3: Volcano Zone", bg: "#ff7979", ground: "#4834d4", botColor: "#f9ca24" }
+        ];
 
-    let items = [];
-    let spawnTimer = 0;
+        // Input handling (Works for both mouse and touch screens)
+        function handleMove(e) {
+            if (!gameActive) return;
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            // Calculate relative X position inside the canvas boundary
+            const canvasX = (clientX - rect.left) * (GAME_WIDTH / rect.width);
+            
+            // Keep player inside screen limits
+            player.x = Math.max(player.radius, Math.min(GAME_WIDTH - player.radius, canvasX));
+        }
 
-    // Настройки внешнего вида карт
-    const mapSettings = {
-        forest: { name: 'Лес', className: 'map-forest', itemColor: '#FF4A5A', starColor: '#FFCC00' },
-        desert: { name: 'Пустыня', className: 'map-desert', itemColor: '#8B4513', starColor: '#FFD700' },
-        space: { name: 'Космос', className: 'map-space', itemColor: '#LimeGreen', starColor: '#FFFFFF' }
-    };
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove, { passive: false });
 
-    // Запуск игры
-    function startGame(mapName) {
-        currentMap = mapName;
-        score = 0;
-        items = [];
-        
-        // Меняем тему
-        container.className = '';
-        container.classList.add(mapSettings[mapName].className);
-        mapLabel.innerText = mapSettings[mapName].name;
-        scoreBox.innerText = "Очки: " + score;
+        function startGame() {
+            // Reset state
+            score = 0;
+            hp = 3;
+            currentMapIndex = 0;
+            bullets = [];
+            bots = [];
+            particles = [];
+            player.x = GAME_WIDTH / 2;
+            
+            scoreVal.innerText = score;
+            hpVal.innerText = hp;
+            mapBanner.innerText = maps[currentMapIndex].name;
 
-        // Сброс игрока
-        player.x = canvas.width / 2;
-        player.y = canvas.height - 140;
-        player.dx = 0;
+            // Hide menus
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            
+            gameActive = true;
+            lastShotTime = performance.now();
+            botSpawnTimer = 0;
+        }
 
-        menu.style.display = 'none';
-        gameActive = true;
-    }
+        function gameOver() {
+            gameActive = false;
+            finalScore.innerText = score;
+            gameOverScreen.classList.remove('hidden');
+        }
 
-    // Управление кнопками телефона
-    const btnLeft = document.getElementById('btn-left');
-    const btnRight = document.getElementById('btn-right');
+        // Create colorful explosion bursts
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 4 + 2,
+                    alpha: 1,
+                    color: color
+                });
+            }
+        }
 
-    btnLeft.addEventListener('touchstart', () => player.dx = -player.speed);
-    btnLeft.addEventListener('touchend', () => player.dx = 0);
-    btnRight.addEventListener('touchstart', () => player.dx = player.speed);
-    btnRight.addEventListener('touchend', () => player.dx = 0);
+        // Main game logic update loop
+        function update() {
+            if (!gameActive) return;
 
-    // Мышка для теста на ПК через кнопки
-    btnLeft.addEventListener('mousedown', () => player.dx = -player.speed);
-    btnLeft.addEventListener('mouseup', () => player.dx = 0);
-    btnRight.addEventListener('mousedown', () => player.dx = player.speed);
-    btnRight.addEventListener('mouseup', () => player.dx = 0);
+            const now = performance.now();
 
-    // Управление клавиатурой
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft' || e.key === 'a') player.dx = -player.speed;
-        if (e.key === 'ArrowRight' || e.key === 'd') player.dx = player.speed;
-    });
+            // 1. Auto-shooting mechanic (Fires a shot every 250 milliseconds)
+            if (now - lastShotTime > 250) {
+                bullets.push({ x: player.x, y: player.y - player.radius, radius: 6, speed: 10 });
+                lastShotTime = now;
+            }
 
-    document.addEventListener('keyup', (e) => {
-        if (['ArrowLeft', 'a', 'ArrowRight', 'd'].includes(e.key)) player.dx = 0;
-    });
+            // 2. Map progression logic based on score milestones
+            if (score > 15 && currentMapIndex === 0) {
+                currentMapIndex = 1;
+                mapBanner.innerText = maps[currentMapIndex].name;
+            } else if (score > 40 && currentMapIndex === 1) {
+                currentMapIndex = 2;
+                mapBanner.innerText = maps[currentMapIndex].name;
+            }
 
-    // Создание падающих предметов
-    function spawnItem() {
-        spawnTimer++;
-        if (spawnTimer % 40 === 0) {
-            let isStar = Math.random() > 0.4; // 60% что это звезда, 40% препятствие
-            items.push({
-                x: Math.random() * (canvas.width - 40) + 20,
-                y: -30,
-                size: isStar ? 15 : 20,
-                speed: Math.random() * 3 + 4,
-                isStar: isStar
+            // 3. Spawning enemy bots
+            botSpawnTimer++;
+            // Spawns faster as the player gets more points
+            let spawnRate = Math.max(20, 50 - score * 0.5); 
+            if (botSpawnTimer > spawnRate) {
+                bots.push({
+                    x: Math.random() * (GAME_WIDTH - 40) + 20,
+                    y: -30,
+                    radius: Math.random() * 6 + 16,
+                    speed: Math.random() * 2 + 2 + (currentMapIndex * 0.5),
+                    hp: currentMapIndex + 1
+                });
+                botSpawnTimer = 0;
+            }
+
+            // 4. Update bullets position
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= bullets[i].speed;
+                if (bullets[i].y < 0) {
+                    bullets.splice(i, 1);
+                }
+            }
+
+            // 5. Update enemy bots position and manage damages
+            for (let i = bots.length - 1; i >= 0; i--) {
+                bots[i].y += bots[i].speed;
+
+                // Check bot reaching bottom floor
+                if (bots[i].y > GAME_HEIGHT + bots[i].radius) {
+                    bots.splice(i, 1);
+                    hp--;
+                    hpVal.innerText = hp;
+                    if (hp <= 0) gameOver();
+                    continue;
+                }
+
+                // Check collision with player character
+                const distToPlayer = Math.hypot(bots[i].x - player.x, bots[i].y - player.y);
+                if (distToPlayer < bots[i].radius + player.radius) {
+                    createExplosion(bots[i].x, bots[i].y, '#ff4757');
+                    bots.splice(i, 1);
+                    hp--;
+                    hpVal.innerText = hp;
+                    if (hp <= 0) gameOver();
+                    continue;
+                }
+
+                // Check collisions with bullets
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    const distToBullet = Math.hypot(bots[i].x - bullets[j].x, bots[i].y - bullets[j].y);
+                    if (distToBullet < bots[i].radius + bullets[j].radius) {
+                        bullets.splice(j, 1);
+                        bots[i].hp--;
+
+                        if (bots[i].hp <= 0) {
+                            createExplosion(bots[i].x, bots[i].y, maps[currentMapIndex].botColor);
+                            score++;
+                            scoreVal.innerText = score;
+                            bots.splice(i, 1);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // 6. Update visual explosion particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].x += particles[i].vx;
+                particles[i].y += particles[i].vy;
+                particles[i].alpha -= 0.04;
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // Draw everything onto the screen canvas
+        function draw() {
+            const currentMap = maps[currentMapIndex];
+
+            // Clean canvas background
+            ctx.fillStyle = currentMap.bg;
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // Draw cartoon ground details at bottom half
+            ctx.fillStyle = currentMap.ground;
+            ctx.fillRect(0, GAME_HEIGHT - 80, GAME_WIDTH, 80);
+
+            // Draw active particles
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Draw player character (Cute green cartoon space ship)
+            ctx.fillStyle = '#2ed573';
+            ctx.strokeStyle = '#1e90ff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Cute big eyes for our character player
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(player.x - 8, player.y - 4, 6, 0, Math.PI * 2);
+            ctx.arc(player.x + 8, player.y - 4, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(player.x - 8, player.y - 6, 3, 0, Math.PI * 2);
+            ctx.arc(player.x + 8, player.y - 6, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw laser bullets
+            ctx.fillStyle = '#fff200';
+            bullets.forEach(b => {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw funny enemy bots
+            bots.forEach(bot => {
+                ctx.fillStyle = currentMap.botColor;
+                ctx.strokeStyle = '#2f3542';
+                ctx.lineWidth = 4;
+                
+                // Boxy body shape
+                ctx.beginPath();
+                ctx.roundRect(bot.x - bot.radius, bot.y - bot.radius, bot.radius * 2, bot.radius * 2, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                // Simple angry eyes for the bots
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(bot.x - bot.radius + 6, bot.y - 4, 6, 6);
+                ctx.fillRect(bot.x + bot.radius - 12, bot.y - 4, 6, 6);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(bot.x - bot.radius + 8, bot.y - 2, 3, 3);
+                ctx.fillRect(bot.x + bot.radius - 10, bot.y - 2, 3, 3);
             });
         }
-    }
 
-    // Главный цикл обновления
-    function update() {
-        if (!gameActive) return;
-
-        // Движение игрока
-        player.x += player.dx;
-        if (player.x - player.size < 0) player.x = player.size;
-        if (player.x + player.size > canvas.width) player.x = canvas.width - player.size;
-
-        spawnItem();
-
-        // Движение предметов
-        for (let i = items.length - 1; i >= 0; i--) {
-            let item = items[i];
-            item.y += item.speed;
-
-            // Проверка столкновения с игроком
-            let dist = Math.hypot(player.x - item.x, player.y - item.y);
-            if (dist < player.size + item.size) {
-                if (item.isStar) {
-                    score += 10;
-                    scoreBox.innerText = "Очки: " + score;
-                    items.splice(i, 1);
-                } else {
-                    // Столкнулись с препятствием — конец игры
-                    gameActive = false;
-                    menu.style.display = 'flex';
-                    document.querySelector('h1').innerText = "ИГРА ОКОНЧЕНА!\nОЧКИ: " + score;
-                }
-                continue;
-            }
-
-            // Удаление если улетел за экран
-            if (item.y > canvas.height + 50) {
-                items.splice(i, 1);
-            }
+        // Loop engine activation loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
         }
-    }
 
-    // Отрисовка графики
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (!gameActive) return;
-
-        // Рисуем предметы
-        items.forEach(item => {
-            ctx.save();
-            ctx.beginPath();
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#333';
-            
-            if (item.isStar) {
-                // Рисуем желтую звезду/монетку
-                ctx.fillStyle = mapSettings[currentMap].starColor;
-                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            } else {
-                // Рисуем опасный мультяшный камень
-                ctx.fillStyle = mapSettings[currentMap].itemColor;
-                ctx.rect(item.x - item.size, item.y - item.size, item.size * 2, item.size * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-            ctx.restore();
-        });
-
-        // Рисуем игрока (Симпатичный желтый смайлик)
-        ctx.save();
-        ctx.translate(player.x, player.y);
-        
-        // Тело игрока
-        ctx.beginPath();
-        ctx.arc(0, 0, player.size, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFEB3B';
-        ctx.fill();
-        ctx.lineWidth = 5;
-        ctx.strokeStyle = '#333';
-        ctx.stroke();
-
-        // Глазки
-        ctx.fillStyle = '#333';
-        ctx.beginPath();
-        ctx.arc(-8, -5, 4, 0, Math.PI * 2);
-        ctx.arc(8, -5, 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Улыбка
-        ctx.beginPath();
-        ctx.arc(0, 5, 10, 0, Math.PI);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#333';
-        ctx.stroke();
-
-        ctx.restore();
-    }
-
-    // Игровой таймер
-    function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-    }
-
-    loop();
-</script>
-
+        // Start running the loop
+        gameLoop();
+    </script>
 </body>
 </html>
