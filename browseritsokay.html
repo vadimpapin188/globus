@@ -95,6 +95,38 @@
             box-shadow: 0 4px 0 #b7791f;
         }
 
+        /* Dynamic Attack Button for Mobile/Mouse */
+        #attack-btn {
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(180deg, #ff4757 0%, #ff2a3a 100%);
+            border: 5px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 8px 0 #b31e2b, 0 10px 15px rgba(0,0,0,0.4);
+            color: white;
+            font-family: var(--primary-font);
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 6;
+            cursor: pointer;
+            -webkit-text-stroke: 1px #000;
+            text-shadow: 2px 2px 0px #000;
+            touch-action: none;
+        }
+
+        #attack-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #b31e2b, 0 5px 10px rgba(0,0,0,0.4);
+            background: linear-gradient(180deg, #ff2a3a 0%, #cc1424 100%);
+        }
+
         /* UI Header */
         #ui-header {
             position: absolute;
@@ -136,12 +168,15 @@
             <div class="ui-pill" id="bots-pill">🤖 Bots Left: <span id="bots-val">10</span></div>
         </div>
 
+        <!-- Attack Button overlay -->
+        <div id="attack-btn" class="hidden">Attack</div>
+
         <canvas id="gameCanvas"></canvas>
 
         <!-- Start Screen -->
         <div id="start-screen" class="screen">
             <h1>ARENA<br>HUNTER</h1>
-            <p>Use the joystick to move. Auto-aim will shoot nearby bots. Clear the arena!</p>
+            <p>Move with the left side joystick / WASD. Hold the RED button or SPACEBAR to attack bots!</p>
             <button class="btn" onclick="startGame()">Start Hunt</button>
         </div>
 
@@ -159,6 +194,7 @@
 
         // UI
         const uiHeader = document.getElementById('ui-header');
+        const attackBtn = document.getElementById('attack-btn');
         const startScreen = document.getElementById('start-screen');
         const endScreen = document.getElementById('end-screen');
         const endTitle = document.getElementById('end-title');
@@ -181,6 +217,7 @@
         let time = 0;
         let lastShotTime = 0;
         let screenShake = 0;
+        let attackButtonPressed = false;
 
         // Camera
         let camera = { x: 0, y: 0 };
@@ -196,11 +233,20 @@
         let keys = {};
         let joystick = { active: false, originX: 0, originY: 0, x: 0, y: 0, dx: 0, dy: 0 };
 
-        // Handle Keyboard (for desktop testing)
+        // Handle Keyboard
         window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
         window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-        // Handle Touch / Mouse for Virtual Joystick
+        // Handle Attack Button Events (Mouse and Touch)
+        attackBtn.addEventListener('mousedown', () => attackButtonPressed = true);
+        attackBtn.addEventListener('mouseup', () => attackButtonPressed = false);
+        attackBtn.addEventListener('mouseleave', () => attackButtonPressed = false);
+        attackBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            attackButtonPressed = true;
+        });
+        attackBtn.addEventListener('touchend', () => attackButtonPressed = false);
+
         function getCanvasPos(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -214,6 +260,10 @@
         function startJoystick(e) {
             if (!gameActive) return;
             const pos = getCanvasPos(e);
+            
+            // Only activate joystick if touching the left half of the screen
+            if (pos.x > GW / 2) return;
+
             joystick.active = true;
             joystick.originX = pos.x;
             joystick.originY = pos.y;
@@ -250,12 +300,13 @@
             joystick.dy = 0;
         }
 
-        window.addEventListener('mousedown', startJoystick);
-        window.addEventListener('mousemove', moveJoystick);
-        window.addEventListener('mouseup', endJoystick);
-        window.addEventListener('touchstart', startJoystick, {passive: false});
-        window.addEventListener('touchmove', e => { e.preventDefault(); moveJoystick(e); }, {passive: false});
-        window.addEventListener('touchend', endJoystick);
+        // Global listeners for the background movement tracking
+        canvas.addEventListener('mousedown', startJoystick);
+        canvas.addEventListener('mousemove', moveJoystick);
+        canvas.addEventListener('mouseup', endJoystick);
+        canvas.addEventListener('touchstart', startJoystick, {passive: false});
+        canvas.addEventListener('touchmove', e => { e.preventDefault(); moveJoystick(e); }, {passive: false});
+        canvas.addEventListener('touchend', endJoystick);
 
         // --- Setup Map ---
         function generateMap() {
@@ -283,10 +334,10 @@
             bullets = [];
             particles = [];
             bots = [];
+            attackButtonPressed = false;
             
             generateMap();
 
-            // Safe spawn for player (centerish)
             player.x = MAP_W/2;
             player.y = MAP_H/2;
 
@@ -308,6 +359,7 @@
             startScreen.classList.add('hidden');
             endScreen.classList.add('hidden');
             uiHeader.classList.remove('hidden');
+            attackBtn.classList.remove('hidden');
             
             gameActive = true;
             lastShotTime = performance.now();
@@ -316,6 +368,7 @@
         function endGame(win) {
             gameActive = false;
             uiHeader.classList.add('hidden');
+            attackBtn.classList.add('hidden');
             endScreen.classList.remove('hidden');
             
             if(win) {
@@ -336,7 +389,6 @@
             if(bots.length <= 0) endGame(true);
         }
 
-        // --- Physics & Collision ---
         function circleRectCollide(circle, rect) {
             let testX = circle.x;
             let testY = circle.y;
@@ -352,7 +404,6 @@
             let distance = Math.hypot(distX, distY);
 
             if (distance < circle.radius) {
-                // Return resolution vector
                 let overlap = circle.radius - distance;
                 let nx = distance > 0 ? distX / distance : 1;
                 let ny = distance > 0 ? distY / distance : 0;
@@ -380,7 +431,6 @@
             if (keys['a'] || keys['arrowleft']) moveX = -1;
             if (keys['d'] || keys['arrowright']) moveX = 1;
 
-            // Normalize
             let mag = Math.hypot(moveX, moveY);
             if (mag > 1) { moveX /= mag; moveY /= mag; }
 
@@ -396,20 +446,23 @@
                 }
             });
 
-            // Auto-Aim & Shooting
+            // Target Finding
             let nearestBot = null;
-            let minDist = 600; // Attack range
+            let minDist = 600; // Shooting range limit
             bots.forEach(b => {
                 let d = Math.hypot(b.x - player.x, b.y - player.y);
                 if (d < minDist) { minDist = d; nearestBot = b; }
             });
 
-            if (nearestBot && now - lastShotTime > 400) {
+            // Controlled Shooting (Checks if button is pressed OR Spacebar is held)
+            let wantToAttack = attackButtonPressed || keys[' '];
+
+            if (wantToAttack && nearestBot && now - lastShotTime > 300) {
                 let angle = Math.atan2(nearestBot.y - player.y, nearestBot.x - player.x);
                 bullets.push({
                     x: player.x, y: player.y,
-                    vx: Math.cos(angle) * 800,
-                    vy: Math.sin(angle) * 800,
+                    vx: Math.cos(angle) * 900,
+                    vy: Math.sin(angle) * 900,
                     radius: 12
                 });
                 lastShotTime = now;
@@ -421,7 +474,6 @@
                 b.x += b.vx * dt;
                 b.y += b.vy * dt;
 
-                // Hit walls
                 let hitWall = false;
                 for (let w of walls) {
                     if (pointInRect(b.x, b.y, w)) {
@@ -433,7 +485,6 @@
                 }
                 if (hitWall) continue;
 
-                // Hit Bots
                 for (let j = bots.length - 1; j >= 0; j--) {
                     let bot = bots[j];
                     if (Math.hypot(bot.x - b.x, bot.y - b.y) < bot.radius + b.radius) {
@@ -452,18 +503,16 @@
                 }
             }
 
-            // Update Bots (Wander & Attack Player)
+            // Update Bots
             for (let i = bots.length - 1; i >= 0; i--) {
                 let b = bots[i];
 
-                // Change direction occasionally
                 if (Math.random() < 0.02) {
                     let angle = Math.random() * Math.PI * 2;
                     b.vx = Math.cos(angle);
                     b.vy = Math.sin(angle);
                 }
 
-                // If close to player, chase!
                 let distToPlayer = Math.hypot(player.x - b.x, player.y - b.y);
                 if (distToPlayer < 400) {
                     let angle = Math.atan2(player.y - b.y, player.x - b.x);
@@ -474,20 +523,16 @@
                 b.x += b.vx * b.speed * dt;
                 b.y += b.vy * b.speed * dt;
 
-                // Bot vs Walls
                 walls.forEach(w => {
                     let col = circleRectCollide(b, w);
                     if (col.hit) {
                         b.x += col.rx;
                         b.y += col.ry;
-                        // Bounce off
                         b.vx *= -1; b.vy *= -1; 
                     }
                 });
 
-                // Bot vs Player (Melee Damage)
                 if (distToPlayer < b.radius + player.radius) {
-                    // Knockback player and bot
                     let angle = Math.atan2(player.y - b.y, player.x - b.x);
                     player.x += Math.cos(angle) * 50;
                     player.y += Math.sin(angle) * 50;
@@ -512,11 +557,10 @@
                 if (p.alpha <= 0) particles.splice(i, 1);
             }
 
-            // Update Camera (Lerp towards player to be smooth)
+            // Update Camera
             let targetCamX = player.x - GW/2;
             let targetCamY = player.y - GH/2;
             
-            // Clamp camera inside map bounds
             targetCamX = Math.max(0, Math.min(MAP_W - GW, targetCamX));
             targetCamY = Math.max(0, Math.min(MAP_H - GH, targetCamY));
 
@@ -524,7 +568,7 @@
             camera.y += (targetCamY - camera.y) * 0.1;
         }
 
-        // --- Drawing ---
+        // --- Drawing Engine ---
         function roundRect(x, y, w, h, r) {
             ctx.beginPath();
             ctx.roundRect(x, y, w, h, r);
@@ -546,17 +590,15 @@
         }
 
         function draw() {
-            // Background Base
             ctx.fillStyle = "#1a1a2e";
             ctx.fillRect(0, 0, GW, GH);
 
             ctx.save();
-            // Apply Camera & Shake
             let sx = (Math.random() - 0.5) * screenShake;
             let sy = (Math.random() - 0.5) * screenShake;
             ctx.translate(-camera.x + sx, -camera.y + sy);
 
-            // Draw Grid Floor (relative to map)
+            // Draw Grid Floor
             ctx.strokeStyle = "rgba(255,255,255,0.05)";
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -569,14 +611,12 @@
             ctx.lineWidth = 10;
             ctx.strokeRect(0, 0, MAP_W, MAP_H);
 
-            // Draw Walls (3D look)
+            // Draw Walls
             walls.forEach(w => {
-                // Wall base/shadow
                 ctx.fillStyle = "#1c2833";
                 roundRect(w.x, w.y + 20, w.w, w.h, 10);
                 ctx.fill();
 
-                // Wall top face
                 ctx.fillStyle = "#34495e";
                 ctx.strokeStyle = "#000";
                 ctx.lineWidth = 6;
@@ -608,7 +648,6 @@
             ctx.lineWidth = 8;
             roundRect(player.x - pr, player.y - pr, pr*2, pr*2, 15);
             ctx.fill(); ctx.stroke();
-            // Visor
             ctx.fillStyle = "#2c3e50";
             roundRect(player.x - pr + 10, player.y - pr + 15, pr*2 - 20, pr - 10, 8);
             ctx.fill(); ctx.stroke();
@@ -618,12 +657,10 @@
                 ctx.fillStyle = (b.hitFlash > 0) ? "#fff" : "#e74c3c";
                 ctx.strokeStyle = "#000";
                 ctx.lineWidth = 8;
-                
                 ctx.beginPath();
                 ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
                 ctx.fill(); ctx.stroke();
 
-                // Angry Eye
                 ctx.fillStyle = "#000";
                 ctx.beginPath();
                 ctx.moveTo(b.x - 15, b.y - 10); ctx.lineTo(b.x + 15, b.y + 5);
@@ -631,17 +668,15 @@
                 ctx.fill();
             });
 
-            ctx.restore(); // Undo Camera transform
+            ctx.restore();
 
-            // Draw Joystick UI Overlay
+            // Draw Virtual Movement Joystick
             if (joystick.active) {
                 ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
                 ctx.lineWidth = 4;
-                // Base
                 ctx.beginPath(); ctx.arc(joystick.originX, joystick.originY, 100, 0, Math.PI*2); 
                 ctx.fill(); ctx.stroke();
-                // Stick
                 ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
                 ctx.beginPath(); ctx.arc(joystick.x, joystick.y, 40, 0, Math.PI*2); 
                 ctx.fill();
@@ -660,7 +695,6 @@
         }
 
         loop();
-
     </script>
 </body>
 </html>
