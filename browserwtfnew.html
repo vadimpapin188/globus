@@ -3,28 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>YouTown: Mega Evolution</title>
+  <title>YouTown: Mobile Evolution</title>
   <style>
-    body { margin: 0; font-family: sans-serif; background-color: #a8d5e2; display: flex; flex-direction: column; height: 100vh; overflow: hidden; touch-action: manipulation; }
-    .header { background-color: #2c3e50; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
-    .stats { display: flex; justify-content: space-around; background: #fff; padding: 15px; font-weight: bold; font-size: 16px; }
-    
-    /* Сетка на весь экран для телефона */
+    body { margin: 0; font-family: sans-serif; background-color: #a8d5e2; height: 100vh; display: flex; flex-direction: column; touch-action: manipulation; }
+    .header { background: #2c3e50; color: white; padding: 15px; text-align: center; font-weight: bold; }
+    .stats { display: flex; justify-content: space-around; background: #fff; padding: 10px; font-weight: bold; font-size: 14px; }
     .grid { display: grid; gap: 8px; padding: 10px; flex-grow: 1; grid-template-columns: repeat(4, 1fr); align-content: start; }
-    .cell { background: #81c784; border-radius: 12px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 32px; box-shadow: 0 4px 0 rgba(0,0,0,0.1); }
-    
-    /* Большой удобный тулбар */
-    .toolbar { display: flex; gap: 10px; padding: 15px; background: #fff; overflow-x: auto; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-    .tool { padding: 15px; background: #f1f2f6; border-radius: 12px; cursor: pointer; text-align: center; font-size: 14px; min-width: 70px; border: 2px solid transparent; }
+    .cell { background: #81c784; border-radius: 12px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 28px; box-shadow: 0 4px 0 rgba(0,0,0,0.1); }
+    .toolbar { display: flex; gap: 8px; padding: 10px; background: #fff; overflow-x: auto; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+    .tool { padding: 10px; background: #f1f2f6; border-radius: 10px; text-align: center; font-size: 12px; min-width: 60px; border: 2px solid transparent; }
     .tool.active { border-color: #ff9f1c; background: #fff3e0; }
+    .action-row { display: flex; gap: 5px; padding: 5px; }
+    .btn { padding: 10px; background: #9b59b6; color: white; border-radius: 8px; flex: 1; text-align: center; font-size: 12px; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<div class="header">YouTown: Мега-Эволюция</div>
+<div class="header">YouTown: Полный Сборник</div>
 <div class="stats">
-  <div>💰 $<span id="money">150</span></div>
+  <div>💰 $<span id="money">100</span></div>
   <div>😊 <span id="happy">100</span>%</div>
+  <div>🏘️ <span id="pop">0</span></div>
+</div>
+
+<div class="action-row">
+  <div class="btn" onclick="takeLoan()">Кредит</div>
+  <div class="btn" style="background:#e67e22" onclick="toggleTax()">Налоги х2</div>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -32,24 +36,27 @@
 <div class="toolbar" id="toolbar"></div>
 
 <script>
-  let money = 150, happiness = 100;
+  let money = 100, happiness = 100, pop = 0, taxMult = 1;
   let mapData = new Array(16).fill(null);
   let currentTool = 'house';
 
   const tools = {
     house: { name: 'Дом', cost: 10, icon: '🏠' },
+    shop: { name: 'Маг', cost: 25, icon: '🛒' },
+    factory: { name: 'Завод', cost: 50, icon: '🏭' },
     road: { name: 'Дорога', cost: 5, icon: '🛣️' },
     farm: { name: 'Ферма', cost: 30, icon: '🌾' },
-    lab: { name: 'Лаб.', cost: 200, icon: '🧪' }
+    lab: { name: 'Лаб.', cost: 200, icon: '🧪' },
+    tv: { name: 'Вышка', cost: 500, icon: '🗼' }
   };
 
   function render() {
     const grid = document.getElementById('grid');
     grid.innerHTML = '';
-    mapData.forEach((type, i) => {
+    mapData.forEach((t, i) => {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      cell.innerText = type ? tools[type].icon : '';
+      cell.innerText = t ? tools[t].icon : '';
       cell.onclick = () => {
         if (!mapData[i] && money >= tools[currentTool].cost) {
           money -= tools[currentTool].cost;
@@ -61,26 +68,36 @@
     });
     document.getElementById('money').innerText = money;
     document.getElementById('happy').innerText = Math.floor(happiness);
+    document.getElementById('pop').innerText = pop;
   }
 
+  function takeLoan() { money += 100; alert("Кредит получен!"); }
+  function toggleTax() { taxMult = (taxMult === 1 ? 2 : 1); alert("Налоги х" + taxMult); }
+
   setInterval(() => {
-    let houses = 0, roads = 0, farms = 0, labs = 0;
+    let h=0, r=0, f=0, l=0, shop=0, fact=0;
     mapData.forEach(t => {
-      if(t === 'house') houses++; if(t === 'road') roads++;
-      if(t === 'farm') farms++; if(t === 'lab') labs++;
+      if(t=='house') h++; if(t=='road') r++; if(t=='farm') f++; 
+      if(t=='lab') l++; if(t=='shop') shop++; if(t=='factory') fact++;
     });
 
-    if (houses > 0) {
-      if (farms < Math.ceil(houses / 3)) happiness -= 0.5;
-      else happiness += 0.2;
-    }
-    if (houses > 0 && roads < Math.ceil(houses / 2)) happiness -= 0.3;
-    
-    if (labs > 0 && Math.random() < 0.1) {
-      happiness += (Math.random() > 0.5 ? 20 : -20);
+    // Фермы и Дороги
+    if (h > 0) {
+      happiness += (f >= Math.ceil(h/3)) ? 0.5 : -1;
+      happiness += (r >= Math.ceil(h/2)) ? 0.3 : -0.5;
     }
 
+    // Лаборатория Вадима, Мирона и Тихона
+    if (l > 0 && Math.random() < 0.1) {
+      happiness += (Math.random() < 0.5 ? 20 : -20);
+    }
+
+    // Катаклизм (пожар)
+    if (Math.random() < 0.02) { alert("🔥 Пожар!"); mapData[Math.floor(Math.random()*16)] = null; }
+
     happiness = Math.max(0, Math.min(100, happiness));
+    money += (fact * 5 * taxMult);
+    pop = h * 6;
     render();
   }, 1000);
 
@@ -88,7 +105,6 @@
   for (let key in tools) {
     let el = document.createElement('div');
     el.className = 'tool';
-    if(key === currentTool) el.classList.add('active');
     el.innerHTML = `${tools[key].icon}<br>${tools[key].name}`;
     el.onclick = () => {
       currentTool = key;
