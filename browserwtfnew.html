@@ -3,54 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>YouTown: Mayor Edition</title>
+  <title>YouTown: Mayor Pro</title>
   <style>
     body { margin: 0; font-family: sans-serif; background: #a8d5e2; height: 100vh; display: flex; flex-direction: column; }
-    .stats { display: flex; justify-content: space-around; background: #fff; padding: 10px; font-weight: bold; font-size: 13px; }
-    #news { background: #2c3e50; color: #f1c40f; padding: 8px; font-size: 12px; text-align: center; }
-    .grid { display: grid; gap: 4px; padding: 10px; flex-grow: 1; align-content: start; }
-    .cell { background: #81c784; border-radius: 8px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 20px; position: relative; }
-    .toolbar { display: flex; gap: 5px; padding: 10px; background: #fff; overflow-x: auto; }
-    .tool { padding: 8px; background: #f1f2f6; border-radius: 8px; text-align: center; font-size: 10px; min-width: 45px; }
-    .active { border: 2px solid #ff9f1c; }
+    .header { background: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; }
+    .news { background: #34495e; color: #f1c40f; padding: 5px; font-size: 12px; text-align: center; }
+    .stats { display: flex; justify-content: space-around; background: #fff; padding: 8px; font-size: 12px; font-weight: bold; }
+    .grid { display: grid; gap: 3px; padding: 5px; flex-grow: 1; align-content: start; }
+    .cell { background: #81c784; border-radius: 6px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 20px; }
+    .toolbar { display: flex; gap: 4px; padding: 8px; background: #fff; overflow-x: auto; }
+    .tool { padding: 8px; background: #f1f2f6; border-radius: 6px; text-align: center; font-size: 10px; min-width: 45px; }
+    .btn-achieve { background: #e67e22; color: white; padding: 10px; text-align: center; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<div id="news">Добро пожаловать, Мэр!</div>
+<div class="header">YouTown: Mayor Pro</div>
+<div id="news" class="news">Мэр, город ждет ваших решений!</div>
 <div class="stats">
   <div>💰$<span id="money">200</span></div>
   <div>😊<span id="happy">100</span>%</div>
   <div>👥<span id="pop">0</span></div>
 </div>
+
 <div class="grid" id="grid"></div>
 <div class="toolbar" id="toolbar"></div>
+<div class="btn-achieve" onclick="showAchievements()">🏆 Достижения</div>
 
 <script>
-  let money = 200, happy = 100, pop = 0, gridCols = 4;
+  let money = 200, happy = 100, pop = 0;
   let map = new Array(16).fill(null);
-  let tools = {
-    house: { n: 'Дом', c: 10, i: '🏠' }, shop: { n: 'Маг', c: 25, i: '🛒' },
-    factory: { n: 'Завод', c: 50, i: '🏭' }, farm: { n: 'Ферма', c: 30, i: '🌾' },
-    park: { n: 'Парк', c: 40, i: '🌳' }, mayor: { n: 'Мэрия', c: 200, i: '🏛️' }
-  };
+  let ach = { firstMoney: false, industry: false };
   let cur = 'house';
 
-  function news(text) { document.getElementById('news').innerText = text; }
+  const tools = {
+    house: { n: 'Дом', c: 10, i: '🏠' }, road: { n: 'Дор.', c: 5, i: '🛣️' },
+    factory: { n: 'Зав.', c: 50, i: '🏭' }, farm: { n: 'Фер.', c: 30, i: '🌾' },
+    court: { n: 'Суд', c: 150, i: '⚖️' }, tv: { n: 'Вышка', c: 500, i: '🗼' }
+  };
 
   function render() {
     const grid = document.getElementById('grid');
-    grid.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
+    grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
     grid.innerHTML = '';
     map.forEach((t, i) => {
       let cell = document.createElement('div');
       cell.className = 'cell';
       cell.innerText = t ? tools[t].i : '';
-      cell.onclick = () => {
-        if (!map[i] && money >= tools[cur].c) {
-          money -= tools[cur].c; map[i] = cur; render();
-        }
-      };
+      cell.onclick = () => { if (!map[i] && money >= tools[cur].c) { money -= tools[cur].c; map[i] = cur; render(); } };
       grid.appendChild(cell);
     });
     document.getElementById('money').innerText = money;
@@ -58,29 +58,28 @@
     document.getElementById('pop').innerText = pop;
   }
 
+  function showAchievements() {
+    alert(`Ачивки:\n- Первые деньги ($1000): ${ach.firstMoney ? '✅' : '❌'}\n- Промышленник: ${ach.industry ? '✅' : '❌'}`);
+  }
+
   setInterval(() => {
-    let farms = [], factories = [], houses = 0, infra = 0;
+    let houses = 0, roads = 0, factories = 0, courts = 0, farms = 0, tv = 0;
     map.forEach((t, i) => {
-      if(t == 'farm') farms.push(i);
-      if(t == 'factory') factories.push(i);
-      if(t == 'house') houses++;
-      if(t == 'park' || t == 'mayor') infra++;
+      if(t == 'house') houses++; if(t == 'road') roads++; if(t == 'factory') factories++;
+      if(t == 'court') courts++; if(t == 'farm') farms++; if(t == 'tv') tv++;
     });
 
-    // Загрязнение ферм заводами
-    farms.forEach(f => {
-      factories.forEach(fac => {
-        if (Math.abs(f - fac) <= 1) { happy -= 0.5; news("Внимание! Ферма отравлена заводами!"); }
-      });
-    });
-
-    // Счастье от отсутствия зданий
-    if (infra == 0) happy -= 0.2;
-    if (farms.length == 0) happy -= 0.5;
+    // Логика
+    if (houses > 0 && roads == 0) { happy -= 1; document.getElementById('news').innerText = "Домам нужны дороги!"; }
+    if (courts == 0) happy -= 0.5;
+    if (farms == 0) happy -= 1;
     
+    // Ачивки
+    if (money >= 1000) ach.firstMoney = true;
+    if (factories > 0 && roads > 0 && houses == 0 && farms == 0) ach.industry = true;
+
     happy = Math.max(0, Math.min(100, happy));
-    pop = houses * 5;
-    money += (factories.length * 5);
+    money += (factories * 10);
     render();
   }, 2000);
 
@@ -88,7 +87,7 @@
     let el = document.createElement('div');
     el.className = 'tool';
     el.innerHTML = `${tools[k].i}<br>${tools[k].n}`;
-    el.onclick = () => { cur = k; render(); };
+    el.onclick = () => { cur = k; };
     document.getElementById('toolbar').appendChild(el);
   });
 
