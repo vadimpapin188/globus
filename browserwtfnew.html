@@ -3,86 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>YouTown: Mod-Ready Evolution</title>
+  <title>YouTown: Mega Evolution</title>
+  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <style>
-    /* (Твои стили без изменений) */
-    body { margin:0; font-family: sans-serif; background: #a8d5e2; }
-    .toolbar { display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: white; }
-    .tool { padding: 10px; background: #f1f2f6; border-radius: 8px; cursor: pointer; }
+    /* ТВОИ СТИЛИ ВОЗВРАЩЕНЫ */
+    body { margin: 0; font-family: 'Varela Round', sans-serif; background-color: #a8d5e2; height: 100vh; overflow: hidden; }
+    .header { background-color: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 22px; font-weight: bold; }
+    .stats { display: flex; justify-content: space-around; background-color: #ffffff; padding: 10px; font-weight: bold; }
+    .grid { display: grid; gap: 6px; padding: 10px; max-width: 440px; margin: auto; }
+    .cell { background-color: #81c784; border-radius: 10px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 28px; }
+    .toolbar-container { background-color: #ffffff; padding: 10px; overflow-x: auto; display: flex; gap: 10px; }
+    .tool { display: flex; flex-direction: column; align-items: center; background: #f1f2f6; padding: 10px; border-radius: 12px; cursor: pointer; min-width: 70px; }
+    .tool.active { border: 2px solid #ff9f1c; }
   </style>
 </head>
 <body>
 
   <div class="header">YouTown: Mega Evolution</div>
   <div class="stats">Money: $<span id="money-display">60</span></div>
-  <div class="toolbar" id="toolbar">
-    </div>
-  <div class="grid" id="grid"></div>
+
+  <div class="toolbar-container" id="toolbar">
+    <div class="tool active" onclick="selectTool('house')">🏠<div>Дом</div></div>
+    <div class="tool" onclick="selectTool('shop')">🏪<div>Маг</div></div>
+  </div>
+
+  <div class="grid" id="grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+  </div>
 
   <script>
-    // --- ДВИЖОК ИГРЫ ---
-    let money = 60;
-    let tools = {
-      house: { cost: 10, icon: '🏠' },
-      shop: { cost: 25, icon: '🏪' }
-    };
-
-    // --- МОДИНГ API ---
-    const EngineValue = {
-        Set: (cmd) => {
-            // Пример: EngineValue.Set(CreditPrice = ~500)
-            let match = cmd.match(/(\w+)\s*=\s*~(\d+)/);
-            if(match) {
-                console.log(`Setting ${match[1]} to ${match[2]}`);
-                // Тут логика применения переменных игры
+    // --- ДВИЖОК МОДОВ ---
+    const ModEngine = {
+        // Тот самый парсер, который понимает твой синтаксис
+        parse(line) {
+            if(line.startsWith("AddBuild")) {
+                let name = line.match(/"([^"]+)"/)[1];
+                let price = line.match(/~(\d+)/)[1];
+                this.injectUI(name, price);
             }
-        }
-    };
-
-    const AddBuild = (name, cost, scriptRef) => {
-        tools[name] = { cost: cost, icon: '📦', script: scriptRef };
-        console.log(`Mod Building ${name} registered.`);
-    };
-
-    const PanelBuilds = {
-        Add: (name) => {
+        },
+        injectUI(name, price) {
             const container = document.getElementById('toolbar');
-            const btn = document.createElement('div');
-            btn.className = 'tool';
-            btn.innerHTML = `${tools[name].icon} ${name}`;
-            btn.onclick = () => console.log("Выбрано: " + name);
-            container.appendChild(btn);
+            const el = document.createElement('div');
+            el.className = 'tool';
+            el.innerHTML = `📦<div>${name}</div><div style="color:#2ec4b6">$${price}</div>`;
+            container.appendChild(el);
         }
     };
 
-    // --- ПАРСЕР МОДОВ (Твой "язык Чирик") ---
-    function executeModCommand(command) {
-        if (command.startsWith("EngineValue.Set")) {
-            EngineValue.Set(command.split('(')[1].replace(')', ''));
-        } 
-        else if (command.startsWith("AddBuild")) {
-            // Парсим: AddBuild ("Завод x10" price ~100 scripts 'zavod')
-            let name = command.match(/"([^"]+)"/)[1];
-            let price = parseInt(command.match(/price\s*~(\d+)/)[1]);
-            let script = command.match(/scripts\s*'([^']+)'/)[1];
-            AddBuild(name, price, script);
-        }
-        else if (command.startsWith("PanelBuilds.Add")) {
-            let name = command.match(/"([^"]+)"/)[1];
-            PanelBuilds.Add(name);
-        }
-    }
+    // Твой мод
+    let myMods = ['AddBuild("Завод x10" price ~100 scripts \'zavod\')'];
+    myMods.forEach(cmd => ModEngine.parse(cmd));
 
-    // --- ПРИМЕР ЗАГРУЗКИ МОДА ---
-    let myCustomMod = [
-        'AddBuild("Завод x10" price ~100 scripts \'zavodscripts\')',
-        'PanelBuilds.Add("Завод x10")',
-        'EngineValue.Set(CreditPrice = ~500)'
-    ];
-
-    // Инициализация модов
-    myCustomMod.forEach(cmd => executeModCommand(cmd));
-
+    function selectTool(t) { /* логика выбора */ }
   </script>
 </body>
 </html>
