@@ -3,46 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brawl Bots Vertical Shooter</title>
+    <title>Brawl Bots: Arena</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-font: 'Lilita One', cursive;
-            --ui-bg: rgba(0, 0, 0, 0.6);
-            --ui-border: #ffd700; /* Goldish */
-            --text-color: #ffffff;
-            --text-stroke: 2px #000000;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background: #121212;
+            background: #000;
             font-family: var(--primary-font);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            color: var(--text-color);
+            color: #fff;
             user-select: none;
             -webkit-user-select: none;
+            touch-action: none;
         }
 
-        /* Portrait Mobile Container */
         #game-container {
             position: relative;
             width: 100vw;
-            max-width: 450px; /* Standard mobile portrait maxWidth */
             height: 100vh;
-            max-height: 900px; /* Standard iPhone Pro Max height class */
-            overflow: hidden;
+            max-width: 600px;
+            max-height: 900px;
             background: #222;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            border: 4px solid #333;
-            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,1);
         }
 
         canvas {
@@ -54,21 +48,17 @@
         /* Screens/Overlays */
         .screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(10, 10, 25, 0.9);
+            background: rgba(10, 10, 25, 0.85);
             z-index: 10;
             text-align: center;
             backdrop-filter: blur(5px);
         }
 
-        /* Brawl Stars Style Title */
         h1 {
             font-size: 3.5rem;
             margin: 0 0 20px 0;
@@ -76,8 +66,7 @@
             color: #fff;
             -webkit-text-stroke: 3px #000;
             text-shadow: 0 6px 0 #c0392b, 0 10px 15px rgba(0,0,0,0.5);
-            letter-spacing: 2px;
-            transform: rotate(-3deg);
+            transform: rotate(-2deg);
         }
 
         p {
@@ -87,10 +76,9 @@
             max-width: 80%;
         }
 
-        /* "Chunky" Brawl Stars Button */
         .btn {
             font-family: var(--primary-font);
-            padding: 18px 50px;
+            padding: 15px 40px;
             font-size: 1.8rem;
             text-transform: uppercase;
             color: white;
@@ -99,25 +87,18 @@
             border-radius: 15px;
             box-shadow: 0 8px 0 #b7791f, 0 10px 20px rgba(0,0,0,0.5);
             cursor: pointer;
-            transition: all 0.1s ease;
             -webkit-text-stroke: 1.5px #6e490a;
-        }
-
-        .btn:hover {
-            background: linear-gradient(180deg, #ffe066 0%, #f39c12 100%);
         }
 
         .btn:active {
             transform: translateY(4px);
-            box-shadow: 0 4px 0 #b7791f, 0 6px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 0 #b7791f;
         }
 
-        /* Top UI Header */
+        /* UI Header */
         #ui-header {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+            top: 0; left: 0; width: 100%;
             padding: 15px;
             box-sizing: border-box;
             display: flex;
@@ -128,7 +109,7 @@
         }
 
         .ui-pill {
-            background: var(--ui-bg);
+            background: rgba(0,0,0,0.6);
             border: 3px solid #666;
             border-radius: 50px;
             padding: 8px 15px;
@@ -140,82 +121,35 @@
             box-shadow: 0 4px 0 rgba(0,0,0,0.3);
         }
 
-        /* Icons (Emulated with text for portability) */
-        .icon {
-            font-size: 1.4rem;
-            -webkit-text-stroke: 0;
-        }
+        #hp-pill { border-color: #e74c3c; color: #ffcccc; }
+        #bots-pill { border-color: #3498db; color: #d6eaf8; }
 
-        #hp-pill {
-            border-color: #e74c3c;
-            color: #ffcccc;
-        }
-
-        #score-pill {
-            border-color: #f1c40f;
-            color: #fffde0;
-        }
-
-        /* Map Banner Overlay */
-        #map-banner-container {
-            position: absolute;
-            top: 80px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            pointer-events: none;
-            z-index: 4;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        #map-banner-container.show {
-            opacity: 1;
-        }
-
-        #map-banner {
-            background: linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.8) 50%, transparent 100%);
-            color: #000;
-            padding: 5px 40px;
-            font-size: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <div id="ui-header">
-            <div class="ui-pill" id="hp-pill">
-                <span class="icon">❤️</span><span id="hp-val">3</span>
-            </div>
-            <div class="ui-pill" id="score-pill">
-                <span class="icon">⭐</span><span id="score-val">0</span>
-            </div>
-        </div>
-
-        <div id="map-banner-container">
-            <div id="map-banner">Crystal Cavern</div>
+        <!-- Top UI -->
+        <div id="ui-header" class="hidden">
+            <div class="ui-pill" id="hp-pill">❤️ <span id="hp-val">3</span></div>
+            <div class="ui-pill" id="bots-pill">🤖 Bots Left: <span id="bots-val">10</span></div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
 
+        <!-- Start Screen -->
         <div id="start-screen" class="screen">
-            <h1>Brawl<br>Bots</h1>
-            <p>Drag to move. Auto-fire is ON. Destroy the bots before they reach the bottom!</p>
-            <button class="btn" onclick="startGame()">Brawl!</button>
+            <h1>ARENA<br>HUNTER</h1>
+            <p>Use the joystick to move. Auto-aim will shoot nearby bots. Clear the arena!</p>
+            <button class="btn" onclick="startGame()">Start Hunt</button>
         </div>
 
-        <div id="game-over-screen" class="screen hidden">
-            <h1 style="color: #e74c3c; -webkit-text-stroke-color: #000; text-shadow: 0 6px 0 #7b241c;">Defeat</h1>
-            <p>Score: <span id="final-score" style="color: #f1c40f; font-size: 2rem;">0</span></p>
-            <button class="btn" onclick="startGame()">Replay</button>
+        <!-- End Screen -->
+        <div id="end-screen" class="screen hidden">
+            <h1 id="end-title">Victory!</h1>
+            <p id="end-desc">You cleared the arena!</p>
+            <button class="btn" onclick="startGame()">Play Again</button>
         </div>
     </div>
 
@@ -223,472 +157,501 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // UI Elements
+        // UI
         const uiHeader = document.getElementById('ui-header');
         const startScreen = document.getElementById('start-screen');
-        const gameOverScreen = document.getElementById('game-over-screen');
-        const scoreVal = document.getElementById('score-val');
-        const finalScore = document.getElementById('final-score');
+        const endScreen = document.getElementById('end-screen');
+        const endTitle = document.getElementById('end-title');
+        const endDesc = document.getElementById('end-desc');
         const hpVal = document.getElementById('hp-val');
-        const mapBannerContainer = document.getElementById('map-banner-container');
-        const mapBannerText = document.getElementById('map-banner');
+        const botsVal = document.getElementById('bots-val');
 
-        // Game logical resolution (higher for crisper graphics on high-res screens)
-        const GW = 600; 
-        const GH = 1000;
+        // Internal Resolution & Map Size
+        const GW = 800; 
+        const GH = 1200;
+        const MAP_W = 2000;
+        const MAP_H = 2000;
         
-        // Match canvas internal resolution to logical resolution
         canvas.width = GW;
         canvas.height = GH;
 
-        // Game State
+        // State
         let gameActive = false;
-        let score = 0;
         let hp = 3;
-        let currentMapIndex = 0;
-        let time = 0; // Global game time for animations
+        let time = 0;
         let lastShotTime = 0;
-        let botSpawnTimer = 0;
         let screenShake = 0;
 
+        // Camera
+        let camera = { x: 0, y: 0 };
+
         // Entities
-        let player = { x: GW / 2, y: GH - 150, radius: 45 };
-        let bullets = [];
+        let player = { x: MAP_W/2, y: MAP_H/2, radius: 40, speed: 400 };
         let bots = [];
+        let bullets = [];
         let particles = [];
+        let walls = [];
 
-        // Map Definitions (Colors & Visual Style)
-        const maps = [
-            { 
-                name: "Crystal Cavern", 
-                bgTop: "#2c3e50", bgBot: "#1c2833", 
-                floor: "#34495e", floorDetail: "#f1c40f", // Gold crystals
-                botColor: { main: "#c0392b", light: "#e74c3c" } // Red bots
-            },
-            { 
-                name: "Neon City", 
-                bgTop: "#130f40", bgBot: "#000000", 
-                floor: "#1e272e", floorDetail: "#00d2d3", // Cyan lights
-                botColor: { main: "#8e44ad", light: "#9b59b6" } // Purple bots
-            },
-            { 
-                name: "Retropolis", 
-                bgTop: "#e67e22", bgBot: "#a04000", 
-                floor: "#d35400", floorDetail: "#ecf0f1", // White road lines
-                botColor: { main: "#2c3e50", light: "#7f8c8d" } // Dark chrome bots
-            }
-        ];
+        // Input / Joystick
+        let keys = {};
+        let joystick = { active: false, originX: 0, originY: 0, x: 0, y: 0, dx: 0, dy: 0 };
 
-        // --- Input Handling ---
-        function getCanvasPoint(e) {
+        // Handle Keyboard (for desktop testing)
+        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+        // Handle Touch / Mouse for Virtual Joystick
+        function getCanvasPos(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            // Map CSS pixels back to internal canvas coordinates
-            return (clientX - rect.left) * (GW / rect.width);
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: (clientX - rect.left) * (GW / rect.width),
+                y: (clientY - rect.top) * (GH / rect.height)
+            };
         }
 
-        function handleMove(e) {
+        function startJoystick(e) {
             if (!gameActive) return;
-            const canvasX = getCanvasPoint(e);
-            // Clamp within bounds with chunky padding
-            player.x = Math.max(player.radius + 20, Math.min(GW - player.radius - 20, canvasX));
+            const pos = getCanvasPos(e);
+            joystick.active = true;
+            joystick.originX = pos.x;
+            joystick.originY = pos.y;
+            joystick.x = pos.x;
+            joystick.y = pos.y;
+            joystick.dx = 0; joystick.dy = 0;
         }
 
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchmove', (e) => {
-            handleMove(e);
-            if(e.cancelable) e.preventDefault(); // Prevent scrolling
-        }, { passive: false });
-
-        // --- Core Game Functions ---
-        function startGame() {
-            score = 0;
-            hp = 3;
-            currentMapIndex = 0;
-            bullets = [];
-            bots = [];
-            particles = [];
-            player.x = GW / 2;
+        function moveJoystick(e) {
+            if (!joystick.active) return;
+            const pos = getCanvasPos(e);
+            joystick.x = pos.x;
+            joystick.y = pos.y;
             
-            updateUI();
-            showMapBanner();
+            let dx = joystick.x - joystick.originX;
+            let dy = joystick.y - joystick.originY;
+            let dist = Math.hypot(dx, dy);
+            const maxRadius = 100;
 
+            if (dist > maxRadius) {
+                dx = (dx / dist) * maxRadius;
+                dy = (dy / dist) * maxRadius;
+                joystick.x = joystick.originX + dx;
+                joystick.y = joystick.originY + dy;
+            }
+
+            joystick.dx = dx / maxRadius;
+            joystick.dy = dy / maxRadius;
+        }
+
+        function endJoystick() {
+            joystick.active = false;
+            joystick.dx = 0;
+            joystick.dy = 0;
+        }
+
+        window.addEventListener('mousedown', startJoystick);
+        window.addEventListener('mousemove', moveJoystick);
+        window.addEventListener('mouseup', endJoystick);
+        window.addEventListener('touchstart', startJoystick, {passive: false});
+        window.addEventListener('touchmove', e => { e.preventDefault(); moveJoystick(e); }, {passive: false});
+        window.addEventListener('touchend', endJoystick);
+
+        // --- Setup Map ---
+        function generateMap() {
+            walls = [];
+            // Border Walls
+            walls.push({x: -100, y: -100, w: MAP_W+200, h: 100}); // Top
+            walls.push({x: -100, y: MAP_H, w: MAP_W+200, h: 100}); // Bot
+            walls.push({x: -100, y: 0, w: 100, h: MAP_H}); // Left
+            walls.push({x: MAP_W, y: 0, w: 100, h: MAP_H}); // Right
+
+            // Random Obstacles
+            for(let i=0; i<15; i++) {
+                walls.push({
+                    x: Math.random() * (MAP_W - 300) + 100,
+                    y: Math.random() * (MAP_H - 300) + 100,
+                    w: Math.random() * 200 + 100,
+                    h: Math.random() * 200 + 100
+                });
+            }
+        }
+
+        // --- Core Functions ---
+        function startGame() {
+            hp = 3;
+            bullets = [];
+            particles = [];
+            bots = [];
+            
+            generateMap();
+
+            // Safe spawn for player (centerish)
+            player.x = MAP_W/2;
+            player.y = MAP_H/2;
+
+            // Spawn Bots
+            for(let i=0; i<12; i++) {
+                bots.push({
+                    x: Math.random() * (MAP_W - 200) + 100,
+                    y: Math.random() * (MAP_H - 200) + 100,
+                    radius: 35,
+                    hp: 3,
+                    speed: 150,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    hitFlash: 0
+                });
+            }
+
+            updateUI();
             startScreen.classList.add('hidden');
-            gameOverScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
             uiHeader.classList.remove('hidden');
             
             gameActive = true;
             lastShotTime = performance.now();
         }
 
-        function gameOver() {
+        function endGame(win) {
             gameActive = false;
-            finalScore.innerText = score;
-            gameOverScreen.classList.remove('hidden');
             uiHeader.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            if(win) {
+                endTitle.innerText = "VICTORY!";
+                endTitle.style.color = "#2ecc71";
+                endDesc.innerText = "You cleared the arena!";
+            } else {
+                endTitle.innerText = "DEFEAT";
+                endTitle.style.color = "#e74c3c";
+                endDesc.innerText = "The bots got you.";
+            }
         }
 
         function updateUI() {
-            scoreVal.innerText = score;
             hpVal.innerText = hp;
+            botsVal.innerText = bots.length;
+            if(hp <= 0) endGame(false);
+            if(bots.length <= 0) endGame(true);
         }
 
-        function showMapBanner() {
-            const map = maps[currentMapIndex];
-            mapBannerText.innerText = map.name;
-            mapBannerContainer.classList.add('show');
-            setTimeout(() => mapBannerContainer.classList.remove('show'), 2000);
-        }
+        // --- Physics & Collision ---
+        function circleRectCollide(circle, rect) {
+            let testX = circle.x;
+            let testY = circle.y;
 
-        // --- Visual Effects & Drawing Helpers ---
+            if (circle.x < rect.x) testX = rect.x;
+            else if (circle.x > rect.x + rect.w) testX = rect.x + rect.w;
+            
+            if (circle.y < rect.y) testY = rect.y;
+            else if (circle.y > rect.y + rect.h) testY = rect.y + rect.h;
 
-        // Draw a rounded rectangle path (essential for Brawl Stars look)
-        function roundRect(x, y, w, h, r) {
-            if (w < 2 * r) r = w / 2;
-            if (h < 2 * r) r = h / 2;
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.arcTo(x + w, y, x + w, y + h, r);
-            ctx.arcTo(x + w, y + h, x, y + h, r);
-            ctx.arcTo(x, y + h, x, y, r);
-            ctx.arcTo(x, y, x + w, y, r);
-            ctx.closePath();
-        }
+            let distX = circle.x - testX;
+            let distY = circle.y - testY;
+            let distance = Math.hypot(distX, distY);
 
-        function createExplosion(x, y, color, count=10) {
-            screenShake = 10;
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 15,
-                    vy: (Math.random() - 0.5) * 15,
-                    radius: Math.random() * 10 + 5,
-                    alpha: 1,
-                    decay: Math.random() * 0.03 + 0.02,
-                    color: color
-                });
+            if (distance < circle.radius) {
+                // Return resolution vector
+                let overlap = circle.radius - distance;
+                let nx = distance > 0 ? distX / distance : 1;
+                let ny = distance > 0 ? distY / distance : 0;
+                return { hit: true, rx: nx * overlap, ry: ny * overlap };
             }
+            return { hit: false };
+        }
+
+        function pointInRect(px, py, rect) {
+            return px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
         }
 
         // --- Game Loop: Update ---
         function update(dt) {
             if (!gameActive) return;
             time += dt;
-
-            if (screenShake > 0) screenShake *= 0.9; // Decay shake
-
             const now = performance.now();
+            if (screenShake > 0) screenShake *= 0.9;
 
-            // Auto-fire
-            if (now - lastShotTime > 350) { // Slower, punchier fire rate
-                bullets.push({ x: player.x, y: player.y - 60, radius: 12, speed: 18 });
+            // Player Movement (Joystick + Keyboard)
+            let moveX = joystick.dx;
+            let moveY = joystick.dy;
+            if (keys['w'] || keys['arrowup']) moveY = -1;
+            if (keys['s'] || keys['arrowdown']) moveY = 1;
+            if (keys['a'] || keys['arrowleft']) moveX = -1;
+            if (keys['d'] || keys['arrowright']) moveX = 1;
+
+            // Normalize
+            let mag = Math.hypot(moveX, moveY);
+            if (mag > 1) { moveX /= mag; moveY /= mag; }
+
+            player.x += moveX * player.speed * dt;
+            player.y += moveY * player.speed * dt;
+
+            // Player vs Walls collision
+            walls.forEach(w => {
+                let col = circleRectCollide(player, w);
+                if (col.hit) {
+                    player.x += col.rx;
+                    player.y += col.ry;
+                }
+            });
+
+            // Auto-Aim & Shooting
+            let nearestBot = null;
+            let minDist = 600; // Attack range
+            bots.forEach(b => {
+                let d = Math.hypot(b.x - player.x, b.y - player.y);
+                if (d < minDist) { minDist = d; nearestBot = b; }
+            });
+
+            if (nearestBot && now - lastShotTime > 400) {
+                let angle = Math.atan2(nearestBot.y - player.y, nearestBot.x - player.x);
+                bullets.push({
+                    x: player.x, y: player.y,
+                    vx: Math.cos(angle) * 800,
+                    vy: Math.sin(angle) * 800,
+                    radius: 12
+                });
                 lastShotTime = now;
             }
 
-            // Map Progression
-            const nextMapScore = (currentMapIndex + 1) * 20;
-            if (score >= nextMapScore && currentMapIndex < maps.length - 1) {
-                currentMapIndex++;
-                showMapBanner();
-            }
-
-            // Spawn Bots
-            botSpawnTimer += dt;
-            let spawnCooldown = Math.max(0.5, 2.0 - (score * 0.02)); 
-            if (botSpawnTimer > spawnCooldown) {
-                const size = Math.random() * 15 + 35;
-                bots.push({
-                    x: Math.random() * (GW - size * 2) + size,
-                    y: -size,
-                    radius: size,
-                    speed: Math.random() * 1 + 2 + (currentMapIndex * 0.5),
-                    hp: 1 + Math.floor(currentMapIndex * 0.5),
-                    wobbleOffset: Math.random() * 100
-                });
-                botSpawnTimer = 0;
-            }
-
-            // Move Bullets
+            // Update Bullets
             for (let i = bullets.length - 1; i >= 0; i--) {
-                bullets[i].y -= bullets[i].speed;
-                if (bullets[i].y < -20) bullets.splice(i, 1);
-            }
+                let b = bullets[i];
+                b.x += b.vx * dt;
+                b.y += b.vy * dt;
 
-            // Move Bots & Collisions
-            const mapColors = maps[currentMapIndex].botColor;
-            for (let i = bots.length - 1; i >= 0; i--) {
-                const b = bots[i];
-                b.y += b.speed;
-
-                // Hit bottom
-                if (b.y > GH + b.radius) {
-                    bots.splice(i, 1);
-                    hp--;
-                    updateUI();
-                    screenShake = 20; // Big shake on damage
-                    if (hp <= 0) gameOver();
-                    continue;
-                }
-
-                // Player collision
-                const distPlayer = Math.hypot(b.x - player.x, b.y - player.y);
-                if (distPlayer < b.radius + player.radius * 0.8) {
-                    createExplosion(b.x, b.y, mapColors.light);
-                    bots.splice(i, 1);
-                    hp--;
-                    updateUI();
-                    if (hp <= 0) gameOver();
-                    continue;
-                }
-
-                // Bullet collision
-                for (let j = bullets.length - 1; j >= 0; j--) {
-                    const blt = bullets[j];
-                    const distBlt = Math.hypot(b.x - blt.x, b.y - blt.y);
-                    if (distBlt < b.radius + blt.radius) {
-                        bullets.splice(j, 1);
-                        b.hp--;
-                        
-                        // Flash white on hit logic (visually handled in draw)
-                        b.hitFlash = 5;
-
-                        if (b.hp <= 0) {
-                            createExplosion(b.x, b.y, mapColors.light);
-                            score++;
-                            updateUI();
-                            bots.splice(i, 1);
-                        }
-                        break; // Bullet destroyed, stop checking other bullets for this bot
+                // Hit walls
+                let hitWall = false;
+                for (let w of walls) {
+                    if (pointInRect(b.x, b.y, w)) {
+                        createExplosion(b.x, b.y, "#f1c40f", 5);
+                        bullets.splice(i, 1);
+                        hitWall = true;
+                        break;
                     }
                 }
-                if(b.hitFlash > 0) b.hitFlash--;
+                if (hitWall) continue;
+
+                // Hit Bots
+                for (let j = bots.length - 1; j >= 0; j--) {
+                    let bot = bots[j];
+                    if (Math.hypot(bot.x - b.x, bot.y - b.y) < bot.radius + b.radius) {
+                        bot.hp--;
+                        bot.hitFlash = 5;
+                        bullets.splice(i, 1);
+                        createExplosion(b.x, b.y, "#fff", 5);
+                        
+                        if (bot.hp <= 0) {
+                            createExplosion(bot.x, bot.y, "#e74c3c", 15);
+                            bots.splice(j, 1);
+                            updateUI();
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Update Bots (Wander & Attack Player)
+            for (let i = bots.length - 1; i >= 0; i--) {
+                let b = bots[i];
+
+                // Change direction occasionally
+                if (Math.random() < 0.02) {
+                    let angle = Math.random() * Math.PI * 2;
+                    b.vx = Math.cos(angle);
+                    b.vy = Math.sin(angle);
+                }
+
+                // If close to player, chase!
+                let distToPlayer = Math.hypot(player.x - b.x, player.y - b.y);
+                if (distToPlayer < 400) {
+                    let angle = Math.atan2(player.y - b.y, player.x - b.x);
+                    b.vx = Math.cos(angle);
+                    b.vy = Math.sin(angle);
+                }
+
+                b.x += b.vx * b.speed * dt;
+                b.y += b.vy * b.speed * dt;
+
+                // Bot vs Walls
+                walls.forEach(w => {
+                    let col = circleRectCollide(b, w);
+                    if (col.hit) {
+                        b.x += col.rx;
+                        b.y += col.ry;
+                        // Bounce off
+                        b.vx *= -1; b.vy *= -1; 
+                    }
+                });
+
+                // Bot vs Player (Melee Damage)
+                if (distToPlayer < b.radius + player.radius) {
+                    // Knockback player and bot
+                    let angle = Math.atan2(player.y - b.y, player.x - b.x);
+                    player.x += Math.cos(angle) * 50;
+                    player.y += Math.sin(angle) * 50;
+                    b.x -= Math.cos(angle) * 50;
+                    b.y -= Math.sin(angle) * 50;
+
+                    hp--;
+                    screenShake = 20;
+                    createExplosion(player.x, player.y, "#e74c3c", 10);
+                    updateUI();
+                }
+
+                if (b.hitFlash > 0) b.hitFlash--;
             }
 
             // Particles
             for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.5; // Gravity
+                let p = particles[i];
+                p.x += p.vx * dt * 60;
+                p.y += p.vy * dt * 60;
                 p.alpha -= p.decay;
-                p.radius *= 0.98; // Shrink
-                if (p.alpha <= 0 || p.radius < 1) particles.splice(i, 1);
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            // Update Camera (Lerp towards player to be smooth)
+            let targetCamX = player.x - GW/2;
+            let targetCamY = player.y - GH/2;
+            
+            // Clamp camera inside map bounds
+            targetCamX = Math.max(0, Math.min(MAP_W - GW, targetCamX));
+            targetCamY = Math.max(0, Math.min(MAP_H - GH, targetCamY));
+
+            camera.x += (targetCamX - camera.x) * 0.1;
+            camera.y += (targetCamY - camera.y) * 0.1;
+        }
+
+        // --- Drawing ---
+        function roundRect(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, r);
+            ctx.closePath();
+        }
+
+        function createExplosion(x, y, color, count=10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    radius: Math.random() * 8 + 4,
+                    alpha: 1,
+                    decay: Math.random() * 0.05 + 0.02,
+                    color: color
+                });
             }
         }
 
-        // --- Game Loop: Draw (The Graphic Overhaul) ---
         function draw() {
-            const map = maps[currentMapIndex];
-
-            ctx.save();
-            
-            // Apply Screen Shake
-            if (screenShake > 0) {
-                ctx.translate(Math.random() * screenShake - screenShake/2, Math.random() * screenShake - screenShake/2);
-            }
-
-            // 1. Background Gradient
-            const bgGrad = ctx.createLinearGradient(0, 0, 0, GH);
-            bgGrad.addColorStop(0, map.bgTop);
-            bgGrad.addColorStop(1, map.bgBot);
-            ctx.fillStyle = bgGrad;
+            // Background Base
+            ctx.fillStyle = "#1a1a2e";
             ctx.fillRect(0, 0, GW, GH);
 
-            // 2. Stylized Floor perspective
-            ctx.fillStyle = map.floor;
+            ctx.save();
+            // Apply Camera & Shake
+            let sx = (Math.random() - 0.5) * screenShake;
+            let sy = (Math.random() - 0.5) * screenShake;
+            ctx.translate(-camera.x + sx, -camera.y + sy);
+
+            // Draw Grid Floor (relative to map)
+            ctx.strokeStyle = "rgba(255,255,255,0.05)";
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(0, GH * 0.7);
-            ctx.lineTo(GW, GH * 0.7);
-            ctx.lineTo(GW * 1.2, GH); // Fake perspective widen
-            ctx.lineTo(-GW * 0.2, GH);
-            ctx.closePath();
-            ctx.fill();
+            for(let x = 0; x <= MAP_W; x+=100) { ctx.moveTo(x, 0); ctx.lineTo(x, MAP_H); }
+            for(let y = 0; y <= MAP_H; y+=100) { ctx.moveTo(0, y); ctx.lineTo(MAP_W, y); }
+            ctx.stroke();
 
-            // Floor Details (Crystals/Markings)
-            ctx.fillStyle = map.floorDetail;
-            ctx.globalAlpha = 0.3;
-            for(let i=0; i<5; i++) {
-                // Draw some chunky polygons as floor details
-                ctx.beginPath();
-                const dx = (i * 150 + (time * 50) % 150);
-                const dy = GH * 0.75 + (i*30);
-                roundRect(dx, dy, 50, 20, 5);
+            // Draw Map Border
+            ctx.strokeStyle = "#e74c3c";
+            ctx.lineWidth = 10;
+            ctx.strokeRect(0, 0, MAP_W, MAP_H);
+
+            // Draw Walls (3D look)
+            walls.forEach(w => {
+                // Wall base/shadow
+                ctx.fillStyle = "#1c2833";
+                roundRect(w.x, w.y + 20, w.w, w.h, 10);
                 ctx.fill();
-            }
-            ctx.globalAlpha = 1.0;
 
+                // Wall top face
+                ctx.fillStyle = "#34495e";
+                ctx.strokeStyle = "#000";
+                ctx.lineWidth = 6;
+                roundRect(w.x, w.y, w.w, w.h, 10);
+                ctx.fill();
+                ctx.stroke();
+            });
 
-            // 3. Draw Particles (Behind entities)
+            // Particles
             particles.forEach(p => {
                 ctx.globalAlpha = p.alpha;
                 ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2); ctx.fill();
             });
             ctx.globalAlpha = 1.0;
 
-            // 4. Draw Player (Stylized Mech/Hero)
-            drawPlayer(player.x, player.y);
-
-            // 5. Draw Bullets (Glowing Plasma)
+            // Bullets
             bullets.forEach(b => {
-                // Outer Glow
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = "#fff";
-                
-                // Cyan laser
-                const bltGrad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius);
-                bltGrad.addColorStop(0, "#fff");
-                bltGrad.addColorStop(0.4, "#00d2d3");
-                bltGrad.addColorStop(1, "rgba(0, 210, 211, 0)");
-                
-                ctx.fillStyle = bltGrad;
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.radius * 1.5, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.shadowBlur = 0; // Reset shadow
+                ctx.fillStyle = "#00d2d3";
+                ctx.shadowBlur = 10; ctx.shadowColor = "#00d2d3";
+                ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
             });
 
-            // 6. Draw Bots (Chunky Enemies)
+            // Draw Player
+            const pr = player.radius;
+            ctx.fillStyle = "#2ecc71";
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 8;
+            roundRect(player.x - pr, player.y - pr, pr*2, pr*2, 15);
+            ctx.fill(); ctx.stroke();
+            // Visor
+            ctx.fillStyle = "#2c3e50";
+            roundRect(player.x - pr + 10, player.y - pr + 15, pr*2 - 20, pr - 10, 8);
+            ctx.fill(); ctx.stroke();
+
+            // Draw Bots
             bots.forEach(b => {
-                drawBot(b);
+                ctx.fillStyle = (b.hitFlash > 0) ? "#fff" : "#e74c3c";
+                ctx.strokeStyle = "#000";
+                ctx.lineWidth = 8;
+                
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
+                ctx.fill(); ctx.stroke();
+
+                // Angry Eye
+                ctx.fillStyle = "#000";
+                ctx.beginPath();
+                ctx.moveTo(b.x - 15, b.y - 10); ctx.lineTo(b.x + 15, b.y + 5);
+                ctx.lineTo(b.x - 15, b.y + 10); ctx.closePath();
+                ctx.fill();
             });
 
-            ctx.restore(); // Restore shake transform
-        }
+            ctx.restore(); // Undo Camera transform
 
-        function drawPlayer(x, y) {
-            const r = player.radius;
-            
-            // Chunky Black Outline for everything
-            ctx.strokeStyle = "#000";
-            ctx.lineWidth = 10;
-            ctx.lineJoin = "round";
-
-            // Add slight hover wobble
-            const wobble = Math.sin(time * 5) * 5;
-            const py = y + wobble;
-
-            // Body (Chunky Green Armor)
-            roundRect(x - r, py - r, r * 2, r * 2, 15);
-            
-            // Gradient fill
-            const bodyGrad = ctx.createLinearGradient(x, py-r, x, py+r);
-            bodyGrad.addColorStop(0, "#2ecc71"); // Light green
-            bodyGrad.addColorStop(1, "#27ae60"); // Dark green
-            ctx.fillStyle = bodyGrad;
-            ctx.stroke();
-            ctx.fill();
-
-            // Face Mask/Visor
-            ctx.fillStyle = "#2c3e50"; // Dark blue/grey
-            ctx.strokeStyle = "#000";
-            ctx.lineWidth = 6;
-            roundRect(x - r + 15, py - r + 20, r * 2 - 30, r - 10, 10);
-            ctx.stroke();
-            ctx.fill();
-
-            // Glowing Eyes
-            ctx.fillStyle = "#fff";
-            ctx.beginPath();
-            ctx.arc(x - 15, py - r + 45, 8, 0, Math.PI * 2);
-            ctx.arc(x + 15, py - r + 45, 8, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Gun Turret on top
-            ctx.fillStyle = "#7f8c8d"; // Grey metal
-            ctx.strokeStyle = "#000";
-            ctx.lineWidth = 8;
-            roundRect(x - 15, py - r - 25, 30, 40, 5);
-            ctx.stroke();
-            ctx.fill();
-            
-            // Red laser sight dot
-            ctx.fillStyle = "#e74c3c";
-            ctx.beginPath(); ctx.arc(x, py - r - 15, 4, 0, Math.PI*2); ctx.fill();
-        }
-
-        function drawBot(b) {
-            const mapColors = maps[currentMapIndex].botColor;
-            
-            // Apply flashing effect if hit
-            if(b.hitFlash > 0) {
-                ctx.fillStyle = "#fff";
-                ctx.strokeStyle = "#fff";
-            } else {
-                // Gradient body
-                const botGrad = ctx.createLinearGradient(b.x, b.y - b.radius, b.x, b.y + b.radius);
-                botGrad.addColorStop(0, mapColors.light);
-                botGrad.addColorStop(1, mapColors.main);
-                ctx.fillStyle = botGrad;
-                ctx.strokeStyle = "#000";
-            }
-
-            ctx.lineWidth = 8;
-            ctx.lineJoin = "round";
-
-            // Slight lateral wobble based on time + individual offset
-            const wobbleX = Math.sin(time * 3 + b.wobbleOffset) * 10;
-            const bx = b.x + wobbleX;
-
-            // Spiky/Angry Head shape
-            ctx.beginPath();
-            ctx.moveTo(bx - b.radius, b.y);
-            ctx.lineTo(bx - b.radius * 0.8, b.y - b.radius); // Spike left top
-            ctx.lineTo(bx, b.y - b.radius * 0.5); // Center dip
-            ctx.lineTo(bx + b.radius * 0.8, b.y - b.radius); // Spike right top
-            ctx.lineTo(bx + b.radius, b.y);
-            ctx.lineTo(bx + b.radius * 0.5, b.y + b.radius); // Bottom right
-            ctx.lineTo(bx - b.radius * 0.5, b.y + b.radius); // Bottom left
-            ctx.closePath();
-            
-            ctx.stroke();
-            ctx.fill();
-
-            // Angry Angry Eyes
-            ctx.fillStyle = (b.hitFlash > 0) ? "#fff" : "#f1c40f"; // Yellow eyes
-            ctx.beginPath();
-            // Left eye angled down
-            ctx.moveTo(bx - 20, b.y - 10); ctx.lineTo(bx - 5, b.y + 5); ctx.lineTo(bx - 25, b.y + 5); ctx.closePath();
-            // Right eye angled down
-            ctx.moveTo(bx + 20, b.y - 10); ctx.lineTo(bx + 5, b.y + 5); ctx.lineTo(bx + 25, b.y + 5); ctx.closePath();
-            ctx.fill();
-            
-            // Black pupils
-            ctx.fillStyle = "#000";
-            if(b.hitFlash === 0) {
-                ctx.beginPath(); ctx.arc(bx-15, b.y+1, 3, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(bx+15, b.y+1, 3, 0, Math.PI*2); ctx.fill();
-            }
-
-            // HP Bar above bot (if damaged or higher tier)
-            if (b.hp > 1 || currentMapIndex > 0) {
-                const barW = b.radius * 1.5;
-                const barH = 10;
-                const bxStart = bx - barW/2;
-                const byStart = b.y - b.radius - 20;
-                
-                ctx.fillStyle = "rgba(0,0,0,0.5)";
-                roundRect(bxStart, byStart, barW, barH, 5);
-                ctx.fill();
-                
-                const maxHp = 1 + Math.floor(currentMapIndex * 0.5);
-                const hpPct = b.hp / maxHp;
-                ctx.fillStyle = "#2ecc71"; // Green hp
-                if(hpPct < 0.5) ctx.fillStyle = "#f39c12"; // Orange
-                
-                roundRect(bxStart, byStart, barW * hpPct, barH, 5);
+            // Draw Joystick UI Overlay
+            if (joystick.active) {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+                ctx.lineWidth = 4;
+                // Base
+                ctx.beginPath(); ctx.arc(joystick.originX, joystick.originY, 100, 0, Math.PI*2); 
+                ctx.fill(); ctx.stroke();
+                // Stick
+                ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+                ctx.beginPath(); ctx.arc(joystick.x, joystick.y, 40, 0, Math.PI*2); 
                 ctx.fill();
             }
         }
 
-        // --- Game Loop Engine ---
         let lastTime = performance.now();
         function loop() {
             const now = performance.now();
-            const dt = (now - lastTime) / 1000; // Delta time in seconds
+            const dt = Math.min((now - lastTime) / 1000, 0.1); 
             lastTime = now;
 
             update(dt);
@@ -696,7 +659,6 @@
             requestAnimationFrame(loop);
         }
 
-        // Initialize
         loop();
 
     </script>
