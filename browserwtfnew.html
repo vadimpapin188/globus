@@ -670,7 +670,7 @@ farm: { cost: 60, icon: '<i class="fa-solid fa-wheat-awn" style="color: #f1c40f;
 
     function expandMap() {
       if (isGameOver || isGameWon || money < expandCost) return;
-      if (gridColumns < 15) {  
+      if (gridColumns < 67) {  
         money -= expandCost;
         let oldData = [...mapData], oldUpgrades = [...upgradesData], oldFires = [...firesData], oldBroken = [...brokenData], oldTv = [...tvLevels];
         
