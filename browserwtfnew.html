@@ -1,103 +1,928 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>YouTown: Полный Мэр</title>
+  <title>YouTown: Mega Evolution</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+  
   <style>
-    body { margin: 0; font-family: sans-serif; background: #a8d5e2; height: 100vh; display: flex; flex-direction: column; }
-    .header { background: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; }
-    .news { background: #34495e; color: #f1c40f; padding: 5px; font-size: 12px; text-align: center; height: 15px; }
-    .stats { display: flex; justify-content: space-around; background: #fff; padding: 8px; font-size: 12px; font-weight: bold; }
-    .grid { display: grid; gap: 3px; padding: 5px; flex-grow: 1; align-content: start; grid-template-columns: repeat(4, 1fr); }
-    .cell { background: #81c784; border-radius: 6px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 20px; position: relative; }
-    .badge { position: absolute; bottom: 2px; right: 2px; background: #2c3e50; color: #fff; font-size: 8px; padding: 2px; }
-    .toolbar { display: flex; gap: 4px; padding: 8px; background: #fff; overflow-x: auto; }
-    .tool { padding: 8px; background: #f1f2f6; border-radius: 6px; text-align: center; font-size: 10px; min-width: 45px; }
+    body {
+      margin: 0;
+      font-family: 'Varela Round', sans-serif;
+      background-color: #a8d5e2;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      touch-action: manipulation;
+      transition: background-color 2s;
+    }
+
+    body.rainy {
+      background-color: #5d7a8c;
+    }
+
+    .header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      background-color: #ffffff;
+      padding: 10px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .money { color: #2ec4b6; }
+    .pop { color: #e71d36; }
+    .happy { color: #ffb703; }
+
+    .alert-banner {
+      display: none;
+      background-color: #e71d36;
+      color: white;
+      text-align: center;
+      padding: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      animation: blink 1s infinite alternate;
+    }
+    .virus-banner {
+      display: none;
+      background-color: #9b59b6;
+      color: white;
+      text-align: center;
+      padding: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      animation: blink 0.5s infinite alternate;
+    }
+    @keyframes blink {
+      from { opacity: 0.6; } to { opacity: 1; }
+    }
+
+    .actions-panel {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 10px 0 10px;
+      gap: 5px;
+    }
+
+    .btn-action {
+      background-color: #9b59b6;
+      color: white;
+      text-align: center;
+      padding: 8px 4px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+      flex: 1;
+    }
+    .btn-action:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+
+    .map-container {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      overflow: hidden;
+    }
+    .grid {
+      display: grid;
+      gap: 6px;
+      width: 100%;
+      max-width: 440px;
+    }
+    .cell {
+      background-color: #81c784;
+      border-radius: 10px;
+      aspect-ratio: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.15);
+      cursor: pointer;
+      position: relative;
+    }
+    .upgrade-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      background: #2c3e50;
+      color: white;
+      font-size: 8px;
+      padding: 1px 3px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .cell.blocked-tv {
+      filter: grayscale(0.8) brightness(0.7);
+    }
+    .cell.blocked-tv::after {
+      content: '📺💤';
+      position: absolute;
+      font-size: 14px;
+      top: 2px;
+      left: 2px;
+    }
+
+    .toolbar-container {
+      background-color: #ffffff;
+      box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
+      padding: 8px 0;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 0 10px;
+    }
+    .tool {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f1f2f6;
+      border: 3px solid transparent;
+      border-radius: 12px;
+      padding: 8px;
+      font-size: 13px;
+      min-width: 75px;
+      cursor: pointer;
+    }
+    .tool.active {
+      border-color: #ff9f1c;
+      background-color: #fff3e0;
+    }
+    .tool i { font-size: 20px; margin-bottom: 4px; }
+    .cost { font-size: 11px; font-weight: bold; color: #2ec4b6; }
+
+    .dev-panel {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding-bottom: 15px;
+      background-color: #ffffff;
+    }
+    .dev-btn {
+      background-color: #2c3e50;
+      color: #bdc3c7;
+      border: 1px dashed #7f8c8d;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .modal-screen {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: white;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .modal-content {
+      background: #34495e;
+      padding: 20px;
+      border-radius: 20px;
+      text-align: center;
+      width: 85%;
+      max-width: 365px;
+      box-shadow: 0 8px 0 #2c3e50;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .up-btn {
+      background-color: #2ecc71;
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+      margin: 6px 0;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      font-family: 'Varela Round', sans-serif;
+      font-weight: bold;
+    }
+    .close-btn { background-color: #e74c3c; margin-top: 12px; }
+    .achieve-item, .log-item {
+      background: #2c3e50;
+      padding: 8px;
+      border-radius: 8px;
+      margin: 5px 0;
+      font-size: 13px;
+      text-align: left;
+      line-height: 1.4;
+    }
+    
+    /* Стили для экрана победы */
+    .win-screen {
+      background: linear-gradient(135deg, #1abc9c, #2ecc71) !important;
+      color: #fff !important;
+    }
+    .win-title {
+      font-size: 32px;
+      color: #f1c40f;
+      text-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      margin-bottom: 15px;
+      animation: bounce 0.5s infinite alternate;
+    }
+    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+.fa-road {
+  transform: scale(1.2);
+  color: #555 !important; /* Сделаем её более похожей на асфальт */
+}
+
+
   </style>
 </head>
 <body>
 
-<div class="header">YouTown: Полный контроль</div>
-<div id="news" class="news">Мэр, город ждет!</div>
-<div class="stats">
-  <div>💰$<span id="money">200</span></div>
-  <div>😊<span id="happy">100</span>%</div>
-  <div>👥<span id="pop">0</span></div>
+  <!-- Экран Гейм Овера -->
+  <div class="modal-screen game-over-screen" id="game-over">
+    <div>💀 ГЕЙМ ОВЕР!</div>
+    <div style="font-size: 18px; margin-top: 10px; padding: 0 20px; text-align: center;" id="game-over-reason">Жители уехали из города!</div>
+    <button class="up-btn" style="background: white; color: #e71d36; width:auto; padding:10px 20px;" onclick="restartGame()">Начать заново</button>
+  </div>
+
+  <!-- ЭКРАН ПОБЕДЫ (ФИНАЛ ИГРЫ) -->
+  <div class="modal-screen win-screen" id="win-screen">
+    <div class="win-title">🎉 ИГРА ПРОЙДЕНА! 🎉</div>
+    <div style="font-size: 18px; margin-bottom: 20px; padding: 0 25px; text-align: center;">
+      Вы построили настоящую <b>Мега-Утопию</b>! <br><br>
+      Телевышка транслирует шоу на весь мир, казна ломится от золота, а жители счастливы на все 100%! Вы — лучший мэр в истории!
+    </div>
+    <button class="up-btn" style="background: #2c3e50; color: white; width:auto; padding:12px 25px;" onclick="restartGame()">Играть снова</button>
+  </div>
+
+  <!-- Меню улучшений заводов -->
+  <div class="modal-screen" id="upgrade-modal">
+    <div class="modal-content">
+      <div style="margin-bottom: 15px; color: #f1c40f;">🏭 Улучшение Завода</div>
+      <button class="up-btn" onclick="applyUpgrade('ТЭЦ')">⚡ Модернизация в ТЭЦ ($40)</button>
+      <button class="up-btn" onclick="applyUpgrade('ТВЦ')">📺 Модернизация в ТВЦ ($40)</button>
+      <button class="up-btn" onclick="applyUpgrade('ТЦ')">🛍️ Модернизация в ТЦ ($40)</button>
+      <button class="up-btn close-btn" onclick="closeUpgradeModal()">Отмена</button>
+    </div>
+  </div>
+
+  <!-- Меню улучшений Телевышки -->
+  <div class="modal-screen" id="tv-upgrade-modal">
+    <div class="modal-content">
+      <div style="margin-bottom: 10px; color: #3498db;">🗼 Настройка Телевышки</div>
+      <div id="tv-status-info" style="font-size: 13px; color: #bdc3c7; margin-bottom: 10px;"></div>
+      <button class="up-btn" id="tv-up-btn" onclick="upgradeTVTower()">🔺 Повысить уровень вышки ($150)</button>
+      <button class="up-btn close-btn" onclick="closeTVModal()">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модалка достижений -->
+  <div class="modal-screen" id="achieve-modal">
+    <div class="modal-content">
+      <div style="margin-bottom: 15px; color: #f1c40f;">🏆 Достижения YouTown</div>
+      <div id="achieve-list"></div>
+      <button class="up-btn close-btn" onclick="closeAchieveModal()">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модалка Лога Обновлений -->
+  <div class="modal-screen" id="log-modal">
+    <div class="modal-content">
+      <div style="margin-bottom: 15px; color: #2ecc71;">📜 Что нового в YouTown?</div>
+      <div class="log-item">🏁 <b>Добавлена финальная цель игры!</b> Чтобы полностью пройти игру, накопи $5000, сделай счастье жителей 100% и прокачай Телевышку до 4 уровня!</div>
+      <div class="log-item">🗼 <b>Новое здание — Телевышка!</b> Стоит $1780, приносит целых +65 к счастью! Но требует огромного снабжения заводов (минимум 8 штук).</div>
+      <div class="log-item">🗺️ <b>Новые горизонты:</b> Максимальный размер карты расширен до огромной сетки 7х7!</div>
+      <button class="up-btn close-btn" onclick="closeLogModal()">Поехали!</button>
+    </div>
+  </div>
+
+  <div class="header">YouTown: Mega Evolution</div>
+  
+  <div class="alert-banner" id="alert-banner">Магазинам нужны ресурсы! Снабжение прервано!</div>
+  <div class="alert-banner" id="shop-no-money-banner" style="background-color: #7f8c8d;">🚫 Магазины пустуют. Прибыль остановлена!</div>
+  <div class="alert-banner" id="shop-med-banner" style="background-color: #d35400;">⚠️ Магазинам нужны медикаменты из Больниц!</div>
+  <div class="virus-banner" id="virus-banner">☣️ ВСПЫШКА ЭПИДЕМИИ! Срочно постройте Больницу!</div>
+  <div class="alert-banner" id="weather-banner" style="background-color: #2980b9;">🌧️ Идет проливной дождь! Пожары невозможны.</div>
+  <div class="alert-banner" id="ufo-banner" style="background-color: #8e44ad;">🛸 Нашествие НЛО! Одно из зданий уничтожено!</div>
+  <div class="alert-banner" id="bank-banner" style="background-color: #d35400;">🏦 Активен кредит! Списание -$5/сек.</div>
+  <div class="alert-banner" id="tv-low-factory-banner" style="background-color: #d35400;">🗼 Вышка отключена! Нужно минимум 8 заводов для работы!</div>
+  <div class="alert-banner" id="tv-hypno-banner" style="background-color: #8e44ad;">📺 Зомбоящик 4 уровня! 70% зданий парализованы просмотром шоу!</div>
+  <div class="alert-banner" id="quest-banner" style="background-color: #27ae60; display: block;">🎯 Цель: Накопи $5000, сделай 100% счастья и апни Вышку до 4-го лвла!</div>
+
+  <div class="stats">
+    <div class="stat-item money"><i class="fa-solid fa-coins"></i> $<span id="money-display">60</span></div>
+    <div class="stat-item pop"><i class="fa-solid fa-users"></i> <span id="pop-display">0</span></div>
+    <div class="stat-item happy"><span id="happy-icon">😀</span> <span id="happy-display">100</span>%</div>
+  </div>
+
+  <div class="actions-panel">
+    <div class="btn-action" style="background-color:#9b59b6;" onclick="expandMap()">🗺️ Расширить ($<span id="expand-cost">40</span>)</div>
+    <div class="btn-action" style="background-color:#34495e; color:#f1c40f;" id="tax-btn" onclick="toggleTaxReform()">📈 Налоги х2</div>
+    <div class="btn-action" style="background-color:#e67e22;" onclick="takeBankLoan()">🏦 Кредит $100</div>
+    <div class="btn-action" style="background-color:#f1c40f; color:#2c3e50;" onclick="openAchieveModal()">🏆 Ачивки</div>
+    <div class="btn-action" style="background-color:#2ecc71;" onclick="openLogModal()">📜 Лог</div>
+  </div>
+
+  <div class="map-container">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="toolbar-container">
+    <div class="toolbar">
+      <div class="tool active" id="tool-house" onclick="selectTool('house')"><i class="fa-solid fa-house" style="color: #3498db;"></i><div>Дом</div><div class="cost">$10</div></div>
+      <div class="tool" id="tool-shop" onclick="selectTool('shop')"><i class="fa-solid fa-store" style="color: #e74c3c;"></i><div>Маг</div><div class="cost">$25</div></div>
+      <div class="tool" id="tool-park" onclick="selectTool('park')"><i class="fa-solid fa-tree" style="color: #2ecc71;"></i><div>Парк</div><div class="cost">$8</div></div>
+      <div class="tool" id="tool-factory" onclick="selectTool('factory')"><i class="fa-solid fa-industry" style="color: #7f8c8d;"></i><div>Завод</div><div class="cost">$50</div></div>
+      <div class="tool" id="tool-hospital" onclick="selectTool('hospital')"><i class="fa-solid fa-hospital" style="color: #e67e22;"></i><div>Больн.</div><div class="cost">$80</div></div>
+      <div class="tool" id="tool-tvtower" onclick="selectTool('tvtower')"><i class="fa-solid fa-tower-broadcast" style="color: #9b59b6;"></i><div>Вышка</div><div class="cost">$1780</div></div>
+<div class="tool" id="tool-road" onclick="selectTool('road')">
+  <i class="fa-solid fa-road" style="color: #9b59b6;"></i>
+  <div>Дорога</div>
+  <div class="cost">$3</div>
 </div>
+<div class="tool" id="tool-farm" onclick="selectTool('farm')">
+  <i class="fa-solid fa-wheat-awn" style="color: #f1c40f;"></i>
+  <div>Ферма</div>
+  <div class="cost">$45</div>
+</div>
+   </div>
+  </div>
 
-<div class="grid" id="grid"></div>
-<div class="toolbar" id="toolbar"></div>
-<button onclick="alert('Ачивки: 1.Первые деньги ($1000) 2.Промышленник (Заводы+Дороги)')">🏆 Достижения</button>
+  <div class="dev-panel">
+    <button class="dev-btn" onclick="triggerManualEpidemic()">☣️ Тест Вирус</button>
+    <button class="dev-btn" onclick="triggerManualUFO()">🛸 Тест НЛО</button>
+    <button class="dev-btn" style="color:#e74c3c;" onclick="clearSave()">🗑️ Сбросить сохранение</button>
+  </div>
 
-<script>
-  let money = 200, happy = 100, pop = 0;
-  let map = new Array(16).fill(null);
-  let levels = new Array(16).fill(1);
-  let fires = new Array(16).fill(false);
-  let cur = 'house';
-
-  const tools = {
-    house: { n: 'Дом', c: 10, i: '🏠' }, road: { n: 'Дор.', c: 5, i: '🛣️' },
-    factory: { n: 'Зав.', c: 50, i: '🏭' }, farm: { n: 'Фер.', c: 30, i: '🌾' },
-    shop: { n: 'Маг.', c: 25, i: '🛒' }, court: { n: 'Суд', c: 150, i: '⚖️' },
-    tv: { n: 'Вышка', c: 500, i: '🗼' }
-  };
-
-  function render() {
-    const grid = document.getElementById('grid');
-    grid.innerHTML = '';
-    map.forEach((t, i) => {
-      let cell = document.createElement('div');
-      cell.className = 'cell';
-      if (fires[i]) {
-        cell.innerText = '🔥';
-        cell.onclick = () => { money -= 20; fires[i] = false; render(); };
-      } else {
-        cell.innerText = t ? tools[t].i : '';
-        if (t === 'factory' && levels[i] > 1) cell.innerHTML += '<div class="badge">L2</div>';
-        cell.onclick = () => {
-          if (!t && money >= tools[cur].c) { money -= tools[cur].c; map[i] = cur; }
-          else if (t === 'factory' && levels[i] < 2 && money >= 50) { money -= 50; levels[i]++; }
-          render();
-        };
-      }
-      grid.appendChild(cell);
-    });
-    document.getElementById('money').innerText = money;
-    document.getElementById('happy').innerText = Math.floor(happy);
-  }
-
-  setInterval(() => {
-    let h=0, r=0, f=0, shop=0, fact=0, court=0;
-    map.forEach((t, i) => {
-      if(t=='house') h++; if(t=='road') r++; if(t=='factory') fact++;
-      if(t=='farm') f++; if(t=='shop') shop++; if(t=='court') court++;
-    });
-
-    if (h > 0 && r == 0) { happy -= 1; document.getElementById('news').innerText = "Домам нужны дороги!"; }
-    if (shop > 0 && fact < 2) document.getElementById('news').innerText = "Магазинам нужны заводы!";
-    if (f == 0) happy -= 0.5;
-    if (court == 0) happy -= 0.2;
+  <script>
+    let money = 60;
+    let isGameOver = false;
+    let isGameWon = false; // Триггер победы
+    let currentTool = 'house';
+   let farmCount = 0;
     
-    if (Math.random() < 0.05) {
-      let idx = Math.floor(Math.random()*16);
-      if(map[idx]) { fires[idx] = true; document.getElementById('news').innerText = "ПОЖАР!"; }
+    let gridColumns = 4;
+    let maxCells = 16; 
+    let expandCost = 40;
+
+    let mapData = new Array(49).fill('');       
+    let upgradesData = new Array(49).fill('');  
+    let firesData = new Array(49).fill(false); 
+    let brokenData = new Array(49).fill(false); 
+    let tvLevels = new Array(49).fill(0);       
+    let blockedByTv = new Array(49).fill(false); 
+
+    let shopNoHospitalTimer = 0; 
+    let shopNoFactoryTimer = 0; 
+    let activeEpidemic = null;   
+    let epidemicLosses = 0;      
+
+    let isTaxReformActive = false;
+    let taxReformTimer = 0;
+    let taxCooldown = 0;
+
+    let isRainy = false;
+    let bankLoanActive = false;
+    let bankLoanLeftToPay = 0;
+    let selectedFactoryIndex = null;
+    let selectedTVIndex = null;
+
+    let achievements = {
+      millionaire: false,
+      megacity: false
+    };
+
+    const tools = {
+      house: { cost: 10, icon: '<i class="fa-solid fa-house" style="color: #3498db;"></i>' },
+      shop: { cost: 25, icon: '<i class="fa-solid fa-store" style="color: #e74c3c;"></i>' },
+      park: { cost: 8, icon: '<i class="fa-solid fa-tree" style="color: #2ecc71;"></i>' },
+      factory: { cost: 50, icon: '<i class="fa-solid fa-industry" style="color: #7f8c8d;"></i>' },
+      hospital: { cost: 80, icon: '<i class="fa-solid fa-hospital" style="color: #e67e22;"></i>' },
+       road: { cost: 3, icon: '<i class="fa-solid fa-road" style="color: #9b59b6;"></i>'},
+      
+farm: { cost: 60, icon: '<i class="fa-solid fa-wheat-awn" style="color: #f1c40f;"></i>' },
+      tvtower: { cost: 1780, icon: '<i class="fa-solid fa-tower-broadcast" style="color: #9b59b6;"></i>' }
+    };
+
+    const tvUpgradeNames = [
+      "Базовый уровень",
+      "Улучшенное качество (Lvl 1)",
+      "Супер качество (Lvl 2)",
+      "Больше каналов (Lvl 3)",
+      "Каналы разных категорий (MAX Lvl 4)"
+    ];
+
+    const gridEl = document.getElementById('grid');
+    const moneyEl = document.getElementById('money-display');
+    const popEl = document.getElementById('pop-display');
+    const happyEl = document.getElementById('happy-display');
+    const happyIconEl = document.getElementById('happy-icon');
+    const expandCostEl = document.getElementById('expand-cost');
+    const taxBtnEl = document.getElementById('tax-btn');
+
+    const alertBanner = document.getElementById('alert-banner');
+    const shopNoMoneyBanner = document.getElementById('shop-no-money-banner');
+    const shopMedBanner = document.getElementById('shop-med-banner');
+    const virusBanner = document.getElementById('virus-banner');
+    const weatherBanner = document.getElementById('weather-banner');
+    const ufoBanner = document.getElementById('ufo-banner');
+    const bankBanner = document.getElementById('bank-banner');
+    const tvLowFactoryBanner = document.getElementById('tv-low-factory-banner');
+    const tvHypnoBanner = document.getElementById('tv-hypno-banner');
+
+    const gameOverScreen = document.getElementById('game-over');
+    const winScreen = document.getElementById('win-screen');
+    const gameOverReason = document.getElementById('game-over-reason');
+    const upgradeModal = document.getElementById('upgrade-modal');
+    const tvUpgradeModal = document.getElementById('tv-upgrade-modal');
+    const achieveModal = document.getElementById('achieve-modal');
+    const logModal = document.getElementById('log-modal');
+
+    function playSound(type) {
+      try {
+        let ctx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        if (type === 'win') {
+          osc.frequency.setValueAtTime(400, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.3);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'build') {
+          osc.frequency.setValueAtTime(300, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.1);
+        } else if (type === 'fire') {
+          osc.type = 'sawtooth'; osc.frequency.setValueAtTime(140, ctx.currentTime);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.2);
+        } else if (type === 'ufo') {
+          osc.type = 'sine'; osc.frequency.setValueAtTime(600, ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(900, ctx.currentTime + 0.4);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.4);
+        }
+      } catch(e) {}
     }
 
-    happy = Math.max(0, Math.min(100, happy));
-    money += (fact * (levels.reduce((a,b)=>a+b,0) * 2));
-    render();
-  }, 2000);
+    function saveGame() {
+      if(isGameOver || isGameWon) return;
+      let state = {
+        money, gridColumns, maxCells, expandCost, mapData, upgradesData, firesData, brokenData, tvLevels, blockedByTv,
+        shopNoHospitalTimer, shopNoFactoryTimer, activeEpidemic, epidemicLosses, achievements, bankLoanActive, bankLoanLeftToPay
+      };
+      localStorage.setItem('youtown_save_v3', JSON.stringify(state));
+    }
 
-  Object.keys(tools).forEach(k => {
-    let el = document.createElement('div');
-    el.className = 'tool';
-    el.innerHTML = `${tools[k].i}<br>${tools[k].n}`;
-    el.onclick = () => cur = k;
-    document.getElementById('toolbar').appendChild(el);
-  });
-  render();
-</script>
+    function loadGame() {
+      let saved = localStorage.getItem('youtown_save_v3');
+      if(!saved) return;
+      try {
+        let state = JSON.parse(saved);
+        money = state.money; gridColumns = state.gridColumns; maxCells = state.maxCells; expandCost = state.expandCost;
+        mapData = state.mapData; upgradesData = state.upgradesData; firesData = state.firesData;
+        brokenData = state.brokenData || new Array(49).fill(false);
+        tvLevels = state.tvLevels || new Array(49).fill(0);
+        blockedByTv = state.blockedByTv || new Array(49).fill(false);
+        shopNoHospitalTimer = state.shopNoHospitalTimer; shopNoFactoryTimer = state.shopNoFactoryTimer;
+        activeEpidemic = state.activeEpidemic; epidemicLosses = state.epidemicLosses;
+        achievements = state.achievements || achievements;
+        bankLoanActive = state.bankLoanActive || false;
+        bankLoanLeftToPay = state.bankLoanLeftToPay || 0;
+      } catch(e) { console.log("Ошибка загрузки"); }
+    }
+
+    function clearSave() {
+      localStorage.removeItem('youtown_save_v3');
+      alert("Город стерт из памяти! Начинаем заново.");
+      restartGame();
+    }
+
+    function createMap() {
+      gridEl.innerHTML = '';
+      gridEl.style.gridTemplateColumns = `repeat(${gridColumns}, 1fr)`;
+      
+      for (let i = 0; i < maxCells; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.id = 'cell-' + i;
+        
+        if (blockedByTv[i] && mapData[i] !== 'tvtower') {
+          cell.classList.add('blocked-tv');
+        }
+
+        if (brokenData[i]) {
+          cell.innerHTML = '❌'; 
+        } else if (firesData[i]) {
+          cell.innerHTML = '🔥';
+        } else if (mapData[i] !== '') {
+          // Здесь исправлено: берем иконку из объекта tools по ключу из mapData
+          cell.innerHTML = tools[mapData[i]].icon;
+          
+          if (mapData[i] === 'tvtower' && tvLevels[i] > 0) {
+            appendBadge(cell, 'Lvl ' + tvLevels[i]);
+          } else if (upgradesData[i] !== '') {
+            appendBadge(cell, upgradesData[i]);
+          }
+        }
+        
+        cell.onclick = () => handleCellClick(cell, i);
+        gridEl.appendChild(cell);
+      }
+    }
+
+    function appendBadge(cell, text) {
+      let existingBadge = cell.querySelector('.upgrade-badge');
+      if (existingBadge) existingBadge.remove();
+      let badge = document.createElement('div');
+      badge.className = 'upgrade-badge';
+      badge.innerText = text;
+      cell.appendChild(badge);
+    }
+
+    function handleCellClick(cell, index) {
+      if (isGameOver || isGameWon) return;
+
+      if (brokenData[index]) {
+        let costToFix = Math.floor(tools[mapData[index]].cost / 2);
+        if (money >= costToFix) {
+          money -= costToFix;
+          brokenData[index] = false;
+          playSound('build');
+          createMap(); updateUI();
+        } else {
+          alert(`Нужно $${costToFix} на ремонт здания!`);
+        }
+        return;
+      }
+
+      if (firesData[index]) {
+        if (money >= 15) {
+          money -= 15; firesData[index] = false;
+          createMap(); updateUI();
+        }
+        return;
+      }
+
+      if (mapData[index] === 'factory') {
+        if (blockedByTv[index]) { alert("Завод заблокирован телевидением!"); return; }
+        openUpgradeModal(index); return;
+      }
+
+      if (mapData[index] === 'tvtower') {
+        openTVModal(index); return;
+      }
+
+      if (mapData[index] !== '') return; 
+      
+      let tool = tools[currentTool];
+      if (money >= tool.cost) {
+        money -= tool.cost;
+        mapData[index] = currentTool;
+        if(currentTool === 'tvtower') tvLevels[index] = 0;
+        playSound('build');
+        createMap(); updateUI();
+      }
+    }
+
+    function takeBankLoan() {
+      if(bankLoanActive) { alert("Кредитная линия уже занята!"); return; }
+      money += 100; bankLoanActive = true; bankLoanLeftToPay = 120;
+      bankBanner.style.display = 'block'; updateUI();
+    }
+
+    function toggleTaxReform() {
+      if (isGameOver || isGameWon || taxCooldown > 0) return;
+      isTaxReformActive = true; taxReformTimer = 20; taxCooldown = 60;
+      taxBtnEl.classList.add('active'); taxBtnEl.innerText = "⏳ Налоги х2";
+      updateUI();
+    }
+
+    function openUpgradeModal(index) {
+      if(upgradesData[index] && upgradesData[index] !== '') return;
+      selectedFactoryIndex = index; upgradeModal.style.display = 'flex';
+    }
+    function closeUpgradeModal() { upgradeModal.style.display = 'none'; selectedFactoryIndex = null; }
+
+    function applyUpgrade(type) {
+      if (money >= 40 && selectedFactoryIndex !== null) {
+        money -= 40; upgradesData[selectedFactoryIndex] = type;
+        appendBadge(document.getElementById('cell-' + selectedFactoryIndex), type);
+        closeUpgradeModal(); updateUI();
+      }
+    }
+
+    function openTVModal(index) {
+      selectedTVIndex = index;
+      let lvl = tvLevels[index];
+      document.getElementById('tv-status-info').innerHTML = `Текущий мод: <b>${tvUpgradeNames[lvl]}</b>`;
+      let upBtn = document.getElementById('tv-up-btn');
+      if (lvl >= 4) {
+        upBtn.style.display = 'none';
+      } else {
+        upBtn.style.display = 'block';
+        upBtn.innerText = `🔺 Качнуть до ${lvl + 1} уровня ($7120)`;
+      }
+      tvUpgradeModal.style.display = 'flex';
+    }
+    function closeTVModal() { tvUpgradeModal.style.display = 'none'; selectedTVIndex = null; }
+
+    function upgradeTVTower() {
+      if (selectedTVIndex === null || money < 7120) { alert("Недостаточно денег ($7120)!"); return; }
+      money -= 150;
+      tvLevels[selectedTVIndex]++;
+      
+      closeTVModal();
+      createMap();
+      updateUI();
+    }
+
+    function expandMap() {
+      if (isGameOver || isGameWon || money < expandCost) return;
+      if (gridColumns < 7) {  
+        money -= expandCost;
+        let oldData = [...mapData], oldUpgrades = [...upgradesData], oldFires = [...firesData], oldBroken = [...brokenData], oldTv = [...tvLevels];
+        
+        mapData = new Array(49).fill(''); 
+        upgradesData = new Array(49).fill(''); 
+        firesData = new Array(49).fill(false); 
+        brokenData = new Array(49).fill(false);
+        tvLevels = new Array(49).fill(0);
+        blockedByTv = new Array(49).fill(false);
+
+        let oldColumns = gridColumns; gridColumns++; maxCells = gridColumns * gridColumns; expandCost = Math.floor(expandCost * 3.5); 
+        
+        for(let i = 0; i < oldData.length; i++) {
+          if (oldData[i] && oldData[i] !== '') {
+            let newIndex = Math.floor(i / oldColumns) * gridColumns + (i % oldColumns);
+            mapData[newIndex] = oldData[i]; 
+            upgradesData[newIndex] = oldUpgrades[i] || ''; 
+            firesData[newIndex] = oldFires[i]; 
+            brokenData[newIndex] = oldBroken[i];
+            tvLevels[newIndex] = oldTv[i] || 0;
+          }
+        }
+        if(gridColumns >= 6) achievements.megacity = true;
+        createMap(); updateUI();
+      }
+    }
+
+    function selectTool(toolName) {
+      currentTool = toolName;
+      document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
+      document.getElementById('tool-' + toolName).classList.add('active');
+    }
+
+    function getNeighbors(index) {
+      let neighbors = [], row = Math.floor(index / gridColumns), col = index % gridColumns;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          let r = row + dr, c = col + dc;
+          if (r >= 0 && r < gridColumns && c >= 0 && c < gridColumns) neighbors.push(r * gridColumns + c);
+        }
+      }
+      return neighbors;
+    }
+
+    function calculateStats() {
+      let totalIncome = 0, totalPopulation = 0, baseHappiness = 100;
+      let houseCount = 0, shopCount = 0, factoryCount = 0, parkCount = 0, hospitalCount = 0, tvCount = 0;
+      let farmCount = 0;
+      let hasInfrastructureUpgrade = false;
+      let hasLevel4TV = false;
+
+      for (let i = 0; i < maxCells; i++) {
+        if (firesData[i] || brokenData[i]) continue;
+        if (mapData[i] === 'factory') factoryCount++;
+        if (mapData[i] === 'tvtower' && tvLevels[i] === 4) hasLevel4TV = true;
+      }
+
+      for (let i = 0; i < maxCells; i++) {
+        if (hasLevel4TV && mapData[i] !== 'tvtower' && mapData[i] !== '' && (i % 3 !== 0)) {
+          blockedByTv[i] = true;
+        } else {
+          blockedByTv[i] = false;
+        }
+     if (mapData[i] === 'farm') {
+          farmCount++;
+          totalIncome += isTaxReformActive ? 14 : 7; // Доход $7 (или $14 под налогами)
+        }
+      }
+
+      if (hasLevel4TV) tvHypnoBanner.style.display = 'block';
+      else tvHypnoBanner.style.display = 'none';
+
+      let activeTVTowersWorking = 0;
+
+      for (let i = 0; i < maxCells; i++) {
+        if (firesData[i] || brokenData[i] || blockedByTv[i]) continue;
+        
+        if (mapData[i] === 'house') houseCount++;
+        if (mapData[i] === 'shop') shopCount++;
+        if (mapData[i] === 'factory') {
+          if (upgradesData[i] === 'ТЭЦ' || upgradesData[i] === 'ТВЦ' || upgradesData[i] === 'ТЦ') hasInfrastructureUpgrade = true;
+        }
+        if (mapData[i] === 'park') parkCount++;
+        if (mapData[i] === 'hospital') hospitalCount++;
+        if (mapData[i] === 'tvtower') {
+          tvCount++;
+          if (factoryCount >= 8) {
+            activeTVTowersWorking++;
+          }
+        }
+        
+        if (mapData[i] === 'shop' && shopNoFactoryTimer < 38) totalIncome += isTaxReformActive ? 6 : (isRainy ? 2 : 3);
+        if (mapData[i] === 'factory') totalIncome += isTaxReformActive ? 24 : 12;
+      }
+
+      if (tvCount > 0 && factoryCount < 8) {
+        tvLowFactoryBanner.style.display = 'block';
+      } else {
+        tvLowFactoryBanner.style.display = 'none';
+      }
+
+      if (hospitalCount > 0) {
+        if(activeEpidemic) achievements.survivor = true;
+        activeEpidemic = null; shopNoHospitalTimer = 0; virusBanner.style.display = 'none'; shopMedBanner.style.display = 'none';
+      }
+
+      let penalty = 0;
+      if (isTaxReformActive) penalty += 20;
+
+      for (let i = 0; i < maxCells; i++) {
+        if (firesData[i] || brokenData[i] || blockedByTv[i]) continue;
+        if (mapData[i] === 'house') {
+          totalPopulation += 6;
+          getNeighbors(i).forEach(n => {
+            if (mapData[n] === 'factory' && !firesData[n] && !brokenData[n]) {
+              if(upgradesData[n] === 'ТЭЦ') penalty -= 10;
+              else penalty += 20;
+            }
+            if (mapData[n] === 'shop' && !firesData[n] && !brokenData[n]) penalty += 8;   
+          });
+        }
+      }
+
+      let parkEfficiency = isRainy ? (parkCount * 2) : parkCount;
+      if (houseCount > (parkEfficiency + hospitalCount * 2)) {
+        penalty += (houseCount - (parkEfficiency + hospitalCount * 2)) * 10;
+      }
+
+      if (shopCount > 0 && factoryCount < 2) {
+        alertBanner.style.display = 'block'; 
+      } else {
+        alertBanner.style.display = 'none'; shopNoFactoryTimer = 0; shopNoMoneyBanner.style.display = 'none';
+      }
+
+      if (shopCount > 0 && factoryCount < 2 && shopNoFactoryTimer >= 38) shopNoMoneyBanner.style.display = 'block';
+      if (houseCount > 0 && !hasInfrastructureUpgrade) penalty += 35;
+      if (shopCount > 0 && hospitalCount === 0 && shopNoHospitalTimer >= 150) { penalty += 40; shopMedBanner.style.display = 'block'; }
+      if (activeEpidemic === 'sad') penalty += 50;
+
+      let tvBonus = activeTVTowersWorking * 65;
+
+      let finalHappiness = Math.max(0, Math.min(100, (baseHappiness - penalty) + tvBonus));
+      let activePopulation = Math.max(0, Math.floor(totalPopulation * (Math.min(100, finalHappiness) / 100)) - epidemicLosses);
+
+      if (money >= 500) achievements.millionaire = true;
+      if (finalHappiness === 0 && houseCount > 0) triggerGameOver("Жители устроили революцию!");
+
+      // ПРОВЕРКА УСЛОВИЯ ПОБЕДЫ
+      if (money >= 5000 && finalHappiness === 100 && hasLevel4TV && !isGameWon) {
+        triggerWinGame();
+      }
+
+      happyIconEl.innerText = finalHappiness > 85 ? '👑' : (finalHappiness > 50 ? '😀' : (finalHappiness > 25 ? '😐' : '😡'));
+      return { happiness: finalHappiness, income: totalIncome, population: activePopulation };
+    }
+
+    function updateUI() {
+      if (isGameOver || isGameWon) return;
+      let stats = calculateStats();
+      moneyEl.innerText = money; popEl.innerText = stats.population; happyEl.innerText = stats.happiness; expandCostEl.innerText = expandCost;
+    }
+
+    function triggerManualEpidemic() { activeEpidemic = 'sad'; virusBanner.style.display = 'block'; updateUI(); }
+    
+    function triggerManualUFO() {
+      let built = [];
+      for(let i=0; i<maxCells; i++) if(mapData[i] !== '' && !brokenData[i]) built.push(i);
+      if(built.length === 0) return;
+      let target = built[Math.floor(Math.random() * built.length)];
+      brokenData[target] = true;
+      ufoBanner.style.display = 'block'; playSound('ufo'); createMap(); updateUI();
+      setTimeout(() => ufoBanner.style.display = 'none', 5000);
+    }
+
+    function triggerGameOver(text) { isGameOver = true; gameOverReason.innerText = text; gameOverScreen.style.display = 'flex'; }
+    
+    // Функция запуска победного экрана
+    function triggerWinGame() {
+      isGameWon = true;
+      playSound('win');
+      winScreen.style.display = 'flex';
+    }
+
+    function openAchieveModal() {
+      achieveModal.style.display = 'flex';
+      document.getElementById('achieve-list').innerHTML = `
+        <div class="achieve-item">💰 Миллионер ($500): ${achievements.millionaire ? '✅ Открыто' : '❌ Закрыто'}</div>
+        <div class="achieve-item">🗺️ Мегаполис (Сетка 6х6+): ${achievements.megacity ? '✅ Открыто' : '❌ Закрыто'}</div>
+        <div class="achieve-item">🦠 Выживший (Построена больница): ${achievements.survivor ? '✅ Открыто' : '❌ Закрыто'}</div>
+      `;
+    }
+    function closeAchieveModal() { achieveModal.style.display = 'none'; }
+
+    function openLogModal() { logModal.style.display = 'flex'; }
+    function closeLogModal() { logModal.style.display = 'none'; }
+
+    function restartGame() {
+      money = 60; isGameOver = false; isGameWon = false; gridColumns = 4; maxCells = 16; expandCost = 40;
+      shopNoHospitalTimer = 0; shopNoFactoryTimer = 0; activeEpidemic = null; epidemicLosses = 0;
+      bankLoanActive = false; bankLoanLeftToPay = 0;
+      mapData.fill(''); upgradesData.fill(''); firesData.fill(false); brokenData.fill(false); tvLevels.fill(0); blockedByTv.fill(false);
+      document.querySelectorAll('.alert-banner, .virus-banner').forEach(b => b.style.display = 'none');
+      document.getElementById('quest-banner').style.display = 'block';
+      gameOverScreen.style.display = 'none'; winScreen.style.display = 'none'; createMap(); updateUI();
+    }
+
+    setInterval(() => {
+      if (isGameOver || isGameWon) return;
+      
+      let activeFactories = mapData.filter((t, idx) => t === 'factory' && !firesData[idx] && !brokenData[idx]).length;
+      if (mapData.includes('shop') && activeFactories < 2) shopNoFactoryTimer++;
+      if (mapData.includes('shop') && !mapData.includes('hospital')) shopNoHospitalTimer++;
+      if (activeEpidemic === 'fast') epidemicLosses += 3;
+
+      if (bankLoanActive) {
+        money -= 5; bankLoanLeftToPay -= 5;
+        if(bankLoanLeftToPay <= 0) { bankLoanActive = false; bankBanner.style.display = 'none'; }
+      }
+
+      if (isTaxReformActive) {
+        taxReformTimer--;
+        if (taxReformTimer <= 0) { isTaxReformActive = false; taxBtnEl.classList.remove('active'); }
+      }
+      if (taxCooldown > 0) {
+        taxCooldown--;
+        taxBtnEl.innerText = taxCooldown > 0 ? `⏱️ Налоги (${taxCooldown}s)` : "📈 Налоги х2";
+      }
+
+      let stats = calculateStats();
+      money += stats.income; updateUI();
+    }, 1000);
+
+    setInterval(() => {
+      if (isGameOver || isGameWon) return;
+      isRainy = !isRainy;
+      if(isRainy) {
+        document.body.classList.add('rainy'); weatherBanner.style.display = 'block';
+        firesData.fill(false); createMap(); 
+      } else {
+        document.body.classList.remove('rainy'); weatherBanner.style.display = 'none';
+      }
+    }, 60000);
+
+    setInterval(() => {
+      if (isGameOver || isGameWon || isRainy) return;
+      if (Math.random() * 100 <= 30) {
+        let built = [];
+        for(let i=0; i<maxCells; i++) if(mapData[i] !== '' && !firesData[i] && !brokenData[i]) built.push(i);
+        if(built.length > 0) { firesData[built[Math.floor(Math.random() * built.length)]] = true; playSound('fire'); createMap(); updateUI(); }
+      }
+    }, 45000);
+
+    setInterval(saveGame, 5000);
+
+    loadGame();
+    createMap();
+    updateUI();
+  </script>
 </body>
 </html>
