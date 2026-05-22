@@ -270,12 +270,18 @@
 
   <!-- ЭКРАН ПОБЕДЫ (ФИНАЛ ИГРЫ) -->
   <div class="modal-screen win-screen" id="win-screen">
-    <div class="win-title">🎉 ИГРА ПРОЙДЕНА! 🎉</div>
+    <div class="win-title">Вы достигли главной цели!</div>
     <div style="font-size: 18px; margin-bottom: 20px; padding: 0 25px; text-align: center;">
       Вы построили настоящую <b>Мега-Утопию</b>! <br><br>
       Телевышка транслирует шоу на весь мир, казна ломится от золота, а жители счастливы на все 100%! Вы — лучший мэр в истории!
     </div>
-    <button class="up-btn" style="background: #2c3e50; color: white; width:auto; padding:12px 25px;" onclick="restartGame()">Играть снова</button>
+    <button class="up-btn" style="background: #2c3e50; color: white; width:auto; padding:12px 25px;" onclick="restartGame()">Играть заново</button>
+<button class="up-btn2" style="background: #2c3e50; color: white; width:auto; padding:12px 25px;" onclick="// Находим объект по ID
+let up-btn2 = document.getElementById('up-btn2');
+
+// Скрываем его
+up-btn2.style.display = 'none';
+">Продолжить</button>
   </div>
 
   <!-- Меню улучшений заводов -->
