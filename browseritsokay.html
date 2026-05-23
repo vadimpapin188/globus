@@ -1,99 +1,661 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Vital for mobile sizing and preventing pinch-to-zoom -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brawl Bots: Pro</title>
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <title>Vertical Strike</title>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: 'Arial', sans-serif; overflow: hidden; touch-action: none; }
-        canvas { display: block; width: 100vw; height: 100vh; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; }
-        .menu-btn { background: #f1c40f; border: none; padding: 10px; margin: 5px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            overflow: hidden; /* Prevents scrolling */
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Overlays */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through to the canvas */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .menu {
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 30px;
+            border: 2px solid #0ff;
+            border-radius: 15px;
+            text-align: center;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+            max-width: 90%;
+            width: 350px;
+        }
+
+        h1 { margin-bottom: 20px; color: #0ff; text-transform: uppercase; letter-spacing: 2px; }
+        h2 { margin-bottom: 15px; color: #ff0055; }
+        
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #222;
+            color: #0ff;
+            border: 1px solid #0ff;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover { background: #0ff; color: #000; }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
+        
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #111;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        /* Heads Up Display */
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+            display: none;
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <div id="my-id">ID: загрузка...</div>
-    <input type="text" id="peer-id" placeholder="ID друга">
-    <button class="menu-btn" onclick="connectToFriend()">Подключиться</button>
-    <hr>
-    <button class="menu-btn" onclick="player.skin='hero'">Герой</button>
-    <button class="menu-btn" onclick="player.skin='fire'">Огонь</button>
-    <button class="menu-btn" onclick="setMap('arena')">Арена</button>
-    <button class="menu-btn" onclick="setMap('forest')">Лес</button>
-</div>
+    <div id="hud">
+        <span id="scoreDisplay">Score: 0</span>
+        <span id="healthDisplay">HP: ♥♥♥</span>
+    </div>
 
-<canvas id="gameCanvas"></canvas>
+    <div id="ui-layer">
+        <!-- Main Menu -->
+        <div id="mainMenu" class="menu">
+            <h1>Vertical Strike</h1>
+            <button onclick="openSetup('sp')">Single Player</button>
+            <button onclick="openSetup('mp')">Multiplayer (Co-op AI)</button>
+        </div>
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 800; canvas.height = 800;
+        <!-- Setup Menu -->
+        <div id="setupMenu" class="menu hidden">
+            <h2>Mission Setup</h2>
+            <div class="form-group">
+                <label>Select Environment:</label>
+                <select id="mapSelect">
+                    <option value="space">Deep Space</option>
+                    <option value="desert">Scorched Desert</option>
+                    <option value="forest">Toxic Forest</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Select Ship Skin:</label>
+                <select id="skinSelect">
+                    <option value="#00ffff">Cyan Interceptor</option>
+                    <option value="#ff0055">Crimson Bruiser</option>
+                    <option value="#ffcc00">Golden Hornet</option>
+                </select>
+            </div>
+            <button onclick="startGame()">LAUNCH</button>
+            <button onclick="goBack()" style="border-color:#555; color:#aaa;">Back</button>
+        </div>
 
-    // Настройки
-    let player = { x: 400, y: 400, skin: 'hero', map: 'arena' };
-    let remotePlayer = null;
-    
-    // Скины
-    const skins = {
-        hero: { body: '#2ecc71', detail: '#27ae60' },
-        fire: { body: '#e74c3c', detail: '#c0392b' }
-    };
+        <!-- Game Over Menu -->
+        <div id="gameOverMenu" class="menu hidden">
+            <h1 style="color:#ff0055;">MISSION FAILED</h1>
+            <h2 id="finalScore">Score: 0</h2>
+            <button onclick="returnToMain()">Main Menu</button>
+        </div>
+    </div>
 
-    // Мультиплеер
-    const peer = new Peer();
-    let conn = null;
-    peer.on('open', id => document.getElementById('my-id').innerText = "ID: " + id);
-    peer.on('connection', c => { conn = c; setupConn(); });
+    <canvas id="gameCanvas"></canvas>
 
-    function connectToFriend() {
-        conn = peer.connect(document.getElementById('peer-id').value);
-        setupConn();
-    }
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-    function setupConn() {
-        conn.on('data', data => {
-            if(data.type === 'update') { remotePlayer = data.player; }
+        // Resize Canvas to fit screen exactly
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Game State Variables
+        let animationId;
+        let gameActive = false;
+        let frameCount = 0;
+        let score = 0;
+        let mode = 'sp'; // 'sp' or 'mp'
+        let currentMap = 'space';
+
+        // Arrays for Game Objects
+        let player;
+        let coOpPartner = null;
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+        let backgroundElements = [];
+        let mapObstacles = [];
+
+        // Map Configurations
+        const maps = {
+            space: {
+                bg: '#050510',
+                speedMultiplier: 1,
+                generateBg: () => {
+                    return { x: Math.random() * canvas.width, y: -10, size: Math.random() * 2 + 1, speed: Math.random() * 2 + 1, color: '#fff' };
+                },
+                generateObstacle: () => {
+                    // Asteroid
+                    return { x: Math.random() * canvas.width, y: -50, size: Math.random() * 30 + 20, speed: 2, type: 'asteroid', hp: 5 };
+                }
+            },
+            desert: {
+                bg: '#c2b280',
+                speedMultiplier: 1.2,
+                generateBg: () => {
+                    // Sand dunes / marks
+                    return { x: Math.random() * canvas.width, y: -20, size: Math.random() * 50 + 10, speed: 3, color: '#b3a26d' };
+                },
+                generateObstacle: () => {
+                    // Cacti / Rocks
+                    return { x: Math.random() * canvas.width, y: -50, size: Math.random() * 20 + 15, speed: 3, type: 'rock', hp: 3 };
+                }
+            },
+            forest: {
+                bg: '#1a3300',
+                speedMultiplier: 1.5,
+                generateBg: () => {
+                    // Canopy leaves
+                    return { x: Math.random() * canvas.width, y: -40, size: Math.random() * 40 + 20, speed: 4, color: '#112200' };
+                },
+                generateObstacle: () => {
+                    // Tree trunks
+                    return { x: Math.random() * canvas.width, y: -50, size: Math.random() * 25 + 15, speed: 4, type: 'tree', hp: 4 };
+                }
+            }
+        };
+
+        // --- CLASSES ---
+
+        class Ship {
+            constructor(x, y, color, isPlayer = true) {
+                this.x = x;
+                this.y = y;
+                this.targetX = x;
+                this.targetY = y;
+                this.color = color;
+                this.isPlayer = isPlayer;
+                this.width = 30;
+                this.height = 40;
+                this.speed = 0.15; // Lerp speed for smooth movement
+                this.hp = 3;
+                this.lastShot = 0;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Engine flame
+                ctx.fillStyle = '#ff8800';
+                ctx.beginPath();
+                ctx.moveTo(-8, this.height/2);
+                ctx.lineTo(8, this.height/2);
+                ctx.lineTo(0, this.height/2 + (Math.random() * 15 + 10));
+                ctx.fill();
+
+                // Main Body (Triangle)
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.moveTo(0, -this.height / 2);
+                ctx.lineTo(this.width / 2, this.height / 2);
+                ctx.lineTo(-this.width / 2, this.height / 2);
+                ctx.fill();
+
+                // Cockpit
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            update() {
+                // Smooth interpolation towards target (Touch position or AI target)
+                this.x += (this.targetX - this.x) * this.speed;
+                this.y += (this.targetY - this.y) * this.speed;
+
+                // Keep in bounds
+                this.x = Math.max(this.width/2, Math.min(canvas.width - this.width/2, this.x));
+                this.y = Math.max(this.height/2, Math.min(canvas.height - this.height/2, this.y));
+
+                // Auto Shoot
+                if (frameCount - this.lastShot > 15) {
+                    bullets.push(new Bullet(this.x, this.y - this.height/2, -10, this.color, true));
+                    this.lastShot = frameCount;
+                }
+                this.draw();
+            }
+
+            takeDamage() {
+                this.hp--;
+                createExplosion(this.x, this.y, this.color, 10);
+                updateHUD();
+                if (this.hp <= 0 && this.isPlayer) {
+                    endGame();
+                }
+            }
+        }
+
+        class Enemy {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 40) + 20;
+                this.y = -30;
+                this.width = 30;
+                this.height = 30;
+                this.speed = Math.random() * 2 + 1 + (score / 1000);
+                this.color = '#ff0055';
+                this.hp = 2;
+                this.wobble = Math.random() * Math.PI * 2;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(-this.width/4, -this.height/4, this.width/2, this.height/2);
+                ctx.restore();
+            }
+
+            update() {
+                this.y += this.speed;
+                this.x += Math.sin(this.wobble) * 2; // Wavy movement
+                this.wobble += 0.05;
+
+                // Shoot randomly
+                if (Math.random() < 0.01) {
+                    bullets.push(new Bullet(this.x, this.y + this.height/2, 5, '#ff0055', false));
+                }
+                this.draw();
+            }
+        }
+
+        class Bullet {
+            constructor(x, y, velocity, color, isPlayerBullet) {
+                this.x = x;
+                this.y = y;
+                this.velocity = velocity;
+                this.color = color;
+                this.isPlayerBullet = isPlayerBullet;
+                this.radius = 4;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+            }
+
+            update() {
+                this.y += this.velocity;
+                ctx.shadowBlur = 0; // Reset shadow for performance
+                this.draw();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color, size, velocity) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = size;
+                this.velocity = velocity;
+                this.alpha = 1;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.02;
+                this.draw();
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        function createExplosion(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(
+                    x, y, color, Math.random() * 4 + 1,
+                    { x: (Math.random() - 0.5) * 6, y: (Math.random() - 0.5) * 6 }
+                ));
+            }
+        }
+
+        function checkCollision(rect1, rect2) {
+            // Simplified distance-based collision (Circle collision)
+            const dx = rect1.x - rect2.x;
+            const dy = rect1.y - rect2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            // Assuming average radius of 15 for ships/obstacles
+            return distance < 20; 
+        }
+
+        // --- MENU LOGIC ---
+
+        function openSetup(selectedMode) {
+            mode = selectedMode;
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('setupMenu').classList.remove('hidden');
+        }
+
+        function goBack() {
+            document.getElementById('setupMenu').classList.add('hidden');
+            document.getElementById('mainMenu').classList.remove('hidden');
+        }
+
+        function returnToMain() {
+            document.getElementById('gameOverMenu').classList.add('hidden');
+            document.getElementById('mainMenu').classList.remove('hidden');
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear screen
+        }
+
+        function startGame() {
+            currentMap = document.getElementById('mapSelect').value;
+            const skin = document.getElementById('skinSelect').value;
+
+            document.getElementById('setupMenu').classList.add('hidden');
+            document.getElementById('hud').style.display = 'flex';
+
+            // Reset Game Variables
+            score = 0;
+            frameCount = 0;
+            bullets = [];
+            enemies = [];
+            particles = [];
+            backgroundElements = [];
+            mapObstacles = [];
+            
+            player = new Ship(canvas.width / 2, canvas.height - 100, skin, true);
+            
+            if (mode === 'mp') {
+                coOpPartner = new Ship(canvas.width / 2 + 50, canvas.height - 100, '#00ff00', false);
+                coOpPartner.speed = 0.05; // Slower reaction time for bot
+            } else {
+                coOpPartner = null;
+            }
+
+            updateHUD();
+            gameActive = true;
+            animate();
+        }
+
+        function updateHUD() {
+            document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+            let hearts = '';
+            for(let i=0; i<Math.max(0, player.hp); i++) hearts += '♥';
+            document.getElementById('healthDisplay').innerText = `HP: ${hearts}`;
+            if(player.hp <= 1) document.getElementById('healthDisplay').style.color = '#ff0000';
+            else document.getElementById('healthDisplay').style.color = '#fff';
+        }
+
+        function endGame() {
+            gameActive = false;
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('gameOverMenu').classList.remove('hidden');
+            document.getElementById('finalScore').innerText = `Final Score: ${score}`;
+        }
+
+        // --- INPUT HANDLING (MOBILE & DESKTOP) ---
+
+        function handleInput(x, y) {
+            if (!gameActive) return;
+            player.targetX = x;
+            // Add a small offset so finger doesn't cover the ship
+            player.targetY = y - 40; 
+        }
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevents pulling-to-refresh on mobile
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            handleInput(touch.clientX - rect.left, touch.clientY - rect.top);
+        }, { passive: false });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if(!gameActive) return;
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            handleInput(touch.clientX - rect.left, touch.clientY - rect.top);
+        }, { passive: false });
+
+        let isDragging = false;
+        canvas.addEventListener('mousedown', () => isDragging = true);
+        canvas.addEventListener('mouseup', () => isDragging = false);
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging && gameActive) {
+                const rect = canvas.getBoundingClientRect();
+                handleInput(e.clientX - rect.left, e.clientY - rect.top);
+            }
         });
-    }
 
-    function setMap(mapName) { player.map = mapName; }
+        // --- MAIN GAME LOOP ---
 
-    // Управление (WASD)
-    window.addEventListener('keydown', e => {
-        if(e.key === 'w') player.y -= 20;
-        if(e.key === 's') player.y += 20;
-        if(e.key === 'a') player.x -= 20;
-        if(e.key === 'd') player.x += 20;
-        
-        if(conn && conn.open) conn.send({ type: 'update', player: player });
-    });
+        function animate() {
+            if (!gameActive) return;
+            animationId = requestAnimationFrame(animate);
+            frameCount++;
 
-    function drawPlayer(p, isRemote) {
-        const s = skins[p.skin] || skins.hero;
-        ctx.fillStyle = s.body;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 30, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = s.detail;
-        ctx.lineWidth = 5;
-        ctx.stroke();
-    }
+            const mapData = maps[currentMap];
 
-    function loop() {
-        // Отрисовка карты
-        ctx.fillStyle = player.map === 'arena' ? '#2c3e50' : '#27ae60';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // 1. Clear Canvas with Map Background
+            ctx.fillStyle = mapData.bg;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Отрисовка игроков
-        drawPlayer(player, false);
-        if(remotePlayer) drawPlayer(remotePlayer, true);
+            // 2. Generate and Draw Background Elements (Parallax)
+            if (frameCount % 10 === 0) backgroundElements.push(mapData.generateBg());
+            
+            backgroundElements.forEach((bg, index) => {
+                bg.y += bg.speed;
+                ctx.fillStyle = bg.color;
+                ctx.beginPath();
+                ctx.arc(bg.x, bg.y, bg.size, 0, Math.PI * 2);
+                ctx.fill();
+                if (bg.y > canvas.height) backgroundElements.splice(index, 1);
+            });
 
-        requestAnimationFrame(loop);
-    }
-    loop();
-</script>
+            // 3. Generate and Draw Map Obstacles
+            if (frameCount % 150 === 0) mapObstacles.push(mapData.generateObstacle());
+
+            mapObstacles.forEach((obs, index) => {
+                obs.y += obs.speed;
+                
+                // Draw dynamic obstacle
+                ctx.save();
+                ctx.translate(obs.x, obs.y);
+                if (obs.type === 'asteroid') {
+                    ctx.fillStyle = '#666';
+                    ctx.beginPath(); ctx.arc(0,0, obs.size, 0, Math.PI*2); ctx.fill();
+                } else if (obs.type === 'rock') {
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(-obs.size/2, -obs.size/2, obs.size, obs.size);
+                } else if (obs.type === 'tree') {
+                    ctx.fillStyle = '#3E2723';
+                    ctx.fillRect(-10, -obs.size, 20, obs.size * 2);
+                    ctx.fillStyle = '#2E7D32';
+                    ctx.beginPath(); ctx.arc(0, -obs.size, obs.size*1.5, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.restore();
+
+                // Collision with player
+                if (checkCollision(player, obs)) {
+                    player.takeDamage();
+                    createExplosion(obs.x, obs.y, '#aaa', 20);
+                    mapObstacles.splice(index, 1);
+                }
+
+                if (obs.y - obs.size > canvas.height) mapObstacles.splice(index, 1);
+            });
+
+            // 4. Update AI Co-op Partner (Multiplayer Mock)
+            if (coOpPartner) {
+                // Find nearest enemy
+                let targetEnemy = enemies[0];
+                if (targetEnemy) {
+                    coOpPartner.targetX = targetEnemy.x;
+                    coOpPartner.targetY = canvas.height - 150; // Stay near bottom
+                } else {
+                    coOpPartner.targetX = canvas.width / 2 + Math.sin(frameCount / 20) * 50;
+                }
+                coOpPartner.update();
+            }
+
+            // 5. Generate and Update Enemies
+            if (frameCount % 60 === 0) enemies.push(new Enemy());
+
+            enemies.forEach((enemy, eIndex) => {
+                enemy.update();
+
+                // Player crashing into enemy
+                if (checkCollision(player, enemy)) {
+                    player.takeDamage();
+                    createExplosion(enemy.x, enemy.y, enemy.color, 15);
+                    enemies.splice(eIndex, 1);
+                }
+
+                if (enemy.y > canvas.height) enemies.splice(eIndex, 1);
+            });
+
+            // 6. Update Bullets and Check Hit Collisions
+            bullets.forEach((bullet, bIndex) => {
+                bullet.update();
+
+                // Remove off-screen bullets
+                if (bullet.y < 0 || bullet.y > canvas.height) {
+                    setTimeout(() => bullets.splice(bIndex, 1), 0);
+                    return;
+                }
+
+                if (bullet.isPlayerBullet) {
+                    // Check hitting enemies
+                    enemies.forEach((enemy, eIndex) => {
+                        const dist = Math.hypot(bullet.x - enemy.x, bullet.y - enemy.y);
+                        if (dist < enemy.width) {
+                            enemy.hp--;
+                            bullets.splice(bIndex, 1);
+                            createExplosion(bullet.x, bullet.y, '#ffff00', 5);
+                            if (enemy.hp <= 0) {
+                                enemies.splice(eIndex, 1);
+                                score += 100;
+                                createExplosion(enemy.x, enemy.y, enemy.color, 20);
+                                updateHUD();
+                            }
+                        }
+                    });
+
+                    // Check hitting obstacles
+                    mapObstacles.forEach((obs, oIndex) => {
+                        const dist = Math.hypot(bullet.x - obs.x, bullet.y - obs.y);
+                        if (dist < obs.size) {
+                            obs.hp--;
+                            bullets.splice(bIndex, 1);
+                            createExplosion(bullet.x, bullet.y, '#fff', 3);
+                            if(obs.hp <= 0) {
+                                mapObstacles.splice(oIndex, 1);
+                                score += 25;
+                                createExplosion(obs.x, obs.y, '#aaa', 15);
+                                updateHUD();
+                            }
+                        }
+                    });
+
+                } else {
+                    // Check enemy bullets hitting player
+                    const dist = Math.hypot(bullet.x - player.x, bullet.y - player.y);
+                    if (dist < player.width / 2) {
+                        player.takeDamage();
+                        bullets.splice(bIndex, 1);
+                    }
+                }
+            });
+
+            // 7. Update Particles (Explosions)
+            particles.forEach((particle, pIndex) => {
+                if (particle.alpha <= 0) {
+                    particles.splice(pIndex, 1);
+                } else {
+                    particle.update();
+                }
+            });
+
+            // 8. Update Player
+            player.update();
+        }
+    </script>
 </body>
 </html>
