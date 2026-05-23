@@ -2,25 +2,26 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Brawl Bots: P2P Multiplayer</title>
-    <!-- Подключаем PeerJS напрямую -->
+    <title>Brawl Bots: Full Arena</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; background: #222; color: white; font-family: sans-serif; overflow: hidden; }
+        body { margin: 0; background: #1a1a2e; color: white; font-family: sans-serif; overflow: hidden; }
         canvas { display: block; }
-        #menu { position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; }
+        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
+        #mp-box { position: absolute; top: 50px; left: 10px; pointer-events: auto; background: rgba(0,0,0,0.5); padding: 10px; }
     </style>
 </head>
 <body>
-
-<div id="menu">
-    <h3 id="my-id">ID: Загрузка...</h3>
-    <button onclick="becomeHost()">Создать игру</button>
-    <input type="text" id="peer-id" placeholder="ID друга">
-    <button onclick="connectToFriend()">Подключиться</button>
-</div>
-
-<canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <h1>ARENA HUNTER</h1>
+        <div id="status">Ботов осталось: <span id="bots-val">12</span></div>
+    </div>
+    <div id="mp-box">
+        <h4 id="my-id">ID загружается...</h4>
+        <input type="text" id="peer-id" placeholder="ID друга">
+        <button onclick="connectToFriend()">Подключиться к другу</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
@@ -28,60 +29,67 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    let peer = new Peer(); // Создаем объект соединения
+    // --- ИГРОВЫЕ ДАННЫЕ ---
+    let bots = [];
+    let player = { x: 400, y: 400, color: '#2ecc71' };
+    let remotePlayer = null; // Появится, если подключится друг
+
+    // --- MULTIPLAYER P2P ---
+    const peer = new Peer();
     let conn = null;
-    let player = { x: 100, y: 100, color: 'blue' };
-    let remotePlayer = { x: 300, y: 300, color: 'red' };
-
-    peer.on('open', (id) => document.getElementById('my-id').innerText = "Твой ID: " + id);
-
-    // Слушаем входящие соединения
-    peer.on('connection', (c) => {
-        conn = c;
-        setupConnection();
-    });
-
-    function becomeHost() { alert("Ты хост! Жди друга."); }
+    peer.on('open', id => document.getElementById('my-id').innerText = "Твой ID: " + id);
+    peer.on('connection', c => { conn = c; setupConn(); });
 
     function connectToFriend() {
-        const id = document.getElementById('peer-id').value;
-        conn = peer.connect(id);
-        setupConnection();
+        conn = peer.connect(document.getElementById('peer-id').value);
+        setupConn();
     }
 
-    function setupConnection() {
-        conn.on('data', (data) => {
-            remotePlayer.x = data.x;
-            remotePlayer.y = data.y;
+    function setupConn() {
+        conn.on('data', data => {
+            if(data.type === 'move') remotePlayer = data.pos;
+            if(data.type === 'bot_kill') { /* тут будет логика синхронизации ботов */ }
         });
     }
 
-    // Управление
-    window.addEventListener('keydown', (e) => {
+    // --- СИНГЛПЛЕЕР ЛОГИКА ---
+    function spawnBots() {
+        for(let i=0; i<12; i++) {
+            bots.push({ x: Math.random()*800, y: Math.random()*800, r: 20 });
+        }
+    }
+
+    window.addEventListener('keydown', e => {
         if(e.key === 'w') player.y -= 20;
         if(e.key === 's') player.y += 20;
         if(e.key === 'a') player.x -= 20;
         if(e.key === 'd') player.x += 20;
-        
-        // Шлем координаты другу
-        if (conn && conn.open) {
-            conn.send({ x: player.x, y: player.y });
-        }
+
+        if(conn && conn.open) conn.send({ type: 'move', pos: player });
+        document.getElementById('bots-val').innerText = bots.length;
     });
 
     function loop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Рисуем себя
+        // Рисуем ботов
+        ctx.fillStyle = '#e74c3c';
+        bots.forEach(b => ctx.fillRect(b.x, b.y, b.r, b.r));
+
+        // Рисуем игрока
         ctx.fillStyle = player.color;
-        ctx.fillRect(player.x, player.y, 50, 50);
-        
-        // Рисуем друга
-        ctx.fillStyle = remotePlayer.color;
-        ctx.fillRect(remotePlayer.x, remotePlayer.y, 50, 50);
-        
+        ctx.fillRect(player.x, player.y, 40, 40);
+
+        // Рисуем друга, если он подключился
+        if(remotePlayer) {
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(remotePlayer.x, remotePlayer.y, 40, 40);
+        }
+
         requestAnimationFrame(loop);
     }
+
+    spawnBots();
     loop();
 </script>
 </body>
