@@ -2,42 +2,48 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Brawl Bots: Full Arena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brawl Bots: Arena</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; background: #1a1a2e; color: white; font-family: sans-serif; overflow: hidden; }
-        canvas { display: block; }
-        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
-        #mp-box { position: absolute; top: 50px; left: 10px; pointer-events: auto; background: rgba(0,0,0,0.5); padding: 10px; }
+        :root { --accent: #f1c40f; }
+        body { margin: 0; background: #222; color: #fff; font-family: 'Arial', sans-serif; overflow: hidden; touch-action: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        /* UI стили */
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; pointer-events: auto; }
+        .btn { background: var(--accent); border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        
+        /* Кнопка атаки */
+        #attack-btn { position: absolute; bottom: 30px; right: 30px; width: 80px; height: 80px; background: red; border-radius: 50%; z-index: 20; border: 4px solid white; }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <h1>ARENA HUNTER</h1>
-        <div id="status">Ботов осталось: <span id="bots-val">12</span></div>
-    </div>
-    <div id="mp-box">
-        <h4 id="my-id">ID загружается...</h4>
-        <input type="text" id="peer-id" placeholder="ID друга">
-        <button onclick="connectToFriend()">Подключиться к другу</button>
-    </div>
-    <canvas id="gameCanvas"></canvas>
+
+<div id="ui">
+    <h3 id="my-id">ID: Загрузка...</h3>
+    <input type="text" id="peer-id" placeholder="ID друга">
+    <button class="btn" onclick="connectToFriend()">Подключиться</button>
+</div>
+<div id="attack-btn" ontouchstart="attack()" onclick="attack()"></div>
+
+<canvas id="gameCanvas"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = 800; canvas.height = 1200; // Фиксируем внутреннее разрешение
 
-    // --- ИГРОВЫЕ ДАННЫЕ ---
-    let bots = [];
-    let player = { x: 400, y: 400, color: '#2ecc71' };
-    let remotePlayer = null; // Появится, если подключится друг
+    // Геймплей переменные
+    let player = { x: 400, y: 600, color: '#2ecc71' };
+    let bots = [{ x: 100, y: 100 }, { x: 700, y: 1000 }];
+    let remotePlayer = null;
 
-    // --- MULTIPLAYER P2P ---
+    // P2P
     const peer = new Peer();
     let conn = null;
-    peer.on('open', id => document.getElementById('my-id').innerText = "Твой ID: " + id);
+    peer.on('open', id => document.getElementById('my-id').innerText = "ID: " + id);
     peer.on('connection', c => { conn = c; setupConn(); });
 
     function connectToFriend() {
@@ -46,50 +52,42 @@
     }
 
     function setupConn() {
-        conn.on('data', data => {
-            if(data.type === 'move') remotePlayer = data.pos;
-            if(data.type === 'bot_kill') { /* тут будет логика синхронизации ботов */ }
-        });
+        conn.on('data', data => { if(data.type === 'move') remotePlayer = data.pos; });
     }
 
-    // --- СИНГЛПЛЕЕР ЛОГИКА ---
-    function spawnBots() {
-        for(let i=0; i<12; i++) {
-            bots.push({ x: Math.random()*800, y: Math.random()*800, r: 20 });
-        }
+    function attack() {
+        // Логика стрельбы
+        console.log("BOOM!");
     }
 
+    // Управление
     window.addEventListener('keydown', e => {
         if(e.key === 'w') player.y -= 20;
         if(e.key === 's') player.y += 20;
         if(e.key === 'a') player.x -= 20;
         if(e.key === 'd') player.x += 20;
-
         if(conn && conn.open) conn.send({ type: 'move', pos: player });
-        document.getElementById('bots-val').innerText = bots.length;
     });
 
     function loop() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         // Рисуем ботов
         ctx.fillStyle = '#e74c3c';
-        bots.forEach(b => ctx.fillRect(b.x, b.y, b.r, b.r));
+        bots.forEach(b => ctx.fillRect(b.x, b.y, 40, 40));
 
-        // Рисуем игрока
+        // Рисуем себя
         ctx.fillStyle = player.color;
-        ctx.fillRect(player.x, player.y, 40, 40);
+        ctx.fillRect(player.x, player.y, 50, 50);
 
-        // Рисуем друга, если он подключился
+        // Рисуем друга
         if(remotePlayer) {
             ctx.fillStyle = '#3498db';
-            ctx.fillRect(remotePlayer.x, remotePlayer.y, 40, 40);
+            ctx.fillRect(remotePlayer.x, remotePlayer.y, 50, 50);
         }
-
         requestAnimationFrame(loop);
     }
-
-    spawnBots();
     loop();
 </script>
 </body>
