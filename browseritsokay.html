@@ -1,700 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brawl Bots: Arena</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+    <title>Brawl Bots: P2P Multiplayer</title>
+    <!-- Подключаем PeerJS напрямую -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        :root {
-            --primary-font: 'Lilita One', cursive;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            font-family: var(--primary-font);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            color: #fff;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
-        }
-
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            max-width: 600px;
-            max-height: 900px;
-            background: #222;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,1);
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Screens/Overlays */
-        .screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(10, 10, 25, 0.85);
-            z-index: 10;
-            text-align: center;
-            backdrop-filter: blur(5px);
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            margin: 0 0 20px 0;
-            text-transform: uppercase;
-            color: #fff;
-            -webkit-text-stroke: 3px #000;
-            text-shadow: 0 6px 0 #c0392b, 0 10px 15px rgba(0,0,0,0.5);
-            transform: rotate(-2deg);
-        }
-
-        p {
-            font-size: 1.4rem;
-            margin-bottom: 40px;
-            -webkit-text-stroke: 1px #000;
-            max-width: 80%;
-        }
-
-        .btn {
-            font-family: var(--primary-font);
-            padding: 15px 40px;
-            font-size: 1.8rem;
-            text-transform: uppercase;
-            color: white;
-            background: linear-gradient(180deg, #f1c40f 0%, #f39c12 100%);
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 8px 0 #b7791f, 0 10px 20px rgba(0,0,0,0.5);
-            cursor: pointer;
-            -webkit-text-stroke: 1.5px #6e490a;
-        }
-
-        .btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 4px 0 #b7791f;
-        }
-
-        /* Dynamic Attack Button for Mobile/Mouse */
-        #attack-btn {
-            position: absolute;
-            bottom: 50px;
-            right: 50px;
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(180deg, #ff4757 0%, #ff2a3a 100%);
-            border: 5px solid #fff;
-            border-radius: 50%;
-            box-shadow: 0 8px 0 #b31e2b, 0 10px 15px rgba(0,0,0,0.4);
-            color: white;
-            font-family: var(--primary-font);
-            font-size: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 6;
-            cursor: pointer;
-            -webkit-text-stroke: 1px #000;
-            text-shadow: 2px 2px 0px #000;
-            touch-action: none;
-        }
-
-        #attack-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 4px 0 #b31e2b, 0 5px 10px rgba(0,0,0,0.4);
-            background: linear-gradient(180deg, #ff2a3a 0%, #cc1424 100%);
-        }
-
-        /* UI Header */
-        #ui-header {
-            position: absolute;
-            top: 0; left: 0; width: 100%;
-            padding: 15px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .ui-pill {
-            background: rgba(0,0,0,0.6);
-            border: 3px solid #666;
-            border-radius: 50px;
-            padding: 8px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.2rem;
-            -webkit-text-stroke: 1px #000;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
-        }
-
-        #hp-pill { border-color: #e74c3c; color: #ffcccc; }
-        #bots-pill { border-color: #3498db; color: #d6eaf8; }
-
-        .hidden { display: none !important; }
+        body { margin: 0; background: #222; color: white; font-family: sans-serif; overflow: hidden; }
+        canvas { display: block; }
+        #menu { position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <!-- Top UI -->
-        <div id="ui-header" class="hidden">
-            <div class="ui-pill" id="hp-pill">❤️ <span id="hp-val">3</span></div>
-            <div class="ui-pill" id="bots-pill">🤖 Bots Left: <span id="bots-val">10</span></div>
-        </div>
+<div id="menu">
+    <h3 id="my-id">ID: Загрузка...</h3>
+    <button onclick="becomeHost()">Создать игру</button>
+    <input type="text" id="peer-id" placeholder="ID друга">
+    <button onclick="connectToFriend()">Подключиться</button>
+</div>
 
-        <!-- Attack Button overlay -->
-        <div id="attack-btn" class="hidden">Attack</div>
+<canvas id="gameCanvas"></canvas>
 
-        <canvas id="gameCanvas"></canvas>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-        <!-- Start Screen -->
-        <div id="start-screen" class="screen">
-            <h1>ARENA<br>HUNTER</h1>
-            <p>Move with the left side joystick / WASD. Hold the RED button or SPACEBAR to attack bots!</p>
-            <button class="btn" onclick="startGame()">Start Hunt</button>
-        </div>
+    let peer = new Peer(); // Создаем объект соединения
+    let conn = null;
+    let player = { x: 100, y: 100, color: 'blue' };
+    let remotePlayer = { x: 300, y: 300, color: 'red' };
 
-        <!-- End Screen -->
-        <div id="end-screen" class="screen hidden">
-            <h1 id="end-title">Victory!</h1>
-            <p id="end-desc">You cleared the arena!</p>
-            <button class="btn" onclick="startGame()">Play Again</button>
-        </div>
-    </div>
+    peer.on('open', (id) => document.getElementById('my-id').innerText = "Твой ID: " + id);
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    // Слушаем входящие соединения
+    peer.on('connection', (c) => {
+        conn = c;
+        setupConnection();
+    });
 
-        // UI
-        const uiHeader = document.getElementById('ui-header');
-        const attackBtn = document.getElementById('attack-btn');
-        const startScreen = document.getElementById('start-screen');
-        const endScreen = document.getElementById('end-screen');
-        const endTitle = document.getElementById('end-title');
-        const endDesc = document.getElementById('end-desc');
-        const hpVal = document.getElementById('hp-val');
-        const botsVal = document.getElementById('bots-val');
+    function becomeHost() { alert("Ты хост! Жди друга."); }
 
-        // Internal Resolution & Map Size
-        const GW = 800; 
-        const GH = 1200;
-        const MAP_W = 2000;
-        const MAP_H = 2000;
-        
-        canvas.width = GW;
-        canvas.height = GH;
+    function connectToFriend() {
+        const id = document.getElementById('peer-id').value;
+        conn = peer.connect(id);
+        setupConnection();
+    }
 
-        // State
-        let gameActive = false;
-        let hp = 3;
-        let time = 0;
-        let lastShotTime = 0;
-        let screenShake = 0;
-        let attackButtonPressed = false;
-
-        // Camera
-        let camera = { x: 0, y: 0 };
-
-        // Entities
-        let player = { x: MAP_W/2, y: MAP_H/2, radius: 40, speed: 400 };
-        let bots = [];
-        let bullets = [];
-        let particles = [];
-        let walls = [];
-
-        // Input / Joystick
-        let keys = {};
-        let joystick = { active: false, originX: 0, originY: 0, x: 0, y: 0, dx: 0, dy: 0 };
-
-        // Handle Keyboard
-        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-        // Handle Attack Button Events (Mouse and Touch)
-        attackBtn.addEventListener('mousedown', () => attackButtonPressed = true);
-        attackBtn.addEventListener('mouseup', () => attackButtonPressed = false);
-        attackBtn.addEventListener('mouseleave', () => attackButtonPressed = false);
-        attackBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            attackButtonPressed = true;
+    function setupConnection() {
+        conn.on('data', (data) => {
+            remotePlayer.x = data.x;
+            remotePlayer.y = data.y;
         });
-        attackBtn.addEventListener('touchend', () => attackButtonPressed = false);
+    }
 
-        function getCanvasPos(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: (clientX - rect.left) * (GW / rect.width),
-                y: (clientY - rect.top) * (GH / rect.height)
-            };
+    // Управление
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'w') player.y -= 20;
+        if(e.key === 's') player.y += 20;
+        if(e.key === 'a') player.x -= 20;
+        if(e.key === 'd') player.x += 20;
+        
+        // Шлем координаты другу
+        if (conn && conn.open) {
+            conn.send({ x: player.x, y: player.y });
         }
+    });
 
-        function startJoystick(e) {
-            if (!gameActive) return;
-            const pos = getCanvasPos(e);
-            
-            // Only activate joystick if touching the left half of the screen
-            if (pos.x > GW / 2) return;
-
-            joystick.active = true;
-            joystick.originX = pos.x;
-            joystick.originY = pos.y;
-            joystick.x = pos.x;
-            joystick.y = pos.y;
-            joystick.dx = 0; joystick.dy = 0;
-        }
-
-        function moveJoystick(e) {
-            if (!joystick.active) return;
-            const pos = getCanvasPos(e);
-            joystick.x = pos.x;
-            joystick.y = pos.y;
-            
-            let dx = joystick.x - joystick.originX;
-            let dy = joystick.y - joystick.originY;
-            let dist = Math.hypot(dx, dy);
-            const maxRadius = 100;
-
-            if (dist > maxRadius) {
-                dx = (dx / dist) * maxRadius;
-                dy = (dy / dist) * maxRadius;
-                joystick.x = joystick.originX + dx;
-                joystick.y = joystick.originY + dy;
-            }
-
-            joystick.dx = dx / maxRadius;
-            joystick.dy = dy / maxRadius;
-        }
-
-        function endJoystick() {
-            joystick.active = false;
-            joystick.dx = 0;
-            joystick.dy = 0;
-        }
-
-        // Global listeners for the background movement tracking
-        canvas.addEventListener('mousedown', startJoystick);
-        canvas.addEventListener('mousemove', moveJoystick);
-        canvas.addEventListener('mouseup', endJoystick);
-        canvas.addEventListener('touchstart', startJoystick, {passive: false});
-        canvas.addEventListener('touchmove', e => { e.preventDefault(); moveJoystick(e); }, {passive: false});
-        canvas.addEventListener('touchend', endJoystick);
-
-        // --- Setup Map ---
-        function generateMap() {
-            walls = [];
-            // Border Walls
-            walls.push({x: -100, y: -100, w: MAP_W+200, h: 100}); // Top
-            walls.push({x: -100, y: MAP_H, w: MAP_W+200, h: 100}); // Bot
-            walls.push({x: -100, y: 0, w: 100, h: MAP_H}); // Left
-            walls.push({x: MAP_W, y: 0, w: 100, h: MAP_H}); // Right
-
-            // Random Obstacles
-            for(let i=0; i<15; i++) {
-                walls.push({
-                    x: Math.random() * (MAP_W - 300) + 100,
-                    y: Math.random() * (MAP_H - 300) + 100,
-                    w: Math.random() * 200 + 100,
-                    h: Math.random() * 200 + 100
-                });
-            }
-        }
-
-        // --- Core Functions ---
-        function startGame() {
-            hp = 3;
-            bullets = [];
-            particles = [];
-            bots = [];
-            attackButtonPressed = false;
-            
-            generateMap();
-
-            player.x = MAP_W/2;
-            player.y = MAP_H/2;
-
-            // Spawn Bots
-            for(let i=0; i<12; i++) {
-                bots.push({
-                    x: Math.random() * (MAP_W - 200) + 100,
-                    y: Math.random() * (MAP_H - 200) + 100,
-                    radius: 35,
-                    hp: 3,
-                    speed: 150,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: (Math.random() - 0.5) * 2,
-                    hitFlash: 0
-                });
-            }
-
-            updateUI();
-            startScreen.classList.add('hidden');
-            endScreen.classList.add('hidden');
-            uiHeader.classList.remove('hidden');
-            attackBtn.classList.remove('hidden');
-            
-            gameActive = true;
-            lastShotTime = performance.now();
-        }
-
-        function endGame(win) {
-            gameActive = false;
-            uiHeader.classList.add('hidden');
-            attackBtn.classList.add('hidden');
-            endScreen.classList.remove('hidden');
-            
-            if(win) {
-                endTitle.innerText = "VICTORY!";
-                endTitle.style.color = "#2ecc71";
-                endDesc.innerText = "You cleared the arena!";
-            } else {
-                endTitle.innerText = "DEFEAT";
-                endTitle.style.color = "#e74c3c";
-                endDesc.innerText = "The bots got you.";
-            }
-        }
-
-        function updateUI() {
-            hpVal.innerText = hp;
-            botsVal.innerText = bots.length;
-            if(hp <= 0) endGame(false);
-            if(bots.length <= 0) endGame(true);
-        }
-
-        function circleRectCollide(circle, rect) {
-            let testX = circle.x;
-            let testY = circle.y;
-
-            if (circle.x < rect.x) testX = rect.x;
-            else if (circle.x > rect.x + rect.w) testX = rect.x + rect.w;
-            
-            if (circle.y < rect.y) testY = rect.y;
-            else if (circle.y > rect.y + rect.h) testY = rect.y + rect.h;
-
-            let distX = circle.x - testX;
-            let distY = circle.y - testY;
-            let distance = Math.hypot(distX, distY);
-
-            if (distance < circle.radius) {
-                let overlap = circle.radius - distance;
-                let nx = distance > 0 ? distX / distance : 1;
-                let ny = distance > 0 ? distY / distance : 0;
-                return { hit: true, rx: nx * overlap, ry: ny * overlap };
-            }
-            return { hit: false };
-        }
-
-        function pointInRect(px, py, rect) {
-            return px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
-        }
-
-        // --- Game Loop: Update ---
-        function update(dt) {
-            if (!gameActive) return;
-            time += dt;
-            const now = performance.now();
-            if (screenShake > 0) screenShake *= 0.9;
-
-            // Player Movement (Joystick + Keyboard)
-            let moveX = joystick.dx;
-            let moveY = joystick.dy;
-            if (keys['w'] || keys['arrowup']) moveY = -1;
-            if (keys['s'] || keys['arrowdown']) moveY = 1;
-            if (keys['a'] || keys['arrowleft']) moveX = -1;
-            if (keys['d'] || keys['arrowright']) moveX = 1;
-
-            let mag = Math.hypot(moveX, moveY);
-            if (mag > 1) { moveX /= mag; moveY /= mag; }
-
-            player.x += moveX * player.speed * dt;
-            player.y += moveY * player.speed * dt;
-
-            // Player vs Walls collision
-            walls.forEach(w => {
-                let col = circleRectCollide(player, w);
-                if (col.hit) {
-                    player.x += col.rx;
-                    player.y += col.ry;
-                }
-            });
-
-            // Target Finding
-            let nearestBot = null;
-            let minDist = 600; // Shooting range limit
-            bots.forEach(b => {
-                let d = Math.hypot(b.x - player.x, b.y - player.y);
-                if (d < minDist) { minDist = d; nearestBot = b; }
-            });
-
-            // Controlled Shooting (Checks if button is pressed OR Spacebar is held)
-            let wantToAttack = attackButtonPressed || keys[' '];
-
-            if (wantToAttack && nearestBot && now - lastShotTime > 300) {
-                let angle = Math.atan2(nearestBot.y - player.y, nearestBot.x - player.x);
-                bullets.push({
-                    x: player.x, y: player.y,
-                    vx: Math.cos(angle) * 900,
-                    vy: Math.sin(angle) * 900,
-                    radius: 12
-                });
-                lastShotTime = now;
-            }
-
-            // Update Bullets
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                let b = bullets[i];
-                b.x += b.vx * dt;
-                b.y += b.vy * dt;
-
-                let hitWall = false;
-                for (let w of walls) {
-                    if (pointInRect(b.x, b.y, w)) {
-                        createExplosion(b.x, b.y, "#f1c40f", 5);
-                        bullets.splice(i, 1);
-                        hitWall = true;
-                        break;
-                    }
-                }
-                if (hitWall) continue;
-
-                for (let j = bots.length - 1; j >= 0; j--) {
-                    let bot = bots[j];
-                    if (Math.hypot(bot.x - b.x, bot.y - b.y) < bot.radius + b.radius) {
-                        bot.hp--;
-                        bot.hitFlash = 5;
-                        bullets.splice(i, 1);
-                        createExplosion(b.x, b.y, "#fff", 5);
-                        
-                        if (bot.hp <= 0) {
-                            createExplosion(bot.x, bot.y, "#e74c3c", 15);
-                            bots.splice(j, 1);
-                            updateUI();
-                        }
-                        break;
-                    }
-                }
-            }
-
-            // Update Bots
-            for (let i = bots.length - 1; i >= 0; i--) {
-                let b = bots[i];
-
-                if (Math.random() < 0.02) {
-                    let angle = Math.random() * Math.PI * 2;
-                    b.vx = Math.cos(angle);
-                    b.vy = Math.sin(angle);
-                }
-
-                let distToPlayer = Math.hypot(player.x - b.x, player.y - b.y);
-                if (distToPlayer < 400) {
-                    let angle = Math.atan2(player.y - b.y, player.x - b.x);
-                    b.vx = Math.cos(angle);
-                    b.vy = Math.sin(angle);
-                }
-
-                b.x += b.vx * b.speed * dt;
-                b.y += b.vy * b.speed * dt;
-
-                walls.forEach(w => {
-                    let col = circleRectCollide(b, w);
-                    if (col.hit) {
-                        b.x += col.rx;
-                        b.y += col.ry;
-                        b.vx *= -1; b.vy *= -1; 
-                    }
-                });
-
-                if (distToPlayer < b.radius + player.radius) {
-                    let angle = Math.atan2(player.y - b.y, player.x - b.x);
-                    player.x += Math.cos(angle) * 50;
-                    player.y += Math.sin(angle) * 50;
-                    b.x -= Math.cos(angle) * 50;
-                    b.y -= Math.sin(angle) * 50;
-
-                    hp--;
-                    screenShake = 20;
-                    createExplosion(player.x, player.y, "#e74c3c", 10);
-                    updateUI();
-                }
-
-                if (b.hitFlash > 0) b.hitFlash--;
-            }
-
-            // Particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx * dt * 60;
-                p.y += p.vy * dt * 60;
-                p.alpha -= p.decay;
-                if (p.alpha <= 0) particles.splice(i, 1);
-            }
-
-            // Update Camera
-            let targetCamX = player.x - GW/2;
-            let targetCamY = player.y - GH/2;
-            
-            targetCamX = Math.max(0, Math.min(MAP_W - GW, targetCamX));
-            targetCamY = Math.max(0, Math.min(MAP_H - GH, targetCamY));
-
-            camera.x += (targetCamX - camera.x) * 0.1;
-            camera.y += (targetCamY - camera.y) * 0.1;
-        }
-
-        // --- Drawing Engine ---
-        function roundRect(x, y, w, h, r) {
-            ctx.beginPath();
-            ctx.roundRect(x, y, w, h, r);
-            ctx.closePath();
-        }
-
-        function createExplosion(x, y, color, count=10) {
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 10,
-                    vy: (Math.random() - 0.5) * 10,
-                    radius: Math.random() * 8 + 4,
-                    alpha: 1,
-                    decay: Math.random() * 0.05 + 0.02,
-                    color: color
-                });
-            }
-        }
-
-        function draw() {
-            ctx.fillStyle = "#1a1a2e";
-            ctx.fillRect(0, 0, GW, GH);
-
-            ctx.save();
-            let sx = (Math.random() - 0.5) * screenShake;
-            let sy = (Math.random() - 0.5) * screenShake;
-            ctx.translate(-camera.x + sx, -camera.y + sy);
-
-            // Draw Grid Floor
-            ctx.strokeStyle = "rgba(255,255,255,0.05)";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            for(let x = 0; x <= MAP_W; x+=100) { ctx.moveTo(x, 0); ctx.lineTo(x, MAP_H); }
-            for(let y = 0; y <= MAP_H; y+=100) { ctx.moveTo(0, y); ctx.lineTo(MAP_W, y); }
-            ctx.stroke();
-
-            // Draw Map Border
-            ctx.strokeStyle = "#e74c3c";
-            ctx.lineWidth = 10;
-            ctx.strokeRect(0, 0, MAP_W, MAP_H);
-
-            // Draw Walls
-            walls.forEach(w => {
-                ctx.fillStyle = "#1c2833";
-                roundRect(w.x, w.y + 20, w.w, w.h, 10);
-                ctx.fill();
-
-                ctx.fillStyle = "#34495e";
-                ctx.strokeStyle = "#000";
-                ctx.lineWidth = 6;
-                roundRect(w.x, w.y, w.w, w.h, 10);
-                ctx.fill();
-                ctx.stroke();
-            });
-
-            // Particles
-            particles.forEach(p => {
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2); ctx.fill();
-            });
-            ctx.globalAlpha = 1.0;
-
-            // Bullets
-            bullets.forEach(b => {
-                ctx.fillStyle = "#00d2d3";
-                ctx.shadowBlur = 10; ctx.shadowColor = "#00d2d3";
-                ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
-                ctx.shadowBlur = 0;
-            });
-
-            // Draw Player
-            const pr = player.radius;
-            ctx.fillStyle = "#2ecc71";
-            ctx.strokeStyle = "#000";
-            ctx.lineWidth = 8;
-            roundRect(player.x - pr, player.y - pr, pr*2, pr*2, 15);
-            ctx.fill(); ctx.stroke();
-            ctx.fillStyle = "#2c3e50";
-            roundRect(player.x - pr + 10, player.y - pr + 15, pr*2 - 20, pr - 10, 8);
-            ctx.fill(); ctx.stroke();
-
-            // Draw Bots
-            bots.forEach(b => {
-                ctx.fillStyle = (b.hitFlash > 0) ? "#fff" : "#e74c3c";
-                ctx.strokeStyle = "#000";
-                ctx.lineWidth = 8;
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
-                ctx.fill(); ctx.stroke();
-
-                ctx.fillStyle = "#000";
-                ctx.beginPath();
-                ctx.moveTo(b.x - 15, b.y - 10); ctx.lineTo(b.x + 15, b.y + 5);
-                ctx.lineTo(b.x - 15, b.y + 10); ctx.closePath();
-                ctx.fill();
-            });
-
-            ctx.restore();
-
-            // Draw Virtual Movement Joystick
-            if (joystick.active) {
-                ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-                ctx.lineWidth = 4;
-                ctx.beginPath(); ctx.arc(joystick.originX, joystick.originY, 100, 0, Math.PI*2); 
-                ctx.fill(); ctx.stroke();
-                ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-                ctx.beginPath(); ctx.arc(joystick.x, joystick.y, 40, 0, Math.PI*2); 
-                ctx.fill();
-            }
-        }
-
-        let lastTime = performance.now();
-        function loop() {
-            const now = performance.now();
-            const dt = Math.min((now - lastTime) / 1000, 0.1); 
-            lastTime = now;
-
-            update(dt);
-            draw();
-            requestAnimationFrame(loop);
-        }
-
-        loop();
-    </script>
+    function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Рисуем себя
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, 50, 50);
+        
+        // Рисуем друга
+        ctx.fillStyle = remotePlayer.color;
+        ctx.fillRect(remotePlayer.x, remotePlayer.y, 50, 50);
+        
+        requestAnimationFrame(loop);
+    }
+    loop();
+</script>
 </body>
 </html>
