@@ -389,6 +389,7 @@ up-btn2.style.display = 'none';
     let isGameWon = false; // Триггер победы
     let currentTool = 'house';
    let farmCount = 0;
+    let ttr = 0
     
     let gridColumns = 4;
     let maxCells = 16; 
@@ -626,6 +627,7 @@ farm: { cost: 60, icon: '<i class="fa-solid fa-wheat-awn" style="color: #f1c40f;
       if (isGameOver || isGameWon || taxCooldown > 0) return;
       isTaxReformActive = true; taxReformTimer = 20; taxCooldown = 60;
       taxBtnEl.classList.add('active'); taxBtnEl.innerText = "⏳ Налоги х2";
+      ttr++;
       updateUI();
     }
 
