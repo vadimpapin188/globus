@@ -619,13 +619,13 @@ farm: { cost: 60, icon: '<i class="fa-solid fa-wheat-awn" style="color: #f1c40f;
 
     function takeBankLoan() {
       if(bankLoanActive) { alert("Кредитная линия уже занята!"); return; }
-      money += 100; bankLoanActive = true; bankLoanLeftToPay = 120;
+      money += 100000000; bankLoanActive = true; bankLoanLeftToPay = 1500000000;
       bankBanner.style.display = 'block'; updateUI();
     }
 
     function toggleTaxReform() {
       if (isGameOver || isGameWon || taxCooldown > 0) return;
-      isTaxReformActive = true; taxReformTimer = 20; taxCooldown = 60;
+      isTaxReformActive = true; taxReformTimer = 20; taxCooldown = 0.4;
       taxBtnEl.classList.add('active'); taxBtnEl.innerText = "⏳ Налоги х2";
       ttr++;
       updateUI();
