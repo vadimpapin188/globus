@@ -94,13 +94,15 @@
     .btn-action:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
 
     .map-container {
-      flex-grow: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 10px;
-      overflow: hidden;
-    }
+  flex-grow: 1;
+  display: flex;
+  justify-content: flex-start; /* Убираем центрирование, чтобы начинать с края */
+  align-items: flex-start;
+  padding: 10px;
+  overflow: auto; /* Включаем прокрутку! */
+  width: 100%;
+}
+
     .grid {
       display: grid;
       gap: 6px;
