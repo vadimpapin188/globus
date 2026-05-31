@@ -600,6 +600,30 @@ modLoader.addEventListener('change', function(event) {
       cell.appendChild(badge);
     }
 
+    function addTool(id, displayName, price, iconHTML) {
+  // 1. Добавляем в объект tools
+  tools[id] = { cost: price, icon: iconHTML };
+
+  // 2. Создаем HTML-элемент для новой кнопки
+  const toolbar = document.querySelector('.toolbar');
+  
+  const newTool = document.createElement('div');
+  newTool.className = 'tool';
+  newTool.id = 'tool-' + id;
+  newTool.setAttribute('onclick', `selectTool('${id}')`);
+  
+  newTool.innerHTML = `
+    ${iconHTML}
+    <div>${displayName}</div>
+    <div class="cost">$${price}</div>
+  `;
+
+  // Добавляем в панель
+  toolbar.appendChild(newTool);
+  
+  console.log("Здание " + displayName + " добавлено в игру!");
+}
+
     function handleCellClick(cell, index) {
       if (isGameOver || isGameWon) return;
 
