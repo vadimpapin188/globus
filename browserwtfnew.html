@@ -468,6 +468,33 @@ farm: { cost: 60, icon: '<i class="fa-solid fa-wheat-awn" style="color: #f1c40f;
     const tvUpgradeModal = document.getElementById('tv-upgrade-modal');
     const achieveModal = document.getElementById('achieve-modal');
     const logModal = document.getElementById('log-modal');
+    const modLoader = document.getElementById('modLoader');
+const modList = document.getElementById('modList');
+
+modLoader.addEventListener('change', function(event) {
+  const files = event.target.files;
+
+  for (let file of files) {
+    const reader = new FileReader();
+
+    // Когда файл прочитан, превращаем его в скрипт
+    reader.onload = function(e) {
+      const scriptContent = e.target.result;
+      
+      // Создаем элемент скрипта
+      const script = document.createElement('script');
+      script.textContent = scriptContent; // Вставляем код напрямую
+      document.body.appendChild(script);
+
+      // Добавляем в список в HTML
+      const li = document.createElement('li');
+      li.textContent = "Активирован мод: " + file.name;
+      modList.appendChild(li);
+    };
+
+    reader.readAsText(file); // Читаем как текст
+  }
+});
 
     function playSound(type) {
       try {
