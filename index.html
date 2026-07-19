@@ -199,42 +199,35 @@
     const input = document.getElementById('search-input');
     if (!input) return;
 
-    // 1. Забираем текст, убираем лишние пробелы и переводим в НИЖНИЙ РЕГИСТР
     let query = input.value.trim().toLowerCase();
-    
     if (!query) return;
 
-    // 2. Отправляем текст на проверку орфографии в Яндекс.Спеллер
     try {
-        // ИСПРАВЛЕНО: Добавлен $, верный эндпоинт и параметр ?text=
-        const spellerUrl = `https://yandex.net?text=${encodeURIComponent(query)}`;
-        
+        // Правильный URL Спеллера
+        const spellerUrl = `https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(query)}`;
         const response = await fetch(spellerUrl);
+        
         if (response.ok) {
             const errors = await response.json();
             
-            // Если Яндекс нашел ошибки, перебираем их с конца к началу
+            // Идем с конца, чтобы не сбивать индексы
             for (let i = errors.length - 1; i >= 0; i--) {
                 const error = errors[i];
-                // Если Яндекс предложил варианты замены, берем самый первый (лучший)
                 if (error.s && error.s.length > 0) {
-                    const wordToReplace = error.word;
-                    const correctedWord = error.s[0].toLowerCase(); // также в нижнем регистре
-                    
-                    // Заменяем слово с ошибкой на исправленное
-                    query = query.replace(wordToReplace, correctedWord);
+                    const correctedWord = error.s[0].toLowerCase();
+                    // Заменяем аккуратно по позиции, которую дал Яндекс
+                    query = query.substring(0, error.pos) + 
+                            correctedWord + 
+                            query.substring(error.pos + error.len);
                 }
             }
         }
     } catch (e) {
         console.error("Ошибка проверки орфографии:", e);
-        // Благодаря блоку try-catch при сбое Яндекса код не упадет, а просто выполнит поиск
     }
 
-    // 3. Выполняем обычный поиск с уже исправленным и приведенным к нижнему регистру текстом
-    // ИСПРАВЛЕНО: Добавлен $, указан правильный путь и параметр ?q=
-    window.location.href = `https://globus-search.online/searcherspecial.html?q=
-${encodeURIComponent(query)}`;
+    // УБРАН пробел после q=
+    window.location.href = `https://globus-search.online/searcherspecial.html?q=${encodeURIComponent(query)}`;
 }
 
 
