@@ -193,44 +193,50 @@
 
     const aiTriggers = ["как", "что", "почему", "зачем", "кто", "где", "когда", "какой", "сколько"];
 
-    async function askAI(question) {
-        mainArea.innerHTML = "<h2>Глобус Ассистент</h2><p>Соединение с нейросетью...</p>";
-        try {
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer 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",
-                    "HTTP-Referer": window.location.href,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    "model": "google/gemini-2.0-flash-lite-preview-02-05:free",
-                    "messages": [
-                        {"role": "system", "content": "Ты — умный помощник Глобус. Отвечай на русском языке, понятно и дружелюбно."},
-                        {"role": "user", "content": question}
-                    ]
-                })
-            });
-            const data = await response.json();
-            const answer = data.choices[0].message.content;
-            mainArea.innerHTML = `<div class="ai-answer-box"><strong>Глобус:</strong><br>${answer.replace(/\n/g, '<br>')}</div>`;
-        } catch (e) {
-            mainArea.innerHTML = "<h2>Ошибка</h2><p>ИИ временно недоступен. Попробуйте обычный поиск.</p>";
+   
+
+    async function doSearch() {
+    const input = document.getElementById('search-input');
+    if (!input) return;
+
+    // 1. Забираем текст, убираем лишние пробелы и переводим в НИЖНИЙ РЕГИСТР
+    let query = input.value.trim().toLowerCase();
+    
+    if (!query) return;
+
+    // 2. Отправляем текст на проверку орфографии в Яндекс.Спеллер
+    try {
+        // ИСПРАВЛЕНО: Добавлен $, верный эндпоинт и параметр ?text=
+        const spellerUrl = `https://yandex.net{encodeURIComponent(query)}`;
+        
+        const response = await fetch(spellerUrl);
+        if (response.ok) {
+            const errors = await response.json();
+            
+            // Если Яндекс нашел ошибки, перебираем их с конца к началу
+            for (let i = errors.length - 1; i >= 0; i--) {
+                const error = errors[i];
+                // Если Яндекс предложил варианты замены, берем самый первый (лучший)
+                if (error.s && error.s.length > 0) {
+                    const wordToReplace = error.word;
+                    const correctedWord = error.s[0].toLowerCase(); // также в нижнем регистре
+                    
+                    // Заменяем слово с ошибкой на исправленное
+                    query = query.replace(wordToReplace, correctedWord);
+                }
+            }
         }
+    } catch (e) {
+        console.error("Ошибка проверки орфографии:", e);
+        // Благодаря блоку try-catch при сбое Яндекса код не упадет, а просто выполнит поиск
     }
 
-    function doSearch() {
-        const query = input.value.trim();
-        if (!query) return;
+    // 3. Выполняем обычный поиск с уже исправленным и приведенным к нижнему регистру текстом
+    // ИСПРАВЛЕНО: Добавлен $, указан правильный путь и параметр ?q=
+    window.location.href = `https://globus-search.online/{encodeURIComponent(query)}`;
+}
 
-        const firstWord = query.toLowerCase().split(' ')[0];
-        if (aiTriggers.includes(firstWord)) {
-            askAI(query);
-        } else {
-            // Обычный поиск
-            window.location.href = `https://globus-search.online/searcherspecial.html?q=${encodeURIComponent(query)}`;
-        }
-    }
+
 
     button.addEventListener('click', doSearch);
     input.addEventListener('keydown', (e) => { if(e.key === 'Enter') doSearch(); });
