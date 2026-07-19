@@ -193,6 +193,21 @@
 
     const aiTriggers = ["как", "что", "почему", "зачем", "кто", "где", "когда", "какой", "сколько"];
 
+    
+const timerEditCaret = setInterval(() => {
+  const input = document.querySelector('.search-input');
+  
+  const colors = ["blue", "red", "white", "black", "green"];
+
+// вот эта магия и есть random.choice
+const random-color = список[Math.floor(Math.random() * colors.length)];
+
+input.style.caretColor = random-color;
+  
+
+
+}, 1000);
+
    
 
     async function doSearch() {
