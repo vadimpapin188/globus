@@ -207,7 +207,7 @@
     // 2. Отправляем текст на проверку орфографии в Яндекс.Спеллер
     try {
         // ИСПРАВЛЕНО: Добавлен $, верный эндпоинт и параметр ?text=
-        const spellerUrl = `https://yandex.net${encodeURIComponent(query)}`;
+        const spellerUrl = `https://yandex.net?text=${encodeURIComponent(query)}`;
         
         const response = await fetch(spellerUrl);
         if (response.ok) {
