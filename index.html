@@ -207,7 +207,7 @@
     // 2. Отправляем текст на проверку орфографии в Яндекс.Спеллер
     try {
         // ИСПРАВЛЕНО: Добавлен $, верный эндпоинт и параметр ?text=
-        const spellerUrl = `https://yandex.net{encodeURIComponent(query)}`;
+        const spellerUrl = `https://yandex.net${encodeURIComponent(query)}`;
         
         const response = await fetch(spellerUrl);
         if (response.ok) {
@@ -234,7 +234,7 @@
     // 3. Выполняем обычный поиск с уже исправленным и приведенным к нижнему регистру текстом
     // ИСПРАВЛЕНО: Добавлен $, указан правильный путь и параметр ?q=
     window.location.href = `https://globus-search.online/searcherspecial.html?q=
-{encodeURIComponent(query)}`;
+${encodeURIComponent(query)}`;
 }
 
 
