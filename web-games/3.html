@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>I did it?</title>
+        <style>
+            body {
+                text-align: center;
+                font-family: Arial, sans-serif;
+                background-color: black;
+                color: white;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>I did it?</h1>
+        <main>
+            <input type="text" placeholder="Enter your name" id="username">
+            <button onclick="start()">Start</button>
+            <h2 class="result">You are...</h2>
+        </main>
+        </body>
+</html>
+<script>
+function start() {
+    const username = document.getElementById('username').value;
+    const results = {
+        did: 'Yes, you did it!',
+        notdid: 'No, you did not do it!'
+    };
+    if (username === '') {
+        alert('Please enter your name');
+        return;
+    }
+    
+    document.querySelector('.result').innerHTML = `You are ${username}`;
+    document.querySelector('.result').innerHTML = Math.random() < 0.5 ? results.did : results.notdid;
+}
+</script>

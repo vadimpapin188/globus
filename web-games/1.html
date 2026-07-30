@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Pixel Street Simulation v5</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f0f14;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+      color: #eee;
+      user-select: none;
+    }
+    #canvas-container {
+      position: relative;
+      border: 4px solid #333;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      cursor: pointer;
+    }
+    canvas {
+      image-rendering: pixelated;
+      display: block;
+    }
+    /* Перенесли кнопки в НИЖНИЙ правый угол */
+    #ui-panel {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      display: flex;
+      gap: 6px;
+    }
+    button {
+      background: rgba(0,0,0,0.75);
+      border: 1px solid #555;
+      color: #fff;
+      padding: 5px 8px;
+      font-family: monospace;
+      font-size: 10px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    button:hover {
+      background: rgba(255,255,255,0.25);
+    }
+    /* Статус остался в ВЕРХНЕМ левом углу */
+    #status-ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.75);
+      padding: 6px 10px;
+      pointer-events: none;
+      font-size: 11px;
+      border-radius: 3px;
+      max-width: 200px;
+      line-height: 1.3;
+    }
+  </style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <canvas id="screen" width="320" height="180"></canvas>
+  <div id="status-ui">Кликай по объекты на экране!</div>
+  <div id="ui-panel">
+    <button id="btn-time">Время: День</button>
+    <button id="btn-weather">Погода: Ясно</button>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('screen');
+  const ctx = canvas.getContext('2d');
+  const statusUi = document.getElementById('status-ui');
+
+  const WIDTH = 320;
+  const HEIGHT = 180;
+  const TROTUAR_Y = 125;
+  const BENCH_X = 175;
+  const BENCH_CAPACITY = 3;
+
+  const Times = { DAY: 0, SUNSET: 1, NIGHT: 2 };
+  const Weathers = { CLEAR: 0, RAIN: 1, SNOW: 2 };
+  
+  let currentTime = Times.DAY;
+  let currentWeather = Weathers.CLEAR;
+  let isLampOn = false;
+
+  let benchOccupants = [];
+  let crumbs = [];
+  let birds = [];
+  let weatherParticles = [];
+
+  const ads = [
+    { text: "FAMILY PARK", bg: "#2ecc71", color: "#fff" },
+    { text: "TASTY ICE", bg: "#f1c40f", color: "#000" },
+    { text: "GLOBUS SEARCH", bg: "#3498db", color: "#fff" },
+    { text: "PIXEL MOVIE", bg: "#e74c3c", color: "#fff" }
+  ];
+  let currentAd = 0;
+
+  const shirtColors = ['#e74c3c', '#3498db', '#9b59b6', '#1abc9c', '#f39c12', '#d35400', '#eee'];
+  const pantsColors = ['#2c3e50', '#34495e', '#7f8c8d', '#16a085'];
+  const skinColors = ['#ffdbac', '#f1c27d', '#e0ac69', '#8d5524'];
+
+  const thoughtsList = [
+    "Где мой кофе?",
+    "Красивый день!",
+    "Надо купить хлеба.",
+    "Интересно, чья это птица?",
+    "Хочу в отпуск...",
+    "Главное — не опоздать",
+   "Люблю дышать свежим воздухом!",
+    "Люблю эту улицу"
+  ];
+
+  const State = { WALKING: 'walking', WANTS_TO_SIT: 'wants_to_sit', SITTING: 'sitting', TALKING: 'talking' };
+
+  class Bird {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.speed = 0.8;
+    }
+
+    update() {
+      if (crumbs.length > 0) {
+        let nearest = crumbs[0];
+        let minDist = Math.hypot(nearest.x - this.x, nearest.y - this.y);
+        for (let c of crumbs) {
+          let d = Math.hypot(c.x - this.x, c.y - this.y);
+          if (d < minDist) { minDist = d; nearest = c; }
+        }
+
+        if (minDist < 3) {
+          crumbs = crumbs.filter(c => c !== nearest);
+        } else {
+          this.x += (nearest.x > this.x ? 1 : -1) * this.speed;
+          this.y += (nearest.y > this.y ? 1 : -1) * this.speed;
+        }
+      } else {
+        if (Math.random() < 0.05) {
+          this.x += (Math.random() - 0.5) * 4;
+          this.y += (Math.random() - 0.5) * 2;
+        }
+      }
+    }
+
+    draw() {
+      ctx.fillStyle = '#7f8c8d';
+      ctx.fillRect(Math.round(this.x), Math.round(this.y), 2, 2);
+      ctx.fillStyle = '#333';
+      ctx.fillRect(Math.round(this.x + 1), Math.round(this.y), 1, 1);
+    }
+  }
+
+  class Pedestrian {
+    constructor(isChild = false) {
+      this.isChild = isChild;
+      this.reset(true);
+    }
+
+    reset(randomX = false) {
+      this.dir = Math.random() > 0.5 ? 1 : -1;
+      this.x = randomX ? Math.random() * WIDTH : (this.dir === 1 ? -20 : WIDTH + 20);
+      this.y = TROTUAR_Y + 10 + Math.random() * 30;
+      this.baseSpeed = (0.25 + Math.random() * 0.3);
+      if (this.isChild) this.baseSpeed *= 1.1;
+      this.speed = this.baseSpeed * this.dir;
+      
+      this.shirt = shirtColors[Math.floor(Math.random() * shirtColors.length)];
+      this.pants = pantsColors[Math.floor(Math.random() * pantsColors.length)];
+      this.skin = skinColors[Math.floor(Math.random() * skinColors.length)];
+      
+      this.animFrame = 0;
+      this.animTimer = 0;
+      this.state = State.WALKING;
+      this.stateTimer = 0;
+      this.thought = null;
+      this.thoughtTimer = 0;
+
+      this.hasFood = false;
+      this.child = null;
+
+      if (!this.isChild && !randomX) {
+        const rand = Math.random();
+        if (rand < 0.2) { 
+          this.hasFood = true; 
+        } else if (rand < 0.35) { 
+          this.child = new Pedestrian(true);
+          this.child.dir = this.dir;
+          this.child.x = this.x - (12 * this.dir);
+          this.child.y = this.y;
+          this.child.speed = this.speed;
+        }
+      }
+
+      this.sitChance = this.child ? 0.70 : (this.hasFood ? 0.35 : 0.08);
+    }
+
+    showThought() {
+      this.thought = thoughtsList[Math.floor(Math.random() * thoughtsList.length)];
+      this.thoughtTimer = 180;
+      statusUi.innerText = `Мысли прохожего: "${this.thought}"`;
+    }
+
+    update() {
+      this.stateTimer++;
+      if (this.thoughtTimer > 0) this.thoughtTimer--;
+
+      if (this.child) this.child.update();
+
+      switch (this.state) {
+        case State.WALKING:
+          this.x += this.speed;
+          this.animTimer += Math.abs(this.speed);
+          if (this.animTimer > 1.5) {
+            this.animFrame = (this.animFrame + 1) % 4;
+            this.animTimer = 0;
+          }
+
+          if (this.child && this.child.state === State.WALKING) {
+            this.child.x = this.x - (10 * this.dir);
+            this.child.y = this.y;
+          }
+
+          if (Math.abs(this.x - BENCH_X) < 40 && Math.random() < this.sitChance && benchOccupants.length < BENCH_CAPACITY) {
+             this.tryToSitGroup();
+          }
+
+          if ((this.dir === 1 && this.x > WIDTH + 40) || (this.dir === -1 && this.x < -40)) {
+            this.reset();
+          }
+          break;
+
+        case State.WANTS_TO_SIT:
+          let targetX = BENCH_X + 6 + (benchOccupants.length * 9);
+          let dist = targetX - this.x;
+          if (Math.abs(dist) < 2) {
+            if (benchOccupants.length < BENCH_CAPACITY) this.sitDown();
+            else this.state = State.WALKING;
+          } else {
+            this.x += (dist > 0 ? 1 : -1) * this.baseSpeed * 1.2;
+            this.y = 129 + (this.y - 129) * 0.2;
+          }
+          break;
+
+        case State.SITTING:
+          if (this.stateTimer > 400 + Math.random() * 300) this.standUp();
+          break;
+      }
+    }
+
+    tryToSitGroup() {
+      let neededSeats = (this.child || this.partner) ? 2 : 1;
+      if (BENCH_CAPACITY - benchOccupants.length >= neededSeats) {
+        this.state = State.WANTS_TO_SIT;
+        if (this.child) this.child.state = State.WANTS_TO_SIT;
+      }
+    }
+
+    sitDown() {
+      this.state = State.SITTING;
+      benchOccupants.push(this);
+      this.x = BENCH_X + 4 + (benchOccupants.indexOf(this) * 10);
+      this.y = 133;
+      this.stateTimer = 0;
+    }
+
+    standUp() {
+      this.state = State.WALKING;
+      benchOccupants = benchOccupants.filter(p => p !== this);
+      this.y = TROTUAR_Y + 15 + Math.random() * 20;
+    }
+
+    draw() {
+      if (this.child) this.child.draw();
+
+      const rx = Math.round(this.x);
+      const ry = Math.round(this.y);
+      const drawY = (this.state === State.SITTING) ? ry - 4 : ry;
+      const h = this.isChild ? 10 : 14;
+      const w = this.isChild ? 4 : 6;
+
+      ctx.fillStyle = this.pants;
+      if (this.state === State.SITTING) {
+        ctx.fillRect(rx + 1, drawY - 2, 2, 3);
+      } else {
+        let legOffset = (this.animFrame === 1 || this.animFrame === 3) ? 1 : 0;
+        ctx.fillRect(rx + 1, drawY - 4, 2, 4 - legOffset);
+        ctx.fillRect(rx + (this.isChild ? 2 : 3), drawY - 4, 2, 4 + legOffset - 1);
+      }
+
+      ctx.fillStyle = this.shirt;
+      ctx.fillRect(rx, drawY - (h - 4), w, h - 7);
+
+      ctx.fillStyle = this.skin;
+      ctx.fillRect(rx + (this.isChild ? 0 : 1), drawY - h, w - 2, 4);
+
+      if (this.hasFood) {
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillRect(rx + (this.dir === 1 ? w : -2), drawY - 7, 2, 3);
+      }
+
+      if (this.thoughtTimer > 0) {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(rx - 8, drawY - h - 12, 20, 8);
+        ctx.fillStyle = '#000';
+        ctx.font = '6px monospace';
+        ctx.fillText("...", rx - 4, drawY - h - 6);
+      }
+    }
+  }
+
+  const people = Array.from({ length: 7 }, () => new Pedestrian());
+  birds = [new Bird(100, 135), new Bird(115, 138)];
+
+  function updateWeather() {
+    if (currentWeather === Weathers.CLEAR) return;
+
+    if (weatherParticles.length < 50) {
+      weatherParticles.push({
+        x: Math.random() * WIDTH,
+        y: 0,
+        speed: currentWeather === Weathers.RAIN ? 4 + Math.random() * 2 : 0.5 + Math.random() * 0.5,
+        length: currentWeather === Weathers.RAIN ? 4 : 1
+      });
+    }
+
+    weatherParticles.forEach((p, i) => {
+      p.y += p.speed;
+      if (currentWeather === Weathers.SNOW) p.x += Math.sin(p.y * 0.05) * 0.3;
+
+      if (p.y > HEIGHT) weatherParticles[i] = { x: Math.random() * WIDTH, y: 0, speed: p.speed, length: p.length };
+    });
+  }
+
+  function drawBackground() {
+    let skyColor = '#2c3e50', cityColor = '#1a252f';
+    if (currentTime === Times.SUNSET) { skyColor = '#e67e22'; cityColor = '#2c3e50'; }
+    if (currentTime === Times.NIGHT) { skyColor = '#0b0c10'; cityColor = '#1f2833'; }
+
+    ctx.fillStyle = skyColor;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    ctx.fillStyle = cityColor;
+    [[10,60,40],[60,40,50],[130,70,35],[200,50,45],[260,65,50]].forEach(b => {
+       ctx.fillRect(b[0], b[1], b[2], HEIGHT - b[1]);
+       if (currentTime === Times.NIGHT && Math.random() < 0.05) {
+         ctx.fillStyle = '#f1c40f';
+         ctx.fillRect(b[0] + 10, b[1] + 15, 3, 3);
+         ctx.fillStyle = cityColor;
+       }
+    });
+
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(0, 110, WIDTH, 15);
+
+    ctx.fillStyle = '#7f8c8d';
+    ctx.fillRect(40, 65, 4, 50); 
+    const ad = ads[currentAd];
+    ctx.fillStyle = ad.bg;
+    ctx.fillRect(10, 35, 64, 32); 
+    ctx.strokeStyle = '#ecf0f1';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(10, 35, 64, 32);
+    ctx.fillStyle = ad.color;
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(ad.text, 42, 54);
+
+    drawTree(120, 85);
+    drawTree(270, 85);
+
+    ctx.fillStyle = currentWeather === Weathers.SNOW ? '#ecf0f1' : '#95a5a6';
+    ctx.fillRect(0, TROTUAR_Y, WIDTH, HEIGHT - TROTUAR_Y);
+
+    drawLamp(230, 80);
+    drawBench(BENCH_X, 130);
+  }
+
+  function drawTree(x, y) {
+    ctx.fillStyle = '#5e270d';
+    ctx.fillRect(x - 2, y, 5, 30);
+    ctx.fillStyle = currentWeather === Weathers.SNOW ? '#dff9fb' : '#2ecc71';
+    [[x-12, y-20, 25, 20], [x-8, y-28, 17, 10]].forEach(c => ctx.fillRect(...c));
+  }
+
+  function drawBench(x, y) {
+    ctx.fillStyle = '#333';
+    ctx.fillRect(x + 2, y + 2, 2, 6);
+    ctx.fillRect(x + 36, y + 2, 2, 6);
+    ctx.fillStyle = '#d35400';
+    ctx.fillRect(x, y + 1, 40, 3);
+    ctx.fillRect(x, y - 4, 40, 4);
+  }
+
+  function drawLamp(x, y) {
+    ctx.fillStyle = '#2c3e50';
+    ctx.fillRect(x, y, 3, 50);
+    ctx.fillRect(x - 3, y, 9, 2);
+
+    if (isLampOn || currentTime === Times.NIGHT) {
+      ctx.fillStyle = '#f1c40f';
+      ctx.fillRect(x - 2, y + 2, 7, 3);
+
+      ctx.fillStyle = 'rgba(241, 196, 15, 0.15)';
+      ctx.beginPath();
+      ctx.moveTo(x - 2, y + 5);
+      ctx.lineTo(x + 25, HEIGHT);
+      ctx.lineTo(x - 20, HEIGHT);
+      ctx.fill();
+    }
+  }
+
+  function drawCrumbsAndWeather() {
+    ctx.fillStyle = '#f39c12';
+    crumbs.forEach(c => ctx.fillRect(c.x, c.y, 1, 1));
+
+    ctx.fillStyle = currentWeather === Weathers.RAIN ? '#74b9ff' : '#ffffff';
+    weatherParticles.forEach(p => ctx.fillRect(p.x, p.y, 1, p.length));
+  }
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = WIDTH / rect.width;
+    const scaleY = HEIGHT / rect.height;
+
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+
+    if (clickX >= 10 && clickX <= 74 && clickY >= 35 && clickY <= 67) {
+      currentAd = (currentAd + 1) % ads.length;
+      statusUi.innerText = "Реклама переключена!";
+      return;
+    }
+
+    if (clickX >= 220 && clickX <= 240 && clickY >= 80 && clickY <= 130) {
+      isLampOn = !isLampOn;
+      statusUi.innerText = isLampOn ? "Фонарь включен!" : "Фонарь выключен!";
+      return;
+    }
+
+    for (let p of people) {
+      if (Math.hypot(p.x - clickX, p.y - clickY) < 12) {
+        p.showThought();
+        return;
+      }
+    }
+
+    if (clickY > TROTUAR_Y) {
+      crumbs.push({ x: clickX, y: clickY });
+      statusUi.innerText = "Вы бросили крошки птицам! 🐦";
+    }
+  });
+
+  document.getElementById('btn-time').addEventListener('click', () => {
+    currentTime = (currentTime + 1) % 3;
+    const names = ["День", "Закат", "Ночь"];
+    document.getElementById('btn-time').innerText = `Время: ${names[currentTime]}`;
+  });
+
+  document.getElementById('btn-weather').addEventListener('click', () => {
+    currentWeather = (currentWeather + 1) % 3;
+    weatherParticles = [];
+    const names = ["Ясно", "Дождь", "Снег"];
+    document.getElementById('btn-weather').innerText = `Погода: ${names[currentWeather]}`;
+  });
+
+  function loop() {
+    drawBackground();
+
+    updateWeather();
+    drawCrumbsAndWeather();
+
+    birds.forEach(b => { b.update(); b.draw(); });
+
+    people.sort((a, b) => a.y - b.y);
+    people.forEach(p => { p.update(); p.draw(); });
+
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+
+</body>
+</html>

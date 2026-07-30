@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Maximum</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Devices Tyccon HTML</h1>
+    <main>
+        <h1>Made a phones!</h1>
+        <input type="text" placeholder="Enter name your phone." id="phoneName">
+        <button onclick="createPhone()">Create Phone</button>
+        <select class="processor">
+  <option>Intel Pentium</option>
+  <option>AMD Ryzen 1001101</option>
+  <option>HERZOGEN 0099910101</option>
+</select>
+<select class="ram">
+  <option>4GB</option>
+    <option>8GB</option>
+    <option>16GB</option>
+</select>
+    </main>
+</body>
+</html>
+<script>
+    function createPhone() {
+        const phoneName = document.getElementById('phoneName').value;
+        const processor = document.querySelector('.processor').value;
+        const ram = document.querySelector('.ram').value;
+        const carmaofphone = 0;
+
+        if (phoneName === '') {
+            alert('Please enter a name for your phone');
+            return;
+        }
+        if (processor === 'Intel Pentium') {
+            carmaofphone += 50;
+        }
+        else if (processor === 'AMD Ryzen 1001101') {
+            carmaofphone += 240;
+        }
+        else if (processor === 'HERZOGEN 0099910101') {
+            carmaofphone += 560;
+        }
+        if (ram === '4GB') {
+            carmaofphone += 20;
+        }
+        else if (ram === '8GB') {
+            carmaofphone += 40;
+        }
+        else if (ram === '16GB') {
+            carmaofphone += 80;
+        }
+        if (carmaofphone == 70) {
+            phoneDetails = 'Rate: 3/10: Oh, this phone is so ugly and slow!, Not recomended., Only for my grandma...';
+        } else if (carmaofphone == 280) {
+            phoneDetails = 'Rate: 7/10: This phone is quite good!, Recommended for daily use.';
+        } else if (carmaofphone == 640) {
+            phoneDetails = 'Rate: 10/10: This phone is amazing!, Recommended for everyone!, Wow! Amazing phone!, I gift it to my girlfriend and she is happy!';
+        }
+
+        const phoneDetails = `0`;
+        alert(phoneDetails);
+    }
+</script>

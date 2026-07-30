@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shift Clicker</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shift Clicker</h1>
+    <h2 class="clicks">0</h2>
+    <button onclick="main(1)" class="clickbutton">Click Me</button>
+    <button onclick="upgrade()">Upgrade</button>
+    <ul class="allupgrades">
+        <li>Upgrade 1: 30 clicks (adds +4 per click)</li>
+        <li>Upgrade 2: 60 clicks (adds +8 per click)</li>
+        <li>Upgrade 3: 120 clicks (adds +16 per click)</li>
+        <li>Upgrade 4: 240 clicks (adds +32 per click)</li>
+        <li>Upgrade 5: 480 clicks (adds +64 per click)</li>
+    </ul>
+</body>
+</html>
+<script>
+    let clicks = 0;
+    function main(add) {
+        clicks += add;
+        document.querySelector('.clicks').innerHTML = clicks;
+    }
+    function upgrade() {
+        if (clicks >=30) {
+            clicks -= 30;
+            document.querySelector('.clicks').innerHTML = clicks;
+            document.querySelector('.clickbutton').onclick = function() { main(4) };
+        }
+        else {
+            alert("Not enough clicks to upgrade!");
+        }
+        if (clicks >=60) {
+            clicks -= 60;
+            document.querySelector('.clicks').innerHTML = clicks;
+            document.querySelector('.clickbutton').onclick = function() { main(8) };
+        }
+        else {
+            alert("Not enough clicks to upgrade!");
+        }
+        if (clicks >=120) {
+            clicks -= 120;
+            document.querySelector('.clicks').innerHTML = clicks;
+            document.querySelector('.clickbutton').onclick = function() { main(16) };
+        }
+        else {
+            alert("Not enough clicks to upgrade!");
+        }
+        if (clicks >=240) {
+            clicks -= 240;
+            document.querySelector('.clicks').innerHTML = clicks;
+            document.querySelector('.clickbutton').onclick = function() { main(32) };
+        }
+        else {
+            alert("Not enough clicks to upgrade!");
+        }
+        if (clicks >=480) {
+            clicks -= 480;
+            document.querySelector('.clicks').innerHTML = clicks;
+            document.querySelector('.clickbutton').onclick = function() { main(64) };
+        }
+        else {
+            alert("Not enough clicks to upgrade!");
+        }
+        
+    }
+    
+
+</script>

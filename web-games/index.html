@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Глобус Игры</title>
+<style>
+header {
+background-color: black;
+color: white;
+position: sticky;
+top: 0;
+width: 100%;
+z-index: 1000;
+text-align: left;
+border-radius: 10px;
+}
+body {
+font-family: 'Arial', sans-serif;
+font-size: 20px;
+text-align: center;
+}
+.game-card {
+border-radius: 30px;
+background-color: #4A90E2;
+margin-bottom: 20px;
+}
+.play-button {
+padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+background-color: #4f46e5;
+  border: none;
+  border-radius: 8px;
+cursor: pointer;
+  transition: all 0.2s ease;
+}
+.play-button:hover {
+background-color: #4338ca;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+.play-button:active {
+transform: translateY(0);
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Глобус Игры</h1>
+</header>
+<div class="game-card">
+<img src="il1.png" height=480 width=640>
+<h2>Симуляция Города: 1 Edition</h2>
+<button onclick="openGameById(1)", class="play-button">Играть</button>
+</div>
+<div class="game-card">
+<img src="il2.png" height=480 width=640>
+<h2>Cliker Mib</h2>
+<button onclick="openGameById(2)", class="play-button">Играть</button>
+</div>
+<div class="game-card">
+<img src="il3.png" height=480 width=640">
+<h2>Red Platformer 4 Web</h2>
+<button onclick="openGameById(5)", class="play-button">Играть</button>
+</div>
+<div class="game-card">
+<img src="il4.png" height=480 width=640">
+<h2>I did it?</h2>
+<button onclick="openGameById(3)", class="play-button">Играть</button>
+</div>
+<div class="game-card">
+<img src="il5.png" height=480 width=640">
+<h2>Devices Tycoon HTML</h2>
+<button onclick="openGameById(4)", class="play-button">Играть</button>
+</div>
+<div class="game-card">
+<img src="il6.png" height=480 width=640">
+<h2>Симулятор прямого эфира 2</h2>
+<button onclick="openGameById(6)", class="play-button">Играть</button>
+</div>
+</body>
+<script>
+function openGameById(id) {
+window.location.href = id + ".html"
+}
+</script>
+</html>
