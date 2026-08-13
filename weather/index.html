@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Глобус Погода</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, -apple-system, Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      padding: 20px;
+    }
+
+    .brand {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.8;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    /* === СТИЛИ ДЛЯ ПК (ПО УМОЛЧАНИЮ) === */
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 700; }
+    .temp { font-size: 4rem; font-weight: 800; margin: 15px 0; color: #4facfe; }
+    .condition { font-size: 1.4rem; opacity: 0.9; }
+
+    /* === СТИЛИ ДЛЯ IPHONE / IOS === */
+    body.is-ios {
+      background: linear-gradient(180deg, #1c1c1e, #2c2c2e);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    }
+
+    body.is-ios .card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 35px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    body.is-ios .temp { color: #5ee7df; }
+
+    /* === СТИЛИ ДЛЯ ANDROID === */
+    body.is-android {
+      background: #121212;
+      font-family: "Roboto", sans-serif;
+    }
+
+    body.is-android .card {
+      background: #1e1e1e;
+      border-radius: 28px;
+      border: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    body.is-android .temp { color: #bb86fc; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="brand">🌍 Глобус Погода</div>
+    <h1 id="city">Загрузка...</h1>
+    <div class="temp" id="temp">--°C</div>
+    <div class="condition" id="condition">--</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+
+    // Определение операционной системы
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      document.body.classList.add('is-ios');
+    } else if (/android/i.test(userAgent)) {
+      document.body.classList.add('is-android');
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAAK27Mb8PFDdOmJOPEZ85eLTKyj58THI0",
+      authDomain: "globus-weather.firebaseapp.com",
+      projectId: "globus-weather",
+      storageBucket: "globus-weather.firebasestorage.app",
+      messagingSenderId: "552203862140",
+      appId: "1:552203862140:web:c8029fac001fafb97909f9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const weatherRef = ref(db, 'weather');
+    onValue(weatherRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        document.getElementById('city').innerText = data.city || 'Город не указан';
+        document.getElementById('temp').innerText = (data.temp || '0') + '°C';
+        document.getElementById('condition').innerText = data.condition || 'Нет данных';
+      }
+    });
+  </script>
+
+</body>
+</html>
