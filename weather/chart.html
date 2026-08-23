@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Глобус Погода — График</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, -apple-system, Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      padding: 20px;
+    }
+
+    .brand {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.8;
+      margin-bottom: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 30px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
+
+    /* === СТИЛИ ДЛЯ IPHONE / IOS === */
+    body.is-ios {
+      background: linear-gradient(180deg, #1c1c1e, #2c2c2e);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    }
+
+    body.is-ios .card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 35px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    /* === СТИЛИ ДЛЯ ANDROID === */
+    body.is-android {
+      background: #121212;
+      font-family: "Roboto", sans-serif;
+    }
+
+    body.is-android .card {
+      background: #1e1e1e;
+      border-radius: 28px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="brand">🌍 Изменение температуры</div>
+    <div class="chart-container">
+      <canvas id="weatherChart"></canvas>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+
+    // Детект ОС
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      document.body.classList.add('is-ios');
+    } else if (/android/i.test(userAgent)) {
+      document.body.classList.add('is-android');
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAAK27Mb8PFDdOmJOPEZ85eLTKyj58THI0",
+      authDomain: "globus-weather.firebaseapp.com",
+      projectId: "globus-weather",
+      storageBucket: "globus-weather.firebasestorage.app",
+      messagingSenderId: "552203862140",
+      appId: "1:552203862140:web:c8029fac001fafb97909f9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let weatherChart = null;
+
+    // Читаем историю из ветки 'history' Firebase
+    const historyRef = ref(db, 'history');
+    onValue(historyRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      // Получаем массив записей и берем последние 8 изменений
+      const historyArray = Object.values(data);
+      const recentData = historyArray.slice(-8);
+
+      const labels = recentData.map(item => item.time);
+      const temps = recentData.map(item => item.temp);
+
+      // Настройка цвета линии в зависимости от темы ОС
+      let lineColor = '#4facfe';
+      let fillColor = 'rgba(79, 172, 254, 0.25)';
+
+      if (document.body.classList.contains('is-ios')) {
+        lineColor = '#5ee7df';
+        fillColor = 'rgba(94, 231, 223, 0.25)';
+      } else if (document.body.classList.contains('is-android')) {
+        lineColor = '#bb86fc';
+        fillColor = 'rgba(187, 134, 252, 0.25)';
+      }
+
+      const ctx = document.getElementById('weatherChart').getContext('2d');
+
+      if (weatherChart) {
+        weatherChart.destroy();
+      }
+
+      weatherChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: temps,
+            borderColor: lineColor,
+            backgroundColor: fillColor,
+            fill: true,
+            tension: 0.4, // Плавная горка
+            borderWidth: 3,
+            pointRadius: 5,
+            pointBackgroundColor: lineColor
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              ticks: { color: 'rgba(255, 255, 255, 0.8)' },
+              grid: { display: false }
+            },
+            y: {
+              ticks: { color: 'rgba(255, 255, 255, 0.8)' },
+              grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            }
+          }
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -114,7 +114,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+    import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
     // Детект ОС
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
@@ -166,12 +166,25 @@
     document.getElementById('weatherForm').addEventListener('submit', (e) => {
       e.preventDefault();
 
+      const city = document.getElementById('city').value;
+      const temp = Number(document.getElementById('temp').value);
+      const condition = document.getElementById('condition').value;
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // 1. Обновляем текущие данные
       set(ref(db, 'weather'), {
-        city: document.getElementById('city').value,
-        temp: document.getElementById('temp').value,
-        condition: document.getElementById('condition').value
+        city: city,
+        temp: temp,
+        condition: condition
+      });
+
+      // 2. Записываем точку в историю для графика
+      push(ref(db, 'history'), {
+        temp: temp,
+        time: time,
+        timestamp: Date.now()
       }).then(() => {
-        alert('Погода успешно обновлена!');
+        alert('Погода и график успешно обновлены!');
       }).catch((error) => {
         alert('Ошибка: ' + error.message);
       });
