@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Глобус Quicker</title>
+    <style>
+        :root {
+            --primary: #0088cc;
+            --primary-hover: #0077b3;
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --text-main: #222222;
+            --text-secondary: #707579;
+            --border-color: #e4e6eb;
+            --my-msg: #eeffde;
+            --other-msg: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; justify-content: center; align-items: center; }
+
+        /* Контейнер авторизации */
+        .auth-container { width: 100%; max-width: 400px; background: var(--panel-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; }
+        .auth-container h2 { color: var(--primary); margin-bottom: 20px; }
+        .auth-container input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; outline: none; }
+        .auth-container input:focus { border-color: var(--primary); }
+        .auth-container button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .auth-container button:hover { background: var(--primary-hover); }
+        .auth-container p { margin-top: 15px; font-size: 14px; color: var(--text-secondary); }
+        .auth-container a { color: var(--primary); text-decoration: none; font-weight: bold; }
+
+        /* Основной интерфейс мессенджера */
+        .messenger-app { display: flex; width: 100vw; height: 100vh; background: var(--panel-bg); overflow: hidden; }
+        @media (min-width: 768px) {
+            .messenger-app { max-width: 1000px; height: 85vh; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+        }
+
+        /* Левая панель (список чатов) */
+        .sidebar { width: 100%; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); background: #fff; }
+        @media (min-width: 768px) { .sidebar { width: 360px; min-width: 360px; } }
+
+        .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; }
+        .user-profile-bar { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-secondary); }
+        .user-profile-bar b { color: var(--text-main); }
+        
+        .search-chats-input { width: 100%; padding: 10px 15px; background: var(--bg-color); border: none; border-radius: 20px; font-size: 14px; outline: none; }
+        
+        .action-buttons { display: flex; gap: 8px; }
+        .action-btn { flex: 1; padding: 8px; background: var(--bg-color); border: none; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer; text-align: center; }
+        .action-btn:hover { background: #e4e6eb; }
+
+        .chats-list { flex-grow: 1; overflow-y: auto; }
+        .chat-item { padding: 15px; display: flex; align-items: center; cursor: pointer; border-bottom: 1px solid #f0f2f5; transition: background 0.2s; }
+        .chat-item:hover { background: #f8f9fa; }
+        .chat-item.active { background: #eef6fc; }
+        .chat-item-avatar { width: 45px; height: 45px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; margin-right: 12px; flex-shrink: 0; }
+        .chat-item-info { overflow: hidden; }
+        .chat-item-title { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+        .chat-item-preview { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Правая панель (область чата) */
+        .chat-pane { flex-grow: 1; display: none; flex-direction: column; background: #fafafa; }
+        .chat-pane.active { display: flex; }
+        @media (max-width: 767px) {
+            .sidebar.hidden-mobile { display: none; }
+            .chat-pane { width: 100%; position: absolute; top: 0; left: 0; height: 100%; z-index: 10; }
+        }
+
+        .chat-header { padding: 12px 20px; background: white; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; }
+        .back-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--primary); display: none; }
+        @media (max-width: 767px) { .back-btn { display: block; } }
+        .chat-header-title { font-weight: bold; font-size: 16px; }
+
+        .messages-container { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 14px; word-break: break-all; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .message-bubble.my { background: var(--my-msg); align-self: flex-end; border-bottom-right-radius: 2px; }
+        .message-bubble.other { background: var(--other-msg); align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid var(--border-color); }
+
+        .chat-input-area { padding: 15px; background: white; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 6px; }
+        .chat-input-row { display: flex; gap: 10px; align-items: center; }
+        .chat-input-row input { flex-grow: 1; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 24px; outline: none; font-size: 14px; }
+        .chat-input-row input:focus { border-color: var(--primary); }
+        .send-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 18px; }
+        .send-btn:hover { background: var(--primary-hover); }
+        .char-counter { font-size: 12px; color: var(--text-secondary); text-align: right; padding-right: 10px; }
+
+        /* Модальные окна */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); }
+        .modal-content h3 { margin-bottom: 15px; font-size: 18px; color: var(--primary); }
+        .modal-content input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 10px; }
+        .modal-buttons button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-main { background: var(--primary); color: white; }
+        .btn-sec { background: var(--border-color); color: var(--text-main); }
+
+        .hidden { display: none !important; }
+        .error-text { color: #d93025; font-size: 13px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+    <!-- ЭКРАН АВТОРИЗАЦИИ / РЕГИСТРАЦИИ (по умолчанию виден) -->
+    <div id="auth-screen" class="auth-container">
+        <div id="login-form">
+            <h2>Глобус Quicker 🌍</h2>
+            <input type="email" id="login-email" placeholder="Электронная почта">
+            <input type="password" id="login-password" placeholder="Пароль">
+            <button onclick="loginUser()">Войти</button>
+            <p>Нет аккаунта? <a href="#" onclick="toggleAuthMode()">Зарегистрироваться</a></p>
+        </div>
+
+        <div id="register-form" class="hidden">
+            <h2>Регистрация</h2>
+            <input type="email" id="reg-email" placeholder="Электронная почта">
+            <input type="password" id="reg-password" placeholder="Пароль">
+            <input type="text" id="reg-id" placeholder="Уникальный ID (например: 543543admin)">
+            <input type="text" id="reg-first" placeholder="Имя">
+            <input type="text" id="reg-last" placeholder="Фамилия">
+            <button onclick="registerUser()">Создать аккаунт</button>
+            <p>Уже есть аккаунт? <a href="#" onclick="toggleAuthMode()">Войти</a></p>
+        </div>
+        <div id="auth-msg" class="error-text"></div>
+    </div>
+
+    <!-- ОСНОВНОЙ ИНТЕРФЕЙС МЕССЕНДЖЕРА (по умолчанию скрыт) -->
+    <div id="app-screen" class="messenger-app hidden">
+        
+        <!-- Сайдбар со списком чатов -->
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile-bar">
+                    <span>Вы: <b id="user-id-display">...</b></span>
+                    <button onclick="logoutUser()" style="background: none; border: none; color: #d93025; font-weight: bold; cursor: pointer; font-size: 13px;">Выйти</button>
+                </div>
+                <input type="text" id="chat-search" class="search-chats-input" placeholder="Поиск по чатам..." oninput="filterChats()">
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="openNewChatModal()">+ Новый квик</button>
+                    <button class="action-btn" onclick="openSearchUserModal()">🔍 Найти человека</button>
+                </div>
+            </div>
+            <div id="chats-list" class="chats-list">
+                <!-- Список чатов загружается динамически -->
+            </div>
+        </div>
+
+        <!-- Область переписки -->
+        <div id="chat-pane" class="chat-pane">
+            <div class="chat-header">
+                <button class="back-btn" onclick="closeChatMobile()">←</button>
+                <div class="chat-header-title" id="active-chat-title">Выберите чат</div>
+            </div>
+            
+            <div id="messages-container" class="messages-container">
+                <div style="margin: auto; color: var(--text-secondary); text-align: center;">Выберите чат слева, чтобы отправить быстрый квик ⚡</div>
+            </div>
+            
+            <div id="message-input-area" class="chat-input-area hidden">
+                <div class="chat-input-row">
+                    <input type="text" id="message-text" placeholder="Введите квик (макс. 31 символ)..." maxlength="31" oninput="checkLength(this)" onkeydown="if(event.key === 'Enter') sendQuickMessage()">
+                    <button class="send-btn" onclick="sendQuickMessage()">➤</button>
+                </div>
+                <div id="char-counter" class="char-counter">31 символ</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: НОВЫЙ ЧАТ -->
+    <div id="modal-new-chat" class="modal hidden">
+        <div class="modal-content">
+            <h3>Новый квик-чат</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">Введите уникальный ID собеседника:</p>
+            <input type="text" id="new-chat-id" placeholder="ID получателя">
+            <div class="modal-buttons">
+                <button class="btn-sec" onclick="closeModals()">Отмена</button>
+                <button class="btn-main" onclick="startNewChatFromModal()">Начать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: ПОИСК ID ПО ИМЕНИ -->
+    <div id="modal-search-user" class="modal hidden">
+        <div class="modal-content">
+            <h3>Поиск ID по имени</h3>
+            <input type="text" id="search-first" placeholder="Имя">
+            <input type="text" id="search-last" placeholder="Фамилия">
+            <div id="search-result" style="font-size: 13px; margin: 8px 0; color: var(--primary); min-height: 18px;"></div>
+            <div class="modal-buttons">
+                <button class="btn-sec" onclick="closeModals()">Закрыть</button>
+                <button class="btn-main" onclick="findUserIdByName()">Найти</button>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+    import { getDatabase, ref, push, set, onChildAdded, get, query as rtdbQuery, limitToLast } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCP-rBhnKm1OUlboqd_2-MoTkA2jqqJAXg",
+        authDomain: "faks-73e71.firebaseapp.com",
+        databaseURL: "https://faks-73e71-default-rtdb.firebaseio.com",
+        projectId: "faks-73e71",
+        storageBucket: "faks-73e71.firebasestorage.app",
+        messagingSenderId: "180624816646",
+        appId: "1:180624816646:web:37614c02dd2e06b400a187",
+        measurementId: "G-W5GS90MLGT"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const rtdb = getDatabase(app);
+
+    setPersistence(auth, browserLocalPersistence).catch((error) => {
+        console.error("Ошибка персистентности:", error);
+    });
+
+    let currentUserId = null;
+    let activeChatId = null;
+
+    window.toggleAuthMode = function() {
+        document.getElementById('login-form').classList.toggle('hidden');
+        document.getElementById('register-form').classList.toggle('hidden');
+        document.getElementById('auth-msg').innerText = '';
+    }
+
+    window.loginUser = async function() {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-password').value;
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (e) {
+            document.getElementById('auth-msg').innerText = e.message;
+        }
+    }
+
+    window.registerUser = async function() {
+        const email = document.getElementById('reg-email').value;
+        const pass = document.getElementById('reg-password').value;
+        const id = document.getElementById('reg-id').value.trim();
+        const first = document.getElementById('reg-first').value.trim();
+        const last = document.getElementById('reg-last').value.trim();
+
+        if (!id || !first || !last) {
+            document.getElementById('auth-msg').innerText = "Заполните все поля профиля!";
+            return;
+        }
+
+        try {
+            await createUserWithEmailAndPassword(auth, email, pass);
+            await setDoc(doc(db, "users_info", email), { id, first, last });
+        } catch (e) {
+            document.getElementById('auth-msg').innerText = e.message;
+        }
+    }
+
+    window.logoutUser = function() { 
+        signOut(auth).then(() => {
+            localStorage.clear();
+            location.reload();
+        }); 
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const docSnap = await getDoc(doc(db, "users_info", user.email));
+                currentUserId = docSnap.exists() ? docSnap.data().id : "нет_id";
+
+                document.getElementById('user-id-display').innerText = currentUserId;
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                loadChats();
+            } catch (err) {
+                console.error("Ошибка загрузки профиля:", err);
+            }
+        } else {
+            currentUserId = null;
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+        }
+    });
+
+    window.openNewChatModal = () => document.getElementById('modal-new-chat').classList.remove('hidden');
+    window.openSearchUserModal = () => document.getElementById('modal-search-user').classList.remove('hidden');
+    window.closeModals = () => {
+        document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+        document.getElementById('search-result').innerText = '';
+    }
+
+    window.findUserIdByName = async function() {
+        const f = document.getElementById('search-first').value.trim();
+        const l = document.getElementById('search-last').value.trim();
+        const resEl = document.getElementById('search-result');
+        if (!f || !l) { resEl.innerText = "Введите имя и фамилию"; return; }
+        resEl.innerText = "Поиск...";
+
+        try {
+            const q = query(collection(db, "users_info"), where("first", "==", f), where("last", "==", l));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                let foundId = "";
+                querySnapshot.forEach((doc) => { foundId = doc.data().id; });
+                resEl.innerHTML = `Найден ID: <b>${foundId}</b>`;
+            } else {
+                resEl.innerText = "Пользователь не найден";
+            }
+        } catch (e) {
+            resEl.innerText = "Ошибка поиска";
+        }
+    }
+
+    function getChatKey(id1, id2) { return [id1, id2].sort().join('_'); }
+
+    window.startNewChatFromModal = function() {
+        const targetId = document.getElementById('new-chat-id').value.trim();
+        if (!targetId || targetId === currentUserId) { alert("Введите корректный ID"); return; }
+        closeModals();
+        openChat(targetId);
+    }
+
+    window.openChat = async function(targetId) {
+        activeChatId = targetId;
+        document.getElementById('active-chat-title').innerText = `ID: ${targetId}`;
+        document.getElementById('message-input-area').classList.remove('hidden');
+        document.getElementById('chat-pane').classList.add('active');
+        if (window.innerWidth < 768) {
+            document.getElementById('sidebar').classList.add('hidden-mobile');
+        }
+
+        const userChatsRef = ref(rtdb, `user_chats/${currentUserId}/${targetId}`);
+        await set(userChatsRef, { targetId, updatedAt: Date.now() });
+
+        loadMessages(targetId);
+        loadChats();
+    }
+
+    window.closeChatMobile = function() {
+        document.getElementById('chat-pane').classList.remove('active');
+        document.getElementById('sidebar').classList.remove('hidden-mobile');
+        activeChatId = null;
+    }
+
+    function loadMessages(targetId) {
+        const chatKey = getChatKey(currentUserId, targetId);
+        const msgRef = ref(rtdb, `chats/${chatKey}/messages`);
+        const lastFiveQuery = rtdbQuery(msgRef, limitToLast(5));
+        const container = document.getElementById('messages-container');
+        container.innerHTML = '';
+
+        onChildAdded(lastFiveQuery, (snapshot) => {
+            const msg = snapshot.val();
+            const div = document.createElement('div');
+            div.className = `message-bubble ${msg.sender === currentUserId ? 'my' : 'other'}`;
+            div.innerText = msg.text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    window.checkLength = function(input) {
+        const remaining = 31 - input.value.length;
+        document.getElementById('char-counter').innerText = `Осталось символов: ${remaining}`;
+    }
+
+    window.sendQuickMessage = async function() {
+        const input = document.getElementById('message-text');
+        const text = input.value.trim();
+        if (!text || !activeChatId) return;
+
+        const chatKey = getChatKey(currentUserId, activeChatId);
+        const msgRef = ref(rtdb, `chats/${chatKey}/messages`);
+
+        await push(msgRef, { sender: currentUserId, text: text, timestamp: Date.now() });
+        await set(ref(rtdb, `user_chats/${currentUserId}/${activeChatId}`), { targetId: activeChatId, updatedAt: Date.now() });
+
+        const snapshot = await get(msgRef);
+        if (snapshot.exists()) {
+            const messages = snapshot.val();
+            const keys = Object.keys(messages);
+            if (keys.length > 5) {
+                for (let i = 0; i < keys.length - 5; i++) {
+                    await set(ref(rtdb, `chats/${chatKey}/messages/${keys[i]}`), null);
+                }
+            }
+        }
+
+        input.value = '';
+        document.getElementById('char-counter').innerText = '31 символ';
+    }
+
+    window.loadChats = async function() {
+        if (!currentUserId) return;
+        const chatsRef = ref(rtdb, `user_chats/${currentUserId}`);
+        const snapshot = await get(chatsRef);
+        const listEl = document.getElementById('chats-list');
+        listEl.innerHTML = '';
+
+        if (snapshot.exists()) {
+            const chats = snapshot.val();
+            const sortedChats = Object.entries(chats).sort((a, b) => b[1].updatedAt - a[1].updatedAt);
+
+            sortedChats.forEach(([targetId, data]) => {
+                const div = document.createElement('div');
+                div.className = `chat-item ${activeChatId === targetId ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="chat-item-avatar">${targetId.charAt(0).toUpperCase()}</div>
+                    <div class="chat-item-info">
+                        <div class="chat-item-title">ID: ${targetId}</div>
+                        <div class="chat-item-preview">Быстрый квик-чат ⚡</div>
+                    </div>
+                `;
+                div.onclick = () => openChat(targetId);
+                listEl.appendChild(div);
+            });
+        } else {
+            listEl.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 14px;">Нет активных чатов.<br>Нажмите «+ Новый квик»</div>`;
+        }
+    }
+
+    window.filterChats = function() {
+        const filter = document.getElementById('chat-search').value.toLowerCase();
+        const items = document.getElementById('chats-list').getElementsByClassName('chat-item');
+        for (let item of items) {
+            const text = item.innerText.toLowerCase();
+            item.style.display = text.includes(filter) ? "flex" : "none";
+        }
+    }
+</script>
+
+</body>
+</html>
