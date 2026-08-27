@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Глобус Меломан - живая волна</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background-color: #121214;
+    color: #ffffff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .player-card {
+    background: #1e1e24;
+    padding: 32px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #a0a0ab;
+  }
+  .track-info {
+    min-height: 60px;
+    margin-bottom: 24px;
+    padding: 12px;
+    background: #141418;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .track-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+  .track-artist {
+    font-size: 0.9rem;
+    color: #88889d;
+  }
+  button {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #ffffff;
+    border: none;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  }
+  button:active {
+    transform: translateY(0);
+  }
+  .ctrl {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #ffffff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+}
+
+.ctrl:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.08);
+}
+
+.ctrl:active {
+    transform: scale(0.95);
+}
+</style>
+</head>
+<body>
+
+<div class="player-card">
+  <h1>Живой поток</h1>
+  <p id="now" class="track-info">Ожидание эфира...</p>
+  <button id="playBtn" onclick="playLiveStream()">Играть / Пауза</button>
+  <p class="r">_</p>
+  <button onclick="playPrevTrack()" class="playBtn">⏮ Назад</button>
+  <p class="r">_</p>
+<button onclick="playNextTrack()" class="playBtn">>⏭ Вперёд</button>
+</div>
+
+<script>
+const API_KEY = "AIzaSyAuNufEa2WfGQ_eLCTn8KmgGLeslD8i0J4";
+
+const playlist = [
+    { title: "Дожди", artist: "Игорь Корнелюк", id: "1wOxr7LQMmsPxX2SIbk9AIFJhEZYAvpKg" },
+    { title: "Верни", artist: "Ольга Бузова", id: "1QcLJyoY-NsCnxdkYOAr2Hpb0QjgKDxfd" },
+    { title: "Зелье", artist: "Бискас", id: "13DSGNJaiZzDCUO1ExZcxIrdLJ3HjfRoK" },
+    { title: "По барам", artist: "ANNA ASTI", id: "1hB_-e-YLvw1ZWCuZwA--vO6d2cLxwgDl" },
+    { title: "Компасы", artist: "Сергей Лазарев", id: "1K20XYHEkLTATs7AD0pr6wmQgBzDzO62X" },
+    { title: "Люди", artist: "Дайте танк(!)", id: "1ROKKZCyNPLKO0dDngkGzPWBcwk-jSDHq" },
+    { title: "М", artist: "Дайте танк(!)", id: "12yqr78ZyuRS52eFqlJeZmbA23KOU3bhU" },
+    { title: "Дорога", artist: "АукцЫон", id: "1iDfZdS_NLQaMj8ygZPbb6dOjU8_v1vPn" },
+    { title: "Розовый фламинго", artist: "Алёна Свиридова", id: "1r3bodg-blqcnGBX1pqU5JYkZjv990nm4" },
+    { title: "Полматери", artist: "Кхм-кхм", id: "1dku189feViV37tblwy9A-xDguzIYnng9" },
+    { title: "Покинула чат", artist: "Клава Кока", id: "1cvhYCmBGdtWm4q10u_ICzr6updXHnPcZ" },
+    { title: "Ты не верь слезам!", artist: "Папин Вадим Smash", id: "1JnwWGsmivQq8MlhlaH7p3Qv-IX_FV4lr" },
+    { title: "Понарошку (Всё О Любви)", artist: "Юрий Титов", id: "1_RMIiIwG3jSbI91SP5j4gKSf7__FIzaS" }
+];
+
+const audio = new Audio();
+let playedTracks = [];       // Треки, сыгранные в текущем круге
+let historyStack = [];       // История для кнопки "Назад"
+let currentTrack = null;
+let currentBlobUrl = null;
+
+function getNextRandomTrack() {
+    if (playedTracks.length >= playlist.length) {
+        playedTracks = [];
+    }
+
+    const available = playlist.filter(track => !playedTracks.includes(track.id));
+    const randomIndex = Math.floor(Math.random() * available.length);
+    const selected = available[randomIndex];
+
+    playedTracks.push(selected.id);
+    return selected;
+}
+
+function updateMediaSession(track) {
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.title,
+            artist: track.artist
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => {
+            audio.play();
+            navigator.mediaSession.playbackState = "playing";
+        });
+
+        navigator.mediaSession.setActionHandler('pause', () => {
+            audio.pause();
+            navigator.mediaSession.playbackState = "paused";
+        });
+
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+            playNextTrack();
+        });
+
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+            playPrevTrack();
+        });
+    }
+}
+
+function updateNowPlaying() {
+    const nowEl = document.getElementById('now');
+    if (nowEl && currentTrack) {
+        nowEl.innerHTML = `
+            <span class="track-title">${currentTrack.title}</span>
+            <span class="track-artist">${currentTrack.artist}</span>
+        `;
+    }
+}
+
+async function loadAndPlayTrack(track) {
+    audio.pause();
+
+    if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = null;
+    }
+
+    currentTrack = track;
+    const streamUrl = `https://www.googleapis.com/drive/v3/files/${currentTrack.id}?alt=media&key=${API_KEY}`;
+
+    try {
+        const response = await fetch(streamUrl);
+        if (!response.ok) throw new Error(`Google API status: ${response.status}`);
+
+        const blob = await response.blob();
+        currentBlobUrl = URL.createObjectURL(blob);
+        audio.src = currentBlobUrl;
+
+        await audio.play();
+        updateMediaSession(currentTrack);
+        updateNowPlaying();
+    } catch (err) {
+        console.error("Сбой трека, пробуем следующий:", err);
+        setTimeout(playNextTrack, 1000);
+    }
+}
+
+// Функция для кнопки "Следующий трек"
+function playNextTrack() {
+    if (currentTrack) {
+        historyStack.push(currentTrack); // Сохраняем текущий в историю перед переключением
+    }
+    const nextTrack = getNextRandomTrack();
+    loadAndPlayTrack(nextTrack);
+}
+
+// Функция для кнопки "Предыдущий трек"
+function playPrevTrack() {
+    if (historyStack.length > 0) {
+        const prevTrack = historyStack.pop(); // Достаем последний трек из истории
+        loadAndPlayTrack(prevTrack);
+    } else {
+        // Если истории ещё нет, перезапускаем текущий трек с начала
+        audio.currentTime = 0;
+    }
+}
+
+function playLiveStream() {
+    if (!currentTrack) {
+        playNextTrack();
+    } else if (audio.paused) {
+        audio.play();
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
+    } else {
+        audio.pause();
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
+    }
+}
+
+audio.addEventListener('ended', () => {
+    playNextTrack();
+});
+
+audio.addEventListener('error', () => {
+    console.warn("Ошибка в audio элемента, пропускаем...");
+    playNextTrack();
+});
+</script>
+
+</body>
+</html>
